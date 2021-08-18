@@ -17,11 +17,11 @@ pub enum ChunkId {
 
 pub enum ExperimentalRpcMethod {
     CheckTx {
-        tx: String,
+        tx: views::SignedTransactionView,
     },
     GenesisConfig,
     BroadcastTxSync {
-        tx: String,
+        tx: views::SignedTransactionView,
     },
     TxStatus {
         tx: String,
@@ -42,10 +42,10 @@ pub enum ExperimentalRpcMethod {
 
 pub enum RpcMethod {
     BroadcastTxAsync {
-        tx: String,
+        tx: views::SignedTransactionView,
     },
     BroadcastTxCommit {
-        tx: String,
+        tx: views::SignedTransactionView,
     },
     Status,
     Health,
@@ -161,13 +161,16 @@ impl JsonRpcClient {
         }
     }
 
-    pub async fn broadcast_tx_async(&self, tx: String) -> Result<String, RpcError> {
+    pub async fn broadcast_tx_async(
+        &self,
+        tx: views::SignedTransactionView,
+    ) -> Result<String, RpcError> {
         RpcMethod::BroadcastTxAsync { tx }.call_on(self).await
     }
 
     pub async fn broadcast_tx_commit(
         &self,
-        tx: String,
+        tx: views::SignedTransactionView,
     ) -> Result<views::FinalExecutionOutcomeView, RpcError> {
         RpcMethod::BroadcastTxCommit { tx }.call_on(self).await
     }
@@ -211,7 +214,10 @@ impl JsonRpcClient {
     }
 
     #[allow(non_snake_case)]
-    pub async fn EXPERIMENTAL_check_tx(&self, tx: String) -> Result<serde_json::Value, RpcError> {
+    pub async fn EXPERIMENTAL_check_tx(
+        &self,
+        tx: views::SignedTransactionView,
+    ) -> Result<serde_json::Value, RpcError> {
         RpcMethod::Experimental(ExperimentalRpcMethod::CheckTx { tx })
             .call_on(self)
             .await
@@ -227,7 +233,7 @@ impl JsonRpcClient {
     #[allow(non_snake_case)]
     pub async fn EXPERIMENTAL_broadcast_tx_sync(
         &self,
-        tx: String,
+        tx: views::SignedTransactionView,
     ) -> Result<serde_json::Value, RpcError> {
         RpcMethod::Experimental(ExperimentalRpcMethod::BroadcastTxSync { tx })
             .call_on(self)
