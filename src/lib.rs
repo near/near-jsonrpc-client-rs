@@ -50,6 +50,7 @@ pub enum RpcMethod {
     Status,
     Health,
     Tx {
+        hash: CryptoHash,
         id: AccountId,
     },
     Chunk {
@@ -77,7 +78,7 @@ impl RpcMethod {
             Self::BroadcastTxCommit { tx } => ("broadcast_tx_commit", json!([tx])),
             Self::Status => ("status", json!([])),
             Self::Health => ("health", json!([])),
-            Self::Tx { id } => ("tx", json!([id])),
+            Self::Tx { hash, id } => ("tx", json!([hash, id])),
             Self::Chunk { id } => ("chunk", json!([id])),
             Self::Validators { block_id } => ("validators", json!([block_id])),
             Self::GasPrice { block_id } => ("gas_price", json!([block_id])),
@@ -183,8 +184,12 @@ impl JsonRpcClient {
         RpcMethod::Health.call_on(self).await
     }
 
-    pub async fn tx(&self, id: AccountId) -> Result<views::FinalExecutionOutcomeView, RpcError> {
-        RpcMethod::Tx { id }.call_on(self).await
+    pub async fn tx(
+        &self,
+        hash: CryptoHash,
+        id: AccountId,
+    ) -> Result<views::FinalExecutionOutcomeView, RpcError> {
+        RpcMethod::Tx { hash, id }.call_on(self).await
     }
 
     pub async fn chunk(&self, id: ChunkId) -> Result<views::ChunkView, RpcError> {

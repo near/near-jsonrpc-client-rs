@@ -36,7 +36,10 @@ Rust crate for interacting with the NEAR Protocol via RPC API
   let rpc_client_1 = JsonRpcClient::new("http://localhost:3030", &client);
   let rpc_client_2 = JsonRpcClient::new("http://rpc.website.com", &client);
 
-  let method = RpcMethod::Tx { id: "miraclx.near".parse::<AccountId>.unwrap() };
+  let method = RpcMethod::Tx {
+      id: "miraclx.near".parse::<AccountId>.unwrap(),
+      hash: "9FtHUFBQsZ2MG77K3x3MJ9wjX3UT8zE1TczCrhZEcG8U".parse::<CryptoHash>().unwrap(),
+  };
 
   let tx_status_1: FinalExecutionOutcomeView = method.call_on(&rpc_client_1).await;
   let tx_status_2: FinalExecutionOutcomeView = method.call_on(&rpc_client_2).await;
