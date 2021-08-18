@@ -61,15 +61,8 @@ pub enum RpcMethod {
     GasPrice {
         block_id: MaybeBlockId,
     },
-    QueryByPath {
-        path: String,
-        data: String,
-    },
     Query {
         request: near_jsonrpc_primitives::types::query::RpcQueryRequest,
-    },
-    BlockById {
-        block_id: BlockId,
     },
     Block {
         request: BlockReference,
@@ -88,9 +81,7 @@ impl RpcMethod {
             Self::Chunk { id } => ("chunk", json!([id])),
             Self::Validators { block_id } => ("validators", json!([block_id])),
             Self::GasPrice { block_id } => ("gas_price", json!([block_id])),
-            Self::QueryByPath { path, data } => ("query", json!([path, data])),
             Self::Query { request } => ("query", json!(request)),
-            Self::BlockById { block_id } => ("block", json!([block_id])),
             Self::Block { request } => ("block", json!(request)),
             Self::Experimental(ExperimentalRpcMethod::CheckTx { tx }) => {
                 ("EXPERIMENTAL_check_tx", json!([tx]))
@@ -208,23 +199,11 @@ impl JsonRpcClient {
         RpcMethod::GasPrice { block_id }.call_on(self).await
     }
 
-    pub async fn query_by_path(
-        &self,
-        path: String,
-        data: String,
-    ) -> Result<near_jsonrpc_primitives::types::query::RpcQueryResponse, RpcError> {
-        RpcMethod::QueryByPath { path, data }.call_on(self).await
-    }
-
     pub async fn query(
         &self,
         request: near_jsonrpc_primitives::types::query::RpcQueryRequest,
     ) -> Result<near_jsonrpc_primitives::types::query::RpcQueryResponse, RpcError> {
         RpcMethod::Query { request }.call_on(self).await
-    }
-
-    pub async fn block_by_id(&self, block_id: BlockId) -> Result<views::BlockView, RpcError> {
-        RpcMethod::BlockById { block_id }.call_on(self).await
     }
 
     pub async fn block(&self, request: BlockReference) -> Result<views::BlockView, RpcError> {
