@@ -1,4 +1,4 @@
-#![deprecated(note = "This crate is unstable and hence, unfit for use.")]
+#![deprecated(note = "this crate is unstable and hence, unfit for use.")]
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use serde_json::json;
