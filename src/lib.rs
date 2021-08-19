@@ -1,5 +1,4 @@
 #![deprecated(note = "This crate is unstable and hence, unfit for use.")]
-use reqwest::Client;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use serde_json::json;
@@ -142,24 +141,30 @@ impl RpcMethod {
     }
 }
 
+#[derive(Clone)]
+pub struct JsonRpcClientBuilder {
+    client: reqwest::Client,
+}
+
+impl JsonRpcClientBuilder {
+    pub fn connect(&self, server_addr: &str) -> JsonRpcClient {
+        JsonRpcClient {
+            server_addr: server_addr.to_string(),
+            client: self.client.clone(),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct JsonRpcClient {
     server_addr: String,
-    client: Client,
+    client: reqwest::Client,
 }
 
 impl JsonRpcClient {
-    pub fn new(server_addr: &str, client: &Client) -> Self {
-        Self {
-            server_addr: server_addr.to_string(),
-            client: client.clone(),
-        }
-    }
-
-    pub fn new_client(server_addr: &str) -> Self {
-        Self {
-            server_addr: server_addr.to_string(),
-            client: Client::new(),
+    pub fn new_client() -> JsonRpcClientBuilder {
+        JsonRpcClientBuilder {
+            client: reqwest::Client::new(),
         }
     }
 
@@ -300,7 +305,7 @@ mod tests {
 
     #[tokio::test]
     async fn it_works() {
-        let rpc_client = JsonRpcClient::new_client("http://localhost:3030");
+        let rpc_client = JsonRpcClient::new_client().connect("http://localhost:3030");
         let status1 = rpc_client.status().await;
         let status2 = RpcMethod::Status
             .call_on::<near_primitives::views::StatusResponse>(&rpc_client)

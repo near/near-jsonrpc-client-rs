@@ -13,7 +13,7 @@ Rust crate for interacting with the NEAR Protocol via RPC API
 
   // this creates a new client internally, only use this if you only need one client
   // see example 2 in the case where you need multiple clients
-  let rpc_client = JsonRpcClient::new_client("http://localhost:3030");
+  let rpc_client = JsonRpcClient::new_client().connect("http://localhost:3030");
 
   // The convenience methods on JsonRpcClient aid simplicity
   let status = rpc_client.status().await;
@@ -27,19 +27,17 @@ Rust crate for interacting with the NEAR Protocol via RPC API
   // Here, we manually construct a method and execute that on a client
   // This is useful if you have multiple clients to execute instructions on
 
-  use reqwest::Client;
-
   use near_api::{RpcMethod, JsonRpcClient};
   use near_primitives::types::AccountId;
   use near_jsonrpc_primitives::views::FinalExecutionOutcomeView;
 
-  let client = reqwest::Client::new(); // instantiate once, share everywhere
+  let client_builder = JsonRpcClient::new_client(); // instantiate once, reuse
 
-  let rpc_client_1 = JsonRpcClient::new("http://localhost:3030", &client);
-  let rpc_client_2 = JsonRpcClient::new("http://rpc.website.com", &client);
+  let rpc_client_1 = client_builder.connect("http://localhost:3030");
+  let rpc_client_2 = client_builder.connect("http://rpc.website.com");
 
   let method = RpcMethod::Tx {
-      id: "miraclx.near".parse::<AccountId>.unwrap(),
+      id: "miraclx.near".parse::<AccountId>().unwrap(),
       hash: "9FtHUFBQsZ2MG77K3x3MJ9wjX3UT8zE1TczCrhZEcG8U".parse::<CryptoHash>().unwrap(),
   };
 
