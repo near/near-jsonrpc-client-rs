@@ -1,5 +1,4 @@
 #![deprecated(note = "This crate is unstable and hence, unfit for use.")]
-use reqwest::Client;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use serde_json::json;
@@ -99,26 +98,33 @@ impl RpcMethod {
     }
 }
 
+use ExperimentalRpcMethod::*;
+use RpcMethod::*;
+
+#[derive(Clone)]
+pub struct JsonRpcClientBuilder {
+    client: reqwest::Client,
+}
+
+impl JsonRpcClientBuilder {
+    pub fn connect(&self, server_addr: &str) -> JsonRpcClient {
+        JsonRpcClient {
+            server_addr: server_addr.to_string(),
+            client: self.client.clone(),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct JsonRpcClient {
     server_addr: String,
-    client: Client,
+    client: reqwest::Client,
 }
 
-use RpcMethod::*;
-use ExperimentalRpcMethod::*;
 impl JsonRpcClient {
-    pub fn new(server_addr: &str, client: &Client) -> Self {
-        Self {
-            server_addr: server_addr.to_string(),
-            client: client.clone(),
-        }
-    }
-
-    pub fn new_client(server_addr: &str) -> Self {
-        Self {
-            server_addr: server_addr.to_string(),
-            client: Client::new(),
+    pub fn new_client() -> JsonRpcClientBuilder {
+        JsonRpcClientBuilder {
+            client: reqwest::Client::new(),
         }
     }
 
@@ -183,16 +189,12 @@ impl JsonRpcClient {
         &self,
         tx: views::SignedTransactionView,
     ) -> Result<serde_json::Value, RpcError> {
-        Experimental(CheckTx(tx))
-            .call_on(self)
-            .await
+        Experimental(CheckTx(tx)).call_on(self).await
     }
 
     #[allow(non_snake_case)]
     pub async fn EXPERIMENTAL_genesis_config(&self) -> Result<serde_json::Value, RpcError> {
-        Experimental(GenesisConfig)
-            .call_on(self)
-            .await
+        Experimental(GenesisConfig).call_on(self).await
     }
 
     #[allow(non_snake_case)]
@@ -200,16 +202,12 @@ impl JsonRpcClient {
         &self,
         tx: views::SignedTransactionView,
     ) -> Result<serde_json::Value, RpcError> {
-        Experimental(BroadcastTxSync(tx))
-            .call_on(self)
-            .await
+        Experimental(BroadcastTxSync(tx)).call_on(self).await
     }
 
     #[allow(non_snake_case)]
     pub async fn EXPERIMENTAL_tx_status(&self, tx: String) -> Result<serde_json::Value, RpcError> {
-        Experimental(TxStatus(tx))
-            .call_on(self)
-            .await
+        Experimental(TxStatus(tx)).call_on(self).await
     }
 
     #[allow(non_snake_case)]
@@ -217,9 +215,7 @@ impl JsonRpcClient {
         &self,
         request: near_jsonrpc_primitives::types::changes::RpcStateChangesRequest,
     ) -> Result<near_jsonrpc_primitives::types::changes::RpcStateChangesResponse, RpcError> {
-        Experimental(Changes(request))
-            .call_on(self)
-            .await
+        Experimental(Changes(request)).call_on(self).await
     }
 
     #[allow(non_snake_case)]
@@ -227,9 +223,7 @@ impl JsonRpcClient {
         &self,
         request: near_jsonrpc_primitives::types::validator::RpcValidatorsOrderedRequest,
     ) -> Result<Vec<views::validator_stake_view::ValidatorStakeView>, RpcError> {
-        Experimental(ValidatorsOrdered(request))
-            .call_on(self)
-            .await
+        Experimental(ValidatorsOrdered(request)).call_on(self).await
     }
 
     #[allow(non_snake_case)]
@@ -237,9 +231,7 @@ impl JsonRpcClient {
         &self,
         request: near_jsonrpc_primitives::types::receipts::RpcReceiptRequest,
     ) -> Result<near_jsonrpc_primitives::types::receipts::RpcReceiptResponse, RpcError> {
-       Experimental(Receipt(request))
-            .call_on(self)
-            .await
+        Experimental(Receipt(request)).call_on(self).await
     }
 
     #[allow(non_snake_case)]
@@ -247,9 +239,7 @@ impl JsonRpcClient {
         &self,
         request: near_jsonrpc_primitives::types::config::RpcProtocolConfigRequest,
     ) -> Result<near_jsonrpc_primitives::types::config::RpcProtocolConfigResponse, RpcError> {
-       Experimental(ProtocolConfig(request))
-            .call_on(self)
-            .await
+        Experimental(ProtocolConfig(request)).call_on(self).await
     }
 }
 
@@ -259,7 +249,7 @@ mod tests {
 
     #[tokio::test]
     async fn it_works() {
-        let rpc_client = JsonRpcClient::new_client("http://localhost:3030");
+        let rpc_client = JsonRpcClient::new_client().connect("http://localhost:3030");
         let status1 = rpc_client.status().await;
         let status2 = RpcMethod::Status
             .call_on::<near_primitives::views::StatusResponse>(&rpc_client)
