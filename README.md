@@ -2,6 +2,8 @@
 
 Rust crate for interacting with the NEAR Protocol via RPC API
 
+> DO NOT USE: this crate is unfinalized and therefore, unfit for use.
+
 ## Usage
 
 - Using a helper function:
