@@ -17,98 +17,55 @@ pub enum ChunkId {
 }
 
 pub enum ExperimentalRpcMethod {
-    CheckTx {
-        tx: views::SignedTransactionView,
-    },
+    CheckTx(views::SignedTransactionView),
     GenesisConfig,
-    BroadcastTxSync {
-        tx: views::SignedTransactionView,
-    },
-    TxStatus {
-        tx: String,
-    },
-    Changes {
-        request: near_jsonrpc_primitives::types::changes::RpcStateChangesRequest,
-    },
-    ValidatorsOrdered {
-        request: near_jsonrpc_primitives::types::validator::RpcValidatorsOrderedRequest,
-    },
-    Receipt {
-        request: near_jsonrpc_primitives::types::receipts::RpcReceiptRequest,
-    },
-    ProtocolConfig {
-        request: near_jsonrpc_primitives::types::config::RpcProtocolConfigRequest,
-    },
+    BroadcastTxSync(views::SignedTransactionView),
+    TxStatus(String),
+    Changes(near_jsonrpc_primitives::types::changes::RpcStateChangesRequest),
+    ValidatorsOrdered(near_jsonrpc_primitives::types::validator::RpcValidatorsOrderedRequest),
+    Receipt(near_jsonrpc_primitives::types::receipts::RpcReceiptRequest),
+    ProtocolConfig(near_jsonrpc_primitives::types::config::RpcProtocolConfigRequest),
 }
 
 pub enum RpcMethod {
-    BroadcastTxAsync {
-        tx: views::SignedTransactionView,
-    },
-    BroadcastTxCommit {
-        tx: views::SignedTransactionView,
-    },
+    BroadcastTxAsync(views::SignedTransactionView),
+    BroadcastTxCommit(views::SignedTransactionView),
     Status,
     Health,
-    Tx {
-        hash: CryptoHash,
-        id: AccountId,
-    },
-    Chunk {
-        id: ChunkId,
-    },
-    Validators {
-        block_id: MaybeBlockId,
-    },
-    GasPrice {
-        block_id: MaybeBlockId,
-    },
-    Query {
-        request: near_jsonrpc_primitives::types::query::RpcQueryRequest,
-    },
-    Block {
-        request: BlockReference,
-    },
+    Tx(CryptoHash, AccountId),
+    Chunk(ChunkId),
+    Validators(MaybeBlockId),
+    GasPrice(MaybeBlockId),
+    Query(near_jsonrpc_primitives::types::query::RpcQueryRequest),
+    Block(BlockReference),
     Experimental(ExperimentalRpcMethod),
 }
 
 impl RpcMethod {
     fn method_and_params(&self) -> (&str, serde_json::Value) {
+        use ExperimentalRpcMethod::*;
+        use RpcMethod::*;
         match self {
-            Self::BroadcastTxAsync { tx } => ("broadcast_tx_async", json!([tx])),
-            Self::BroadcastTxCommit { tx } => ("broadcast_tx_commit", json!([tx])),
-            Self::Status => ("status", json!([])),
-            Self::Health => ("health", json!([])),
-            Self::Tx { hash, id } => ("tx", json!([hash, id])),
-            Self::Chunk { id } => ("chunk", json!([id])),
-            Self::Validators { block_id } => ("validators", json!([block_id])),
-            Self::GasPrice { block_id } => ("gas_price", json!([block_id])),
-            Self::Query { request } => ("query", json!(request)),
-            Self::Block { request } => ("block", json!(request)),
-            Self::Experimental(ExperimentalRpcMethod::CheckTx { tx }) => {
-                ("EXPERIMENTAL_check_tx", json!([tx]))
-            }
-            Self::Experimental(ExperimentalRpcMethod::GenesisConfig) => {
-                ("EXPERIMENTAL_genesis_config", json!([]))
-            }
-            Self::Experimental(ExperimentalRpcMethod::BroadcastTxSync { tx }) => {
-                ("EXPERIMENTAL_broadcast_tx_sync", json!([tx]))
-            }
-            Self::Experimental(ExperimentalRpcMethod::TxStatus { tx }) => {
-                ("EXPERIMENTAL_tx_status", json!([tx]))
-            }
-            Self::Experimental(ExperimentalRpcMethod::Changes { request }) => {
-                ("EXPERIMENTAL_changes", json!(request))
-            }
-            Self::Experimental(ExperimentalRpcMethod::ValidatorsOrdered { request }) => {
-                ("EXPERIMENTAL_validators_ordered", json!(request))
-            }
-            Self::Experimental(ExperimentalRpcMethod::Receipt { request }) => {
-                ("EXPERIMENTAL_receipt", json!(request))
-            }
-            Self::Experimental(ExperimentalRpcMethod::ProtocolConfig { request }) => {
-                ("EXPERIMENTAL_protocol_config", json!(request))
-            }
+            BroadcastTxAsync(tx) => ("broadcast_tx_async", json!([tx])),
+            BroadcastTxCommit(tx) => ("broadcast_tx_commit", json!([tx])),
+            Status => ("status", json!([])),
+            Health => ("health", json!([])),
+            Tx(hash, id) => ("tx", json!([hash, id])),
+            Chunk(id) => ("chunk", json!([id])),
+            Validators(block_id) => ("validators", json!([block_id])),
+            GasPrice(block_id) => ("gas_price", json!([block_id])),
+            Query(request) => ("query", json!(request)),
+            Block(request) => ("block", json!(request)),
+            Experimental(method) => match method {
+                CheckTx(tx) => ("EXPERIMENTAL_check_tx", json!([tx])),
+                GenesisConfig => ("EXPERIMENTAL_genesis_config", json!([])),
+                BroadcastTxSync(tx) => ("EXPERIMENTAL_broadcast_tx_sync", json!([tx])),
+                TxStatus(tx) => ("EXPERIMENTAL_tx_status", json!([tx])),
+                Changes(request) => ("EXPERIMENTAL_changes", json!(request)),
+                ValidatorsOrdered(request) => ("EXPERIMENTAL_validators_ordered", json!(request)),
+                Receipt(request) => ("EXPERIMENTAL_receipt", json!(request)),
+                ProtocolConfig(request) => ("EXPERIMENTAL_protocol_config", json!(request)),
+            },
         }
     }
 
@@ -148,6 +105,8 @@ pub struct JsonRpcClient {
     client: Client,
 }
 
+use RpcMethod::*;
+use ExperimentalRpcMethod::*;
 impl JsonRpcClient {
     pub fn new(server_addr: &str, client: &Client) -> Self {
         Self {
@@ -167,22 +126,22 @@ impl JsonRpcClient {
         &self,
         tx: views::SignedTransactionView,
     ) -> Result<String, RpcError> {
-        RpcMethod::BroadcastTxAsync { tx }.call_on(self).await
+        BroadcastTxAsync(tx).call_on(self).await
     }
 
     pub async fn broadcast_tx_commit(
         &self,
         tx: views::SignedTransactionView,
     ) -> Result<views::FinalExecutionOutcomeView, RpcError> {
-        RpcMethod::BroadcastTxCommit { tx }.call_on(self).await
+        BroadcastTxCommit(tx).call_on(self).await
     }
 
     pub async fn status(&self) -> Result<views::StatusResponse, RpcError> {
-        RpcMethod::Status.call_on(self).await
+        Status.call_on(self).await
     }
 
     pub async fn health(&self) -> Result<(), RpcError> {
-        RpcMethod::Health.call_on(self).await
+        Health.call_on(self).await
     }
 
     pub async fn tx(
@@ -190,33 +149,33 @@ impl JsonRpcClient {
         hash: CryptoHash,
         id: AccountId,
     ) -> Result<views::FinalExecutionOutcomeView, RpcError> {
-        RpcMethod::Tx { hash, id }.call_on(self).await
+        Tx(hash, id).call_on(self).await
     }
 
     pub async fn chunk(&self, id: ChunkId) -> Result<views::ChunkView, RpcError> {
-        RpcMethod::Chunk { id }.call_on(self).await
+        Chunk(id).call_on(self).await
     }
 
     pub async fn validators(
         &self,
         block_id: MaybeBlockId,
     ) -> Result<views::EpochValidatorInfo, RpcError> {
-        RpcMethod::Validators { block_id }.call_on(self).await
+        Validators(block_id).call_on(self).await
     }
 
     pub async fn gas_price(&self, block_id: MaybeBlockId) -> Result<views::GasPriceView, RpcError> {
-        RpcMethod::GasPrice { block_id }.call_on(self).await
+        GasPrice(block_id).call_on(self).await
     }
 
     pub async fn query(
         &self,
         request: near_jsonrpc_primitives::types::query::RpcQueryRequest,
     ) -> Result<near_jsonrpc_primitives::types::query::RpcQueryResponse, RpcError> {
-        RpcMethod::Query { request }.call_on(self).await
+        Query(request).call_on(self).await
     }
 
     pub async fn block(&self, request: BlockReference) -> Result<views::BlockView, RpcError> {
-        RpcMethod::Block { request }.call_on(self).await
+        Block(request).call_on(self).await
     }
 
     #[allow(non_snake_case)]
@@ -224,14 +183,14 @@ impl JsonRpcClient {
         &self,
         tx: views::SignedTransactionView,
     ) -> Result<serde_json::Value, RpcError> {
-        RpcMethod::Experimental(ExperimentalRpcMethod::CheckTx { tx })
+        Experimental(CheckTx(tx))
             .call_on(self)
             .await
     }
 
     #[allow(non_snake_case)]
     pub async fn EXPERIMENTAL_genesis_config(&self) -> Result<serde_json::Value, RpcError> {
-        RpcMethod::Experimental(ExperimentalRpcMethod::GenesisConfig)
+        Experimental(GenesisConfig)
             .call_on(self)
             .await
     }
@@ -241,14 +200,14 @@ impl JsonRpcClient {
         &self,
         tx: views::SignedTransactionView,
     ) -> Result<serde_json::Value, RpcError> {
-        RpcMethod::Experimental(ExperimentalRpcMethod::BroadcastTxSync { tx })
+        Experimental(BroadcastTxSync(tx))
             .call_on(self)
             .await
     }
 
     #[allow(non_snake_case)]
     pub async fn EXPERIMENTAL_tx_status(&self, tx: String) -> Result<serde_json::Value, RpcError> {
-        RpcMethod::Experimental(ExperimentalRpcMethod::TxStatus { tx })
+        Experimental(TxStatus(tx))
             .call_on(self)
             .await
     }
@@ -258,7 +217,7 @@ impl JsonRpcClient {
         &self,
         request: near_jsonrpc_primitives::types::changes::RpcStateChangesRequest,
     ) -> Result<near_jsonrpc_primitives::types::changes::RpcStateChangesResponse, RpcError> {
-        RpcMethod::Experimental(ExperimentalRpcMethod::Changes { request })
+        Experimental(Changes(request))
             .call_on(self)
             .await
     }
@@ -268,7 +227,7 @@ impl JsonRpcClient {
         &self,
         request: near_jsonrpc_primitives::types::validator::RpcValidatorsOrderedRequest,
     ) -> Result<Vec<views::validator_stake_view::ValidatorStakeView>, RpcError> {
-        RpcMethod::Experimental(ExperimentalRpcMethod::ValidatorsOrdered { request })
+        Experimental(ValidatorsOrdered(request))
             .call_on(self)
             .await
     }
@@ -278,7 +237,7 @@ impl JsonRpcClient {
         &self,
         request: near_jsonrpc_primitives::types::receipts::RpcReceiptRequest,
     ) -> Result<near_jsonrpc_primitives::types::receipts::RpcReceiptResponse, RpcError> {
-        RpcMethod::Experimental(ExperimentalRpcMethod::Receipt { request })
+       Experimental(Receipt(request))
             .call_on(self)
             .await
     }
@@ -288,7 +247,7 @@ impl JsonRpcClient {
         &self,
         request: near_jsonrpc_primitives::types::config::RpcProtocolConfigRequest,
     ) -> Result<near_jsonrpc_primitives::types::config::RpcProtocolConfigResponse, RpcError> {
-        RpcMethod::Experimental(ExperimentalRpcMethod::ProtocolConfig { request })
+       Experimental(ProtocolConfig(request))
             .call_on(self)
             .await
     }
