@@ -9,6 +9,10 @@ homepage = "https://github.com/near/near-api-rs"
 description = "Rust crate for interacting with the NEAR Protocol via RPC API"
 
 [dependencies]
+# todo! remove this once nearcore has upgraded to stable actix
+# todo! or if actix is no longer in the dependency graph
+actix_derive = { version = "=0.6.0-beta.1" }
+
 reqwest = { version = "0.11.4", features = ["json"] }
 
 serde = "1.0.127"
