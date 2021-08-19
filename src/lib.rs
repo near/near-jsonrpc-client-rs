@@ -1,3 +1,4 @@
+#![deprecated(note = "This crate is unstable and hence, unfit for use.")]
 use reqwest::Client;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
