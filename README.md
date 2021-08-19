@@ -9,7 +9,7 @@ Rust crate for interacting with the NEAR Protocol via RPC API
 - Using a helper function:
 
   ```rust
-  use near_api_rs::JsonRpcClient;
+  use near_api::JsonRpcClient;
 
   // this creates a new client internally, only use this if you only need one client
   // see example 2 in the case where you need multiple clients
@@ -29,7 +29,7 @@ Rust crate for interacting with the NEAR Protocol via RPC API
 
   use reqwest::Client;
 
-  use near_api_rs::{RpcMethod, JsonRpcClient};
+  use near_api::{RpcMethod, JsonRpcClient};
   use near_primitives::types::AccountId;
   use near_jsonrpc_primitives::views::FinalExecutionOutcomeView;
 
