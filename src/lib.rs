@@ -73,6 +73,11 @@ pub enum ExperimentalRpcMethod {
     ProtocolConfig(near_jsonrpc_primitives::types::config::RpcProtocolConfigRequest),
 }
 
+#[cfg(feature = "sandbox")]
+pub enum SandboxMethod {
+    PatchState(near_jsonrpc_primitives::types::sandbox::RpcSandboxPatchStateRequest),
+}
+
 pub enum RpcMethod {
     BroadcastTxAsync {
         tx: views::SignedTransactionView,
@@ -104,11 +109,15 @@ pub enum RpcMethod {
         near_jsonrpc_primitives::types::light_client::RpcLightClientNextBlockRequest,
     ),
     NetworkInfo,
+    #[cfg(feature = "sandbox")]
+    Sandbox(SandboxMethod),
     Experimental(ExperimentalRpcMethod),
 }
 
 use ExperimentalRpcMethod::*;
 use RpcMethod::*;
+#[cfg(feature = "sandbox")]
+use SandboxMethod::*;
 
 impl RpcMethod {
     fn method_and_params(&self) -> (&str, serde_json::Value) {
@@ -126,6 +135,10 @@ impl RpcMethod {
             LightClientProof(request) => ("light_client_proof", json!(request)),
             NextLightClientBlock(request) => ("next_light_client_block", json!(request)),
             NetworkInfo => ("network_info", json!(null)),
+            #[cfg(feature = "sandbox")]
+            Sandbox(method) => match method {
+                PatchState(request) => ("sandbox_patch_state", json!(request)),
+            },
             Experimental(method) => match method {
                 CheckTx { tx } => ("EXPERIMENTAL_check_tx", json!([tx])),
                 GenesisConfig => ("EXPERIMENTAL_genesis_config", json!(null)),
@@ -329,6 +342,15 @@ impl JsonRpcClient {
         &self,
     ) -> RpcMethodCallResult<near_client_primitives::types::NetworkInfoResponse> {
         NetworkInfo.call_on(self).await
+    }
+
+    #[cfg(feature = "sandbox")]
+    pub async fn sandbox_patch_state(
+        &self,
+        request: near_jsonrpc_primitives::types::sandbox::RpcSandboxPatchStateRequest,
+    ) -> RpcMethodCallResult<near_jsonrpc_primitives::types::sandbox::RpcSandboxPatchStateResponse>
+    {
+        Sandbox(PatchState(request)).call_on(self).await
     }
 
     #[allow(non_snake_case)]
