@@ -73,16 +73,36 @@ pub enum ExperimentalRpcMethod {
 }
 
 pub enum RpcMethod {
-    BroadcastTxAsync { tx: views::SignedTransactionView },
-    BroadcastTxCommit { tx: views::SignedTransactionView },
+    BroadcastTxAsync {
+        tx: views::SignedTransactionView,
+    },
+    BroadcastTxCommit {
+        tx: views::SignedTransactionView,
+    },
     Status,
     Health,
-    Tx { hash: CryptoHash, id: AccountId },
-    Chunk { id: ChunkId },
-    Validators { block_id: MaybeBlockId },
-    GasPrice { block_id: MaybeBlockId },
+    Tx {
+        hash: CryptoHash,
+        id: AccountId,
+    },
+    Chunk {
+        id: ChunkId,
+    },
+    Validators {
+        block_id: MaybeBlockId,
+    },
+    GasPrice {
+        block_id: MaybeBlockId,
+    },
     Query(near_jsonrpc_primitives::types::query::RpcQueryRequest),
     Block(BlockReference),
+    LightClientProof(
+        near_jsonrpc_primitives::types::light_client::RpcLightClientExecutionProofRequest,
+    ),
+    NextLightClientBlock(
+        near_jsonrpc_primitives::types::light_client::RpcLightClientNextBlockRequest,
+    ),
+    NetworkInfo,
     Experimental(ExperimentalRpcMethod),
 }
 
@@ -102,6 +122,9 @@ impl RpcMethod {
             GasPrice { block_id } => ("gas_price", json!([block_id])),
             Query(request) => ("query", json!(request)),
             Block(request) => ("block", json!(request)),
+            LightClientProof(request) => ("light_client_proof", json!(request)),
+            NextLightClientBlock(request) => ("next_light_client_block", json!(request)),
+            NetworkInfo => ("network_info", json!(null)),
             Experimental(method) => match method {
                 CheckTx { tx } => ("EXPERIMENTAL_check_tx", json!([tx])),
                 GenesisConfig => ("EXPERIMENTAL_genesis_config", json!(null)),
@@ -279,6 +302,31 @@ impl JsonRpcClient {
 
     pub async fn block(&self, request: BlockReference) -> RpcMethodCallResult<views::BlockView> {
         Block(request).call_on(self).await
+    }
+
+    pub async fn light_client_proof(
+        &self,
+        request: near_jsonrpc_primitives::types::light_client::RpcLightClientExecutionProofRequest,
+    ) -> RpcMethodCallResult<
+        near_jsonrpc_primitives::types::light_client::RpcLightClientExecutionProofResponse,
+    > {
+        LightClientProof(request).call_on(self).await
+    }
+
+    // todo: RpcLightClientNextBlockResponse doesn't impl Deserialize
+    // pub async fn next_light_client_block(
+    //     &self,
+    //     request: near_jsonrpc_primitives::types::light_client::RpcLightClientNextBlockRequest,
+    // ) -> RpcMethodCallResult<
+    //     near_jsonrpc_primitives::types::light_client::RpcLightClientNextBlockResponse,
+    // > {
+    //     NextLightClientBlock(request).call_on(self).await
+    // }
+
+    pub async fn network_info(
+        &self,
+    ) -> RpcMethodCallResult<near_client_primitives::types::NetworkInfoResponse> {
+        NetworkInfo.call_on(self).await
     }
 
     #[allow(non_snake_case)]
