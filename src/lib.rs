@@ -66,7 +66,8 @@ pub enum ExperimentalRpcMethod {
     GenesisConfig,
     BroadcastTxSync { tx: views::SignedTransactionView },
     TxStatus { tx: String },
-    Changes(near_jsonrpc_primitives::types::changes::RpcStateChangesRequest),
+    ChangesInBlock(near_jsonrpc_primitives::types::changes::RpcStateChangesRequest),
+    Changes(near_jsonrpc_primitives::types::changes::RpcStateChangesInBlockRequest),
     ValidatorsOrdered(near_jsonrpc_primitives::types::validator::RpcValidatorsOrderedRequest),
     Receipt(near_jsonrpc_primitives::types::receipts::RpcReceiptRequest),
     ProtocolConfig(near_jsonrpc_primitives::types::config::RpcProtocolConfigRequest),
@@ -131,6 +132,7 @@ impl RpcMethod {
                 BroadcastTxSync { tx } => ("EXPERIMENTAL_broadcast_tx_sync", json!([tx])),
                 TxStatus { tx } => ("EXPERIMENTAL_tx_status", json!([tx])),
                 Changes(request) => ("EXPERIMENTAL_changes", json!(request)),
+                ChangesInBlock(request) => ("EXPERIMENTAL_changes_in_block", json!(request)),
                 ValidatorsOrdered(request) => ("EXPERIMENTAL_validators_ordered", json!(request)),
                 Receipt(request) => ("EXPERIMENTAL_receipt", json!(request)),
                 ProtocolConfig(request) => ("EXPERIMENTAL_protocol_config", json!(request)),
@@ -361,9 +363,18 @@ impl JsonRpcClient {
     #[allow(non_snake_case)]
     pub async fn EXPERIMENTAL_changes(
         &self,
-        request: near_jsonrpc_primitives::types::changes::RpcStateChangesRequest,
+        request: near_jsonrpc_primitives::types::changes::RpcStateChangesInBlockRequest,
     ) -> RpcMethodCallResult<near_jsonrpc_primitives::types::changes::RpcStateChangesResponse> {
         Experimental(Changes(request)).call_on(self).await
+    }
+
+    #[allow(non_snake_case)]
+    pub async fn EXPERIMENTAL_changes_in_block(
+        &self,
+        request: near_jsonrpc_primitives::types::changes::RpcStateChangesRequest,
+    ) -> RpcMethodCallResult<near_jsonrpc_primitives::types::changes::RpcStateChangesInBlockResponse>
+    {
+        Experimental(ChangesInBlock(request)).call_on(self).await
     }
 
     #[allow(non_snake_case)]
