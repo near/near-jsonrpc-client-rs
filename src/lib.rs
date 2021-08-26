@@ -3,8 +3,8 @@ use serde::de::DeserializeOwned;
 use serde::Serialize;
 use serde_json::json;
 
-use near_jsonrpc_primitives::errors::RpcError;
-use near_jsonrpc_primitives::message::{from_slice, Message};
+use near_jsonrpc_primitives::errors::{RpcError, RpcErrorKind, RpcRequestValidationErrorKind};
+use near_jsonrpc_primitives::message::{self, from_slice, Message};
 use near_primitives::hash::CryptoHash;
 use near_primitives::types::{AccountId, BlockId, BlockReference, MaybeBlockId, ShardId};
 use near_primitives::views;
@@ -14,6 +14,52 @@ pub enum ChunkId {
     BlockShardId(BlockId, ShardId),
     Hash(CryptoHash),
 }
+
+#[derive(Debug)]
+pub enum RpcTransportSendError {
+    PayloadSerializeError(serde_json::Error),
+    PayloadSendError(reqwest::Error),
+}
+
+#[derive(Debug)]
+pub enum RpcTransportHandlerResponseError {
+    ResultParseError(serde_json::Error),
+    ErrorMessageParseError(serde_json::Error),
+}
+
+#[derive(Debug)]
+pub enum RpcTransportRecvError {
+    UnexpectedServerResponse(Message),
+    // error occurred while retrieving payload
+    PayloadRecvError(reqwest::Error),
+    // invalid message from server
+    PayloadParseError(message::Broken),
+    // error while parsing response from method call
+    ResponseParseError(RpcTransportHandlerResponseError),
+}
+
+#[derive(Debug)]
+pub enum RpcTransportError {
+    SendError(RpcTransportSendError),
+    RecvError(RpcTransportRecvError),
+}
+
+#[derive(Debug)]
+pub enum JsonRpcError<E> {
+    TransportError(RpcTransportError),
+    ServerError(RpcServerError<E>),
+}
+
+#[derive(Debug)]
+pub enum RpcServerError<E> {
+    RequestValidationError(RpcRequestValidationErrorKind),
+    HandlerError(E),
+    InternalError(serde_json::Value),
+}
+
+type MethodExecutionError = RpcError;
+
+pub type RpcMethodCallResult<T> = Result<T, JsonRpcError<MethodExecutionError>>;
 
 pub enum ExperimentalRpcMethod {
     CheckTx { tx: views::SignedTransactionView },
@@ -72,29 +118,76 @@ impl RpcMethod {
     pub async fn call_on<T: DeserializeOwned>(
         &self,
         rpc_client: &JsonRpcClient,
-    ) -> Result<T, RpcError> {
+    ) -> RpcMethodCallResult<T> {
         let (method_name, params) = self.method_and_params();
         let request_payload = Message::request(method_name.to_string(), Some(params));
+        let request_payload = serde_json::to_vec(&request_payload).map_err(|err| {
+            JsonRpcError::TransportError(RpcTransportError::SendError(
+                RpcTransportSendError::PayloadSerializeError(err),
+            ))
+        })?;
         let request = rpc_client
             .client
             .post(&rpc_client.server_addr)
             .header("Content-Type", "application/json")
-            .json(&request_payload);
-        let response = request
-            .send()
-            .await
-            .map_err(|err| RpcError::new_internal_error(None, format!("{:?}", err)))?;
-        let response_payload = response.bytes().await.map_err(|err| {
-            RpcError::parse_error(format!("Failed to retrieve response payload: {:?}", err))
+            .body(request_payload);
+        let response = request.send().await.map_err(|err| {
+            JsonRpcError::TransportError(RpcTransportError::SendError(
+                RpcTransportSendError::PayloadSendError(err),
+            ))
         })?;
-        if let Message::Response(response) = from_slice(&response_payload).map_err(|err| {
-            RpcError::parse_error(format!("Failed parsing response payload: {:?}", err))
-        })? {
-            return serde_json::from_value(response.result?)
-                .map_err(|err| RpcError::parse_error(format!("Failed to parse: {:?}", err)));
+        let response_payload = response.bytes().await.map_err(|err| {
+            JsonRpcError::TransportError(RpcTransportError::RecvError(
+                RpcTransportRecvError::PayloadRecvError(err),
+            ))
+        })?;
+        let response_message = from_slice(&response_payload).map_err(|err| {
+            JsonRpcError::TransportError(RpcTransportError::RecvError(
+                RpcTransportRecvError::PayloadParseError(err),
+            ))
+        })?;
+        if let Message::Response(response) = response_message {
+            let response_result = response.result.or_else(|err| {
+                let err = match if err.error_struct.is_some() {
+                    err
+                } else {
+                    RpcError::new_internal_error(None, format!("<no data>"))
+                }
+                .error_struct
+                .unwrap()
+                {
+                    RpcErrorKind::HandlerError(handler_error) => {
+                        JsonRpcError::ServerError(RpcServerError::HandlerError(
+                            serde_json::from_value(handler_error).map_err(|err| {
+                                JsonRpcError::TransportError(RpcTransportError::RecvError(
+                                    RpcTransportRecvError::ResponseParseError(
+                                        RpcTransportHandlerResponseError::ErrorMessageParseError(
+                                            err,
+                                        ),
+                                    ),
+                                ))
+                            })?,
+                        ))
+                    }
+                    RpcErrorKind::RequestValidationError(err) => {
+                        JsonRpcError::ServerError(RpcServerError::RequestValidationError(err))
+                    }
+                    RpcErrorKind::InternalError(err) => {
+                        JsonRpcError::ServerError(RpcServerError::InternalError(err))
+                    }
+                };
+                Err(err)
+            })?;
+            return serde_json::from_value(response_result).map_err(|err| {
+                JsonRpcError::TransportError(RpcTransportError::RecvError(
+                    RpcTransportRecvError::ResponseParseError(
+                        RpcTransportHandlerResponseError::ResultParseError(err),
+                    ),
+                ))
+            });
         }
-        Err(RpcError::parse_error(format!(
-            "Failed to parse JSON RPC response"
+        Err(JsonRpcError::TransportError(RpcTransportError::RecvError(
+            RpcTransportRecvError::UnexpectedServerResponse(response_message),
         )))
     }
 }
@@ -129,22 +222,22 @@ impl JsonRpcClient {
     pub async fn broadcast_tx_async(
         &self,
         tx: views::SignedTransactionView,
-    ) -> Result<String, RpcError> {
+    ) -> RpcMethodCallResult<String> {
         BroadcastTxAsync { tx }.call_on(self).await
     }
 
     pub async fn broadcast_tx_commit(
         &self,
         tx: views::SignedTransactionView,
-    ) -> Result<views::FinalExecutionOutcomeView, RpcError> {
+    ) -> RpcMethodCallResult<views::FinalExecutionOutcomeView> {
         BroadcastTxCommit { tx }.call_on(self).await
     }
 
-    pub async fn status(&self) -> Result<views::StatusResponse, RpcError> {
+    pub async fn status(&self) -> RpcMethodCallResult<views::StatusResponse> {
         Status.call_on(self).await
     }
 
-    pub async fn health(&self) -> Result<(), RpcError> {
+    pub async fn health(&self) -> RpcMethodCallResult<()> {
         Health.call_on(self).await
     }
 
@@ -152,33 +245,39 @@ impl JsonRpcClient {
         &self,
         hash: CryptoHash,
         id: AccountId,
-    ) -> Result<views::FinalExecutionOutcomeView, RpcError> {
+    ) -> RpcMethodCallResult<views::FinalExecutionOutcomeView> {
         Tx { hash, id }.call_on(self).await
     }
 
-    pub async fn chunk(&self, id: ChunkId) -> Result<views::ChunkView, RpcError> {
+    pub async fn chunk(&self, id: ChunkId) -> RpcMethodCallResult<views::ChunkView> {
         Chunk { id }.call_on(self).await
     }
 
     pub async fn validators(
         &self,
         block_id: MaybeBlockId,
-    ) -> Result<views::EpochValidatorInfo, RpcError> {
+    ) -> RpcMethodCallResult<views::EpochValidatorInfo> {
         Validators { block_id }.call_on(self).await
     }
 
-    pub async fn gas_price(&self, block_id: MaybeBlockId) -> Result<views::GasPriceView, RpcError> {
+    pub async fn gas_price(
+        &self,
+        block_id: MaybeBlockId,
+    ) -> RpcMethodCallResult<views::GasPriceView> {
         GasPrice { block_id }.call_on(self).await
     }
 
     pub async fn query(
         &self,
         request: near_jsonrpc_primitives::types::query::RpcQueryRequest,
-    ) -> Result<near_jsonrpc_primitives::types::query::RpcQueryResponse, RpcError> {
+    ) -> Result<
+        near_jsonrpc_primitives::types::query::RpcQueryResponse,
+        JsonRpcError<MethodExecutionError>,
+    > {
         Query(request).call_on(self).await
     }
 
-    pub async fn block(&self, request: BlockReference) -> Result<views::BlockView, RpcError> {
+    pub async fn block(&self, request: BlockReference) -> RpcMethodCallResult<views::BlockView> {
         Block(request).call_on(self).await
     }
 
@@ -186,12 +285,12 @@ impl JsonRpcClient {
     pub async fn EXPERIMENTAL_check_tx(
         &self,
         tx: views::SignedTransactionView,
-    ) -> Result<serde_json::Value, RpcError> {
+    ) -> RpcMethodCallResult<serde_json::Value> {
         Experimental(CheckTx { tx }).call_on(self).await
     }
 
     #[allow(non_snake_case)]
-    pub async fn EXPERIMENTAL_genesis_config(&self) -> Result<serde_json::Value, RpcError> {
+    pub async fn EXPERIMENTAL_genesis_config(&self) -> RpcMethodCallResult<serde_json::Value> {
         Experimental(GenesisConfig).call_on(self).await
     }
 
@@ -199,12 +298,15 @@ impl JsonRpcClient {
     pub async fn EXPERIMENTAL_broadcast_tx_sync(
         &self,
         tx: views::SignedTransactionView,
-    ) -> Result<serde_json::Value, RpcError> {
+    ) -> RpcMethodCallResult<serde_json::Value> {
         Experimental(BroadcastTxSync { tx }).call_on(self).await
     }
 
     #[allow(non_snake_case)]
-    pub async fn EXPERIMENTAL_tx_status(&self, tx: String) -> Result<serde_json::Value, RpcError> {
+    pub async fn EXPERIMENTAL_tx_status(
+        &self,
+        tx: String,
+    ) -> RpcMethodCallResult<serde_json::Value> {
         Experimental(TxStatus { tx }).call_on(self).await
     }
 
@@ -212,7 +314,7 @@ impl JsonRpcClient {
     pub async fn EXPERIMENTAL_changes(
         &self,
         request: near_jsonrpc_primitives::types::changes::RpcStateChangesRequest,
-    ) -> Result<near_jsonrpc_primitives::types::changes::RpcStateChangesResponse, RpcError> {
+    ) -> RpcMethodCallResult<near_jsonrpc_primitives::types::changes::RpcStateChangesResponse> {
         Experimental(Changes(request)).call_on(self).await
     }
 
@@ -220,7 +322,7 @@ impl JsonRpcClient {
     pub async fn EXPERIMENTAL_validators_ordered(
         &self,
         request: near_jsonrpc_primitives::types::validator::RpcValidatorsOrderedRequest,
-    ) -> Result<Vec<views::validator_stake_view::ValidatorStakeView>, RpcError> {
+    ) -> RpcMethodCallResult<Vec<views::validator_stake_view::ValidatorStakeView>> {
         Experimental(ValidatorsOrdered(request)).call_on(self).await
     }
 
@@ -228,7 +330,7 @@ impl JsonRpcClient {
     pub async fn EXPERIMENTAL_receipt(
         &self,
         request: near_jsonrpc_primitives::types::receipts::RpcReceiptRequest,
-    ) -> Result<near_jsonrpc_primitives::types::receipts::RpcReceiptResponse, RpcError> {
+    ) -> RpcMethodCallResult<near_jsonrpc_primitives::types::receipts::RpcReceiptResponse> {
         Experimental(Receipt(request)).call_on(self).await
     }
 
@@ -236,7 +338,8 @@ impl JsonRpcClient {
     pub async fn EXPERIMENTAL_protocol_config(
         &self,
         request: near_jsonrpc_primitives::types::config::RpcProtocolConfigRequest,
-    ) -> Result<near_jsonrpc_primitives::types::config::RpcProtocolConfigResponse, RpcError> {
+    ) -> RpcMethodCallResult<near_jsonrpc_primitives::types::config::RpcProtocolConfigResponse>
+    {
         Experimental(ProtocolConfig(request)).call_on(self).await
     }
 }
@@ -253,7 +356,7 @@ mod tests {
             .call_on::<near_primitives::views::StatusResponse>(&rpc_client)
             .await;
 
-        println!("{:?}", status1);
-        println!("{:?}", status2);
+        println!("{:?}", status1.unwrap());
+        println!("{:?}", status2.unwrap());
     }
 }
