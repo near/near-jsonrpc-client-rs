@@ -94,8 +94,8 @@ impl RpcMethod {
         match self {
             BroadcastTxAsync { tx } => ("broadcast_tx_async", json!([tx])),
             BroadcastTxCommit { tx } => ("broadcast_tx_commit", json!([tx])),
-            Status => ("status", json!([])),
-            Health => ("health", json!([])),
+            Status => ("status", json!(null)),
+            Health => ("health", json!(null)),
             Tx { hash, id } => ("tx", json!([hash, id])),
             Chunk { id } => ("chunk", json!([id])),
             Validators { block_id } => ("validators", json!([block_id])),
