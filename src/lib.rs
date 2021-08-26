@@ -78,6 +78,17 @@ pub enum SandboxMethod {
     PatchState(near_jsonrpc_primitives::types::sandbox::RpcSandboxPatchStateRequest),
 }
 
+#[cfg(feature = "adversarial")]
+pub enum AdversarialMethod {
+    SetWeight(u64),
+    DisableHeaderSync,
+    DisableDoomslug,
+    ProduceBlocks { num_blocks: u64, only_valid: bool },
+    SwitchToHeight(u64),
+    GetSavedBlocks,
+    CheckStore,
+}
+
 pub enum RpcMethod {
     BroadcastTxAsync {
         tx: views::SignedTransactionView,
@@ -109,11 +120,15 @@ pub enum RpcMethod {
         near_jsonrpc_primitives::types::light_client::RpcLightClientNextBlockRequest,
     ),
     NetworkInfo,
+    Experimental(ExperimentalRpcMethod),
     #[cfg(feature = "sandbox")]
     Sandbox(SandboxMethod),
-    Experimental(ExperimentalRpcMethod),
+    #[cfg(feature = "adversarial")]
+    Adversarial(AdversarialMethod),
 }
 
+#[cfg(feature = "adversarial")]
+use AdversarialMethod::*;
 use ExperimentalRpcMethod::*;
 use RpcMethod::*;
 #[cfg(feature = "sandbox")]
@@ -135,10 +150,6 @@ impl RpcMethod {
             LightClientProof(request) => ("light_client_proof", json!(request)),
             NextLightClientBlock(request) => ("next_light_client_block", json!(request)),
             NetworkInfo => ("network_info", json!(null)),
-            #[cfg(feature = "sandbox")]
-            Sandbox(method) => match method {
-                PatchState(request) => ("sandbox_patch_state", json!(request)),
-            },
             Experimental(method) => match method {
                 CheckTx { tx } => ("EXPERIMENTAL_check_tx", json!([tx])),
                 GenesisConfig => ("EXPERIMENTAL_genesis_config", json!(null)),
@@ -149,6 +160,23 @@ impl RpcMethod {
                 ValidatorsOrdered(request) => ("EXPERIMENTAL_validators_ordered", json!(request)),
                 Receipt(request) => ("EXPERIMENTAL_receipt", json!(request)),
                 ProtocolConfig(request) => ("EXPERIMENTAL_protocol_config", json!(request)),
+            },
+            #[cfg(feature = "sandbox")]
+            Sandbox(method) => match method {
+                PatchState(request) => ("sandbox_patch_state", json!(request)),
+            },
+            #[cfg(feature = "adversarial")]
+            Adversarial(method) => match method {
+                SetWeight(height) => ("adv_set_weight", json!(height)),
+                DisableHeaderSync => ("adv_disable_header_sync", json!(null)),
+                DisableDoomslug => ("adv_disable_doomslug", json!(null)),
+                ProduceBlocks {
+                    num_blocks,
+                    only_valid,
+                } => ("adv_produce_blocks", json!([num_blocks, only_valid])),
+                SwitchToHeight(height) => ("adv_switch_to_height", json!([height])),
+                GetSavedBlocks => ("adv_get_saved_blocks", json!(null)),
+                CheckStore => ("adv_check_store", json!(null)),
             },
         }
     }
@@ -344,15 +372,6 @@ impl JsonRpcClient {
         NetworkInfo.call_on(self).await
     }
 
-    #[cfg(feature = "sandbox")]
-    pub async fn sandbox_patch_state(
-        &self,
-        request: near_jsonrpc_primitives::types::sandbox::RpcSandboxPatchStateRequest,
-    ) -> RpcMethodCallResult<near_jsonrpc_primitives::types::sandbox::RpcSandboxPatchStateResponse>
-    {
-        Sandbox(PatchState(request)).call_on(self).await
-    }
-
     #[allow(non_snake_case)]
     pub async fn EXPERIMENTAL_check_tx(
         &self,
@@ -422,6 +441,62 @@ impl JsonRpcClient {
     ) -> RpcMethodCallResult<near_jsonrpc_primitives::types::config::RpcProtocolConfigResponse>
     {
         Experimental(ProtocolConfig(request)).call_on(self).await
+    }
+
+    #[cfg(feature = "sandbox")]
+    pub async fn sandbox_patch_state(
+        &self,
+        request: near_jsonrpc_primitives::types::sandbox::RpcSandboxPatchStateRequest,
+    ) -> RpcMethodCallResult<near_jsonrpc_primitives::types::sandbox::RpcSandboxPatchStateResponse>
+    {
+        Sandbox(PatchState(request)).call_on(self).await
+    }
+
+    #[cfg(feature = "adversarial")]
+    pub async fn adv_set_weight(&self, height: u64) -> RpcMethodCallResult<serde_json::Value> {
+        Adversarial(SetWeight(height)).call_on(self).await
+    }
+
+    #[cfg(feature = "adversarial")]
+    pub async fn adv_disable_header_sync(&self) -> RpcMethodCallResult<serde_json::Value> {
+        Adversarial(DisableHeaderSync).call_on(self).await
+    }
+
+    #[cfg(feature = "adversarial")]
+    pub async fn adv_disable_doomslug(&self) -> RpcMethodCallResult<serde_json::Value> {
+        Adversarial(DisableDoomslug).call_on(self).await
+    }
+
+    #[cfg(feature = "adversarial")]
+    pub async fn adv_produce_blocks(
+        &self,
+        num_blocks: u64,
+        only_valid: bool,
+    ) -> RpcMethodCallResult<serde_json::Value> {
+        Adversarial(ProduceBlocks {
+            num_blocks,
+            only_valid,
+        })
+        .call_on(self)
+        .await
+    }
+
+    #[cfg(feature = "adversarial")]
+    pub async fn adv_switch_to_height(
+        &self,
+        height: u64,
+    ) -> RpcMethodCallResult<serde_json::Value> {
+        Adversarial(SwitchToHeight(height)).call_on(self).await
+    }
+
+    #[cfg(feature = "adversarial")]
+    pub async fn adv_get_saved_blocks(&self) -> RpcMethodCallResult<serde_json::Value> {
+        Adversarial(GetSavedBlocks).call_on(self).await
+    }
+
+    #[cfg(feature = "adversarial")]
+    pub async fn adv_check_store(&self) -> RpcMethodCallResult<serde_json::Value> {
+        Adversarial(CheckStore).call_on(self).await
     }
 }
 
