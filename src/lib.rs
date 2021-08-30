@@ -9,8 +9,10 @@
 //! Connect and request status via JSON_RPC & HTTP API
 //!
 //! ```
-//! use near_api_providers_rs::NearClient;
-//!
+//! # #![allow(deprecated)]
+//! # use near_api_providers::NearClient;
+//! # #[tokio::main]
+//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! let near_client = NearClient::new().connect("https://rpc.testnet.near.org");
 //!
 //! let jsonrpc_client = near_client.as_jsonrpc();
@@ -18,6 +20,10 @@
 //!
 //! let status_from_jsonrpc = jsonrpc_client.status().await?;
 //! let status_from_http    = http_client   .status().await?;
+//!
+//! println!("{:?}", status_from_http);
+//! # Ok(())
+//! # }
 //! ```
 
 pub mod http;
@@ -60,8 +66,7 @@ impl NearClient {
     /// ## Example
     ///
     /// ```
-    /// use near_api_providers_rs::NearClient;
-    ///
+    /// # use near_api_providers::NearClient;
     /// let client_builder = NearClient::new();
     ///
     /// let near_mainnet_client = client_builder.connect("https://rpc.mainnet.near.org");
