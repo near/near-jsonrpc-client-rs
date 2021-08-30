@@ -1,6 +1,6 @@
 # near-api-providers (N-AR providers)
 
-Rust crate providing direct interfaces to the NEAR Protocol via RPC API
+Generic, low-level interfaces for interacting with the NEAR Protocol via JSON_RPC / HTTP.
 
 > DO NOT USE: this crate is unfinalized and therefore, unfit for use.
 

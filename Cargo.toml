@@ -6,7 +6,7 @@ edition = "2018"
 license = "Apache-2.0"
 repository = "https://github.com/near/near-api-rs"
 homepage = "https://github.com/near/near-api-rs"
-description = "Library providing direct interfaces to the NEAR Protocol via RPC API"
+description = "Generic, low-level interfaces for interacting with the NEAR Protocol via JSON_RPC / HTTP"
 
 [dependencies]
 # todo! remove this once nearcore has upgraded to stable actix
