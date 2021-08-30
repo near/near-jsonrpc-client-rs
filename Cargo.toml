@@ -14,6 +14,7 @@ description = "Library providing direct interfaces to the NEAR Protocol via RPC 
 actix_derive = { version = "=0.6.0-beta.1" }
 
 reqwest = { version = "0.11.4", features = ["json"] }
+prometheus = { version = "0.11.0", optional = true }
 
 serde = "1.0.127"
 serde_json = "1.0.66"
@@ -27,4 +28,5 @@ tokio = { version = "1.1", features = ["rt", "macros"] }
 
 [features]
 sandbox = []
+metrics = ["prometheus"]
 adversarial = ["near-jsonrpc-primitives/adversarial"]
