@@ -1,6 +1,6 @@
-# near-api-rs (N-AR)
+# near-api-providers (N-AR providers)
 
-Rust crate for interacting with the NEAR Protocol via RPC API
+Rust crate providing direct interfaces to the NEAR Protocol via RPC API
 
 > DO NOT USE: this crate is unfinalized and therefore, unfit for use.
 
@@ -9,7 +9,7 @@ Rust crate for interacting with the NEAR Protocol via RPC API
 - Using a helper function:
 
   ```rust
-  use near_api::JsonRpcClient;
+  use near_api_providers::JsonRpcClient;
 
   // this creates a new client internally, only use this if you only need one client
   // see example 2 in the case where you need multiple clients
@@ -27,8 +27,8 @@ Rust crate for interacting with the NEAR Protocol via RPC API
   // Here, we manually construct a method and execute that on a client
   // This is useful if you have multiple clients to execute instructions on
 
-  use near_api::{RpcMethod, JsonRpcClient};
   use near_primitives::types::AccountId;
+  use near_api_providers::{RpcMethod, JsonRpcClient};
   use near_jsonrpc_primitives::views::FinalExecutionOutcomeView;
 
   let client_builder = JsonRpcClient::new_client(); // instantiate once, reuse
@@ -62,7 +62,7 @@ Rust crate for interacting with the NEAR Protocol via RPC API
 - Execute the test
 
   ```console
-  git clone https://github.com/near/near-api-rs
-  cd near-api-rs
+  git clone https://github.com/near/near-api-providers-rs
+  cd near-api-providers-rs
   cargo test -- --nocapture
   ```
