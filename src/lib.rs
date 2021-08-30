@@ -47,18 +47,27 @@ impl NearClient {
 mod tests {
     use crate::{jsonrpc::JsonRpcMethod, NearClient};
 
+    const RPC_SERVER_ADDR: &'static str = "http://localhost:3030";
+
     #[tokio::test]
     async fn check_jsonrpc_status() {
-        let jsonrpc_client = NearClient::new()
-            .connect("http://localhost:3030")
-            .as_jsonrpc();
+        let jsonrpc_client = NearClient::new().connect(RPC_SERVER_ADDR).as_jsonrpc();
         let status1 = jsonrpc_client.status().await;
 
         let status2 = JsonRpcMethod::Status
             .call_on::<near_primitives::views::StatusResponse>(&jsonrpc_client)
             .await;
 
-        println!("{:?}", status1.unwrap());
-        println!("{:?}", status2.unwrap());
+        println!("status via JSON_RPC method 1: {:?}", status1.unwrap());
+        println!("status via JSON_RPC method 2: {:?}", status2.unwrap());
+    }
+
+    #[tokio::test]
+    async fn check_http_status() {
+        let http_client = NearClient::new().connect(RPC_SERVER_ADDR).as_http();
+
+        let status = http_client.status().await;
+
+        println!("status via HTTP: {:?}", status.unwrap());
     }
 }
