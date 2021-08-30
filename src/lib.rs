@@ -1,7 +1,7 @@
 #![deprecated(note = "this crate is unstable and hence, unfit for use.")]
 
 pub mod http;
-pub mod rpc;
+pub mod jsonrpc;
 
 #[derive(Clone)]
 pub struct NearClientBuilder {
@@ -30,8 +30,8 @@ impl NearClient {
         }
     }
 
-    pub fn as_rpc(&self) -> rpc::NearRpcClient {
-        rpc::NearRpcClient {
+    pub fn as_jsonrpc(&self) -> jsonrpc::NearJsonRpcClient {
+        jsonrpc::NearJsonRpcClient {
             near_client: self.clone(),
         }
     }
@@ -45,14 +45,17 @@ impl NearClient {
 
 #[cfg(test)]
 mod tests {
-    use crate::{rpc::RpcMethod, NearClient};
+    use crate::{jsonrpc::JsonRpcMethod, NearClient};
 
     #[tokio::test]
-    async fn it_works() {
-        let rpc_client = NearClient::new().connect("http://localhost:3030").as_rpc();
-        let status1 = rpc_client.status().await;
-        let status2 = RpcMethod::Status
-            .call_on::<near_primitives::views::StatusResponse>(&rpc_client)
+    async fn check_jsonrpc_status() {
+        let jsonrpc_client = NearClient::new()
+            .connect("http://localhost:3030")
+            .as_jsonrpc();
+        let status1 = jsonrpc_client.status().await;
+
+        let status2 = JsonRpcMethod::Status
+            .call_on::<near_primitives::views::StatusResponse>(&jsonrpc_client)
             .await;
 
         println!("{:?}", status1.unwrap());
