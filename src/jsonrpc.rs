@@ -92,18 +92,23 @@ use SandboxJsonRpcMethod::*;
 
 #[derive(Debug)]
 pub enum JsonRpcTransportSendError {
+    // failed to prepare the payload to be sent
     PayloadSerializeError(serde_json::Error),
+    // network error occurred while sending the payload
     PayloadSendError(reqwest::Error),
 }
 
 #[derive(Debug)]
 pub enum JsonRpcTransportHandlerResponseError {
+    // the method executed successfully on the server but we failed to parse it's response
     ResultParseError(serde_json::Error),
+    // the method failed in it's execution on the server
     ErrorMessageParseError(serde_json::Error),
 }
 
 #[derive(Debug)]
 pub enum JsonRpcTransportRecvError {
+    // the server response wasn't a response, crazy, right?
     UnexpectedServerResponse(Message),
     // error occurred while retrieving payload
     PayloadRecvError(reqwest::Error),
@@ -115,20 +120,27 @@ pub enum JsonRpcTransportRecvError {
 
 #[derive(Debug)]
 pub enum RpcTransportError {
+    // an error occurred while sending the message
     SendError(JsonRpcTransportSendError),
+    // an error occurred while receiving the message
     RecvError(JsonRpcTransportRecvError),
 }
 
 #[derive(Debug)]
 pub enum JsonRpcServerError<E> {
+    // the message sent wasn't properly validated
     RequestValidationError(RpcRequestValidationErrorKind),
+    // the method call on the server returned an error
     HandlerError(E),
+    // the server failed unexpectedly
     InternalError(serde_json::Value),
 }
 
 #[derive(Debug)]
 pub enum JsonRpcError<E> {
+    // an error occurred while sending / receiving the message
     TransportError(RpcTransportError),
+    // the server returned an error while processing our message
     ServerError(JsonRpcServerError<E>),
 }
 
