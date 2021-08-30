@@ -43,7 +43,7 @@ Rust crate providing direct interfaces to the NEAR Protocol via RPC API
   let client_builder = NearClient::new(); // instantiate once, reuse
 
   let jsonrpc_client_1 = client_builder.connect("http://localhost:3030").as_jsonrpc();
-  let jsonrpc_client_2 = client_builder.connect("http://rpc.website.com").as_jsonrpc();
+  let jsonrpc_client_2 = client_builder.connect("http://rpc.testnet.near.org").as_jsonrpc();
 
   let method = RpcMethod::Tx { // this method can be reused
       id: "miraclx.near".parse::<AccountId>()?,
