@@ -259,6 +259,7 @@ impl JsonRpcMethod {
     }
 }
 
+#[derive(Clone)]
 pub struct NearJsonRpcClient {
     pub(crate) near_client: NearClient,
 }

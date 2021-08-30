@@ -1,5 +1,6 @@
 use super::NearClient;
 
+#[derive(Clone)]
 pub struct NearHttpClient {
     pub(crate) near_client: NearClient,
 }
