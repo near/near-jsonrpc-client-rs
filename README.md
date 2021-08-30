@@ -12,7 +12,7 @@ Rust crate providing direct interfaces to the NEAR Protocol via RPC API
   use near_api_providers::NearClient;
 
   // creates a generic RPC/HTTP NEAR Client
-  let near_client = NearClient::new_client().connect("http://localhost:3030");
+  let near_client = NearClient::new().connect("http://localhost:3030");
 
   // creates an RPC interface based off the existing NEAR Client
   let rpc_client = near_client.as_rpc();
@@ -40,7 +40,7 @@ Rust crate providing direct interfaces to the NEAR Protocol via RPC API
   use near_api_providers::{rpc::RpcMethod, NearClient};
   use near_jsonrpc_primitives::views::FinalExecutionOutcomeView;
 
-  let client_builder = NearClient::new_client(); // instantiate once, reuse
+  let client_builder = NearClient::new(); // instantiate once, reuse
 
   let rpc_client_1 = client_builder.connect("http://localhost:3030").as_rpc();
   let rpc_client_2 = client_builder.connect("http://rpc.website.com").as_rpc();

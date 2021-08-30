@@ -24,7 +24,7 @@ pub struct NearClient {
 }
 
 impl NearClient {
-    pub fn new_client() -> NearClientBuilder {
+    pub fn new() -> NearClientBuilder {
         NearClientBuilder {
             client: reqwest::Client::new(),
         }
@@ -49,9 +49,7 @@ mod tests {
 
     #[tokio::test]
     async fn it_works() {
-        let rpc_client = NearClient::new_client()
-            .connect("http://localhost:3030")
-            .as_rpc();
+        let rpc_client = NearClient::new().connect("http://localhost:3030").as_rpc();
         let status1 = rpc_client.status().await;
         let status2 = RpcMethod::Status
             .call_on::<near_primitives::views::StatusResponse>(&rpc_client)
