@@ -6,21 +6,27 @@ pub struct NearHttpClient {
 }
 
 impl NearHttpClient {
-    pub async fn status() -> Result<
+    pub async fn status(
+        &self,
+    ) -> Result<
         near_jsonrpc_primitives::types::status::RpcStatusResponse,
         near_jsonrpc_primitives::types::status::RpcStatusError,
     > {
         todo!()
     }
 
-    pub async fn health() -> Result<
+    pub async fn health(
+        &self,
+    ) -> Result<
         near_jsonrpc_primitives::types::status::RpcHealthResponse,
         near_jsonrpc_primitives::types::status::RpcStatusError,
     > {
         todo!()
     }
 
-    pub async fn network_info() -> Result<
+    pub async fn network_info(
+        &self,
+    ) -> Result<
         near_jsonrpc_primitives::types::network_info::RpcNetworkInfoResponse,
         near_jsonrpc_primitives::types::network_info::RpcNetworkInfoError,
     > {
@@ -28,7 +34,7 @@ impl NearHttpClient {
     }
 
     #[cfg(feature = "metrics")]
-    pub async fn metrics() -> Result<Vec<prometheus::proto::MetricFamily>, ()> {
+    pub async fn metrics(&self) -> Result<Vec<prometheus::proto::MetricFamily>, ()> {
         todo!()
     }
 }
