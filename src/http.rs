@@ -1,3 +1,5 @@
+//! HTTP API Client for the NEAR Protocol
+
 use super::NearClient;
 
 #[derive(Clone)]
