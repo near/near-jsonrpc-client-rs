@@ -1,5 +1,9 @@
 //! RPC API Client for the NEAR Protocol
 
+use std::fmt;
+
+use thiserror::Error;
+
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::json;
 
@@ -90,57 +94,57 @@ use JsonRpcMethod::*;
 #[cfg(feature = "sandbox")]
 use SandboxJsonRpcMethod::*;
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum JsonRpcTransportSendError {
-    // failed to prepare the payload to be sent
+    #[error("error while serializing payload: [{0}]")]
     PayloadSerializeError(serde_json::Error),
-    // network error occurred while sending the payload
+    #[error("error while sending payload: [{0}]")]
     PayloadSendError(reqwest::Error),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum JsonRpcTransportHandlerResponseError {
-    // the method executed successfully on the server but we failed to parse it's response
+    #[error("error while parsing method call result: [{0}]")]
     ResultParseError(serde_json::Error),
-    // the method failed in it's execution on the server
+    #[error("error while parsing method call error message: [{0}]")]
     ErrorMessageParseError(serde_json::Error),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum JsonRpcTransportRecvError {
-    // the server response wasn't a response, crazy, right?
+    #[error("unexpected server response: [{0:?}]")]
     UnexpectedServerResponse(Message),
-    // error occurred while retrieving payload
+    #[error("error while reading response: [{0}]")]
     PayloadRecvError(reqwest::Error),
-    // invalid message from server
+    #[error("error while parsing server response: [{0:?}]")]
     PayloadParseError(message::Broken),
-    // error while parsing response from method call
+    #[error(transparent)]
     ResponseParseError(JsonRpcTransportHandlerResponseError),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum RpcTransportError {
-    // an error occurred while sending the message
+    #[error(transparent)]
     SendError(JsonRpcTransportSendError),
-    // an error occurred while receiving the message
+    #[error(transparent)]
     RecvError(JsonRpcTransportRecvError),
 }
 
-#[derive(Debug)]
-pub enum JsonRpcServerError<E> {
-    // the message sent wasn't properly validated
+#[derive(Debug, Error)]
+pub enum JsonRpcServerError<E: fmt::Debug + fmt::Display> {
+    #[error("request validation error: [{0:?}]")]
     RequestValidationError(RpcRequestValidationErrorKind),
-    // the method call on the server returned an error
+    #[error("handler error: [{0}]")]
     HandlerError(E),
-    // the server failed unexpectedly
+    #[error("internal error: [{0}]")]
     InternalError(serde_json::Value),
 }
 
-#[derive(Debug)]
-pub enum JsonRpcError<E> {
-    // an error occurred while sending / receiving the message
+#[derive(Debug, Error)]
+pub enum JsonRpcError<E: fmt::Debug + fmt::Display> {
+    #[error(transparent)]
     TransportError(RpcTransportError),
-    // the server returned an error while processing our message
+    #[error(transparent)]
     ServerError(JsonRpcServerError<E>),
 }
 

@@ -1,24 +1,32 @@
 //! HTTP API Client for the NEAR Protocol
 
+use thiserror::Error;
+
 use serde::de::DeserializeOwned;
 
 use super::NearClient;
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum HttpTransportSendError {
+    #[error("error while sending payload: [{0}]")]
     PayloadSendError(reqwest::Error),
+    #[error("error while serializing payload: [{0}]")]
     PayloadSerializeError(serde_json::Error),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum HttpTransportRecvError {
+    #[error("error while reading response: [{0}]")]
     PayloadRecvError(reqwest::Error),
+    #[error("error while parsing response: [{0}]")]
     PayloadParseError(serde_json::Error),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum HttpMethodCallError {
+    #[error(transparent)]
     Send(HttpTransportSendError),
+    #[error(transparent)]
     Recv(HttpTransportRecvError),
 }
 
