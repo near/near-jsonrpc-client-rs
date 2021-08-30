@@ -22,15 +22,15 @@ pub enum ChunkId {
 }
 
 pub enum ExperimentalJsonRpcMethod {
+    BroadcastTxSync { tx: views::SignedTransactionView },
+    Changes(near_jsonrpc_primitives::types::changes::RpcStateChangesInBlockRequest),
+    ChangesInBlock(near_jsonrpc_primitives::types::changes::RpcStateChangesRequest),
     CheckTx { tx: views::SignedTransactionView },
     GenesisConfig,
-    BroadcastTxSync { tx: views::SignedTransactionView },
-    TxStatus { tx: String },
-    ChangesInBlock(near_jsonrpc_primitives::types::changes::RpcStateChangesRequest),
-    Changes(near_jsonrpc_primitives::types::changes::RpcStateChangesInBlockRequest),
-    ValidatorsOrdered(near_jsonrpc_primitives::types::validator::RpcValidatorsOrderedRequest),
-    Receipt(near_jsonrpc_primitives::types::receipts::RpcReceiptRequest),
     ProtocolConfig(near_jsonrpc_primitives::types::config::RpcProtocolConfigRequest),
+    Receipt(near_jsonrpc_primitives::types::receipts::RpcReceiptRequest),
+    TxStatus { tx: String },
+    ValidatorsOrdered(near_jsonrpc_primitives::types::validator::RpcValidatorsOrderedRequest),
 }
 
 #[cfg(feature = "sandbox")]
@@ -50,29 +50,20 @@ pub enum AdversarialJsonRpcMethod {
 }
 
 pub enum JsonRpcMethod {
+    Block(BlockReference),
     BroadcastTxAsync {
         tx: views::SignedTransactionView,
     },
     BroadcastTxCommit {
         tx: views::SignedTransactionView,
     },
-    Status,
-    Health,
-    Tx {
-        hash: CryptoHash,
-        id: AccountId,
-    },
     Chunk {
         id: ChunkId,
-    },
-    Validators {
-        block_id: MaybeBlockId,
     },
     GasPrice {
         block_id: MaybeBlockId,
     },
-    Query(near_jsonrpc_primitives::types::query::RpcQueryRequest),
-    Block(BlockReference),
+    Health,
     LightClientProof(
         near_jsonrpc_primitives::types::light_client::RpcLightClientExecutionProofRequest,
     ),
@@ -80,6 +71,15 @@ pub enum JsonRpcMethod {
         near_jsonrpc_primitives::types::light_client::RpcLightClientNextBlockRequest,
     ),
     NetworkInfo,
+    Query(near_jsonrpc_primitives::types::query::RpcQueryRequest),
+    Status,
+    Tx {
+        hash: CryptoHash,
+        id: AccountId,
+    },
+    Validators {
+        block_id: MaybeBlockId,
+    },
     Experimental(ExperimentalJsonRpcMethod),
     #[cfg(feature = "sandbox")]
     Sandbox(SandboxJsonRpcMethod),
@@ -155,29 +155,29 @@ pub type JsonRpcMethodCallResult<T> = Result<T, JsonRpcError<MethodExecutionErro
 impl JsonRpcMethod {
     fn method_and_params(&self) -> (&str, serde_json::Value) {
         match self {
+            Block(request) => ("block", json!(request)),
             BroadcastTxAsync { tx } => ("broadcast_tx_async", json!([tx])),
             BroadcastTxCommit { tx } => ("broadcast_tx_commit", json!([tx])),
-            Status => ("status", json!(null)),
-            Health => ("health", json!(null)),
-            Tx { hash, id } => ("tx", json!([hash, id])),
             Chunk { id } => ("chunk", json!([id])),
-            Validators { block_id } => ("validators", json!([block_id])),
             GasPrice { block_id } => ("gas_price", json!([block_id])),
-            Query(request) => ("query", json!(request)),
-            Block(request) => ("block", json!(request)),
+            Health => ("health", json!(null)),
             LightClientProof(request) => ("light_client_proof", json!(request)),
             NextLightClientBlock(request) => ("next_light_client_block", json!(request)),
             NetworkInfo => ("network_info", json!(null)),
+            Query(request) => ("query", json!(request)),
+            Status => ("status", json!(null)),
+            Tx { hash, id } => ("tx", json!([hash, id])),
+            Validators { block_id } => ("validators", json!([block_id])),
             Experimental(method) => match method {
-                CheckTx { tx } => ("EXPERIMENTAL_check_tx", json!([tx])),
-                GenesisConfig => ("EXPERIMENTAL_genesis_config", json!(null)),
                 BroadcastTxSync { tx } => ("EXPERIMENTAL_broadcast_tx_sync", json!([tx])),
-                TxStatus { tx } => ("EXPERIMENTAL_tx_status", json!([tx])),
                 Changes(request) => ("EXPERIMENTAL_changes", json!(request)),
                 ChangesInBlock(request) => ("EXPERIMENTAL_changes_in_block", json!(request)),
-                ValidatorsOrdered(request) => ("EXPERIMENTAL_validators_ordered", json!(request)),
-                Receipt(request) => ("EXPERIMENTAL_receipt", json!(request)),
+                CheckTx { tx } => ("EXPERIMENTAL_check_tx", json!([tx])),
+                GenesisConfig => ("EXPERIMENTAL_genesis_config", json!(null)),
                 ProtocolConfig(request) => ("EXPERIMENTAL_protocol_config", json!(request)),
+                Receipt(request) => ("EXPERIMENTAL_receipt", json!(request)),
+                TxStatus { tx } => ("EXPERIMENTAL_tx_status", json!([tx])),
+                ValidatorsOrdered(request) => ("EXPERIMENTAL_validators_ordered", json!(request)),
             },
             #[cfg(feature = "sandbox")]
             Sandbox(method) => match method {
@@ -283,6 +283,13 @@ pub struct NearJsonRpcClient {
 }
 
 impl NearJsonRpcClient {
+    pub async fn block(
+        &self,
+        request: BlockReference,
+    ) -> JsonRpcMethodCallResult<views::BlockView> {
+        Block(request).call_on(self).await
+    }
+
     pub async fn broadcast_tx_async(
         &self,
         tx: views::SignedTransactionView,
@@ -297,34 +304,8 @@ impl NearJsonRpcClient {
         BroadcastTxCommit { tx }.call_on(self).await
     }
 
-    pub async fn status(&self) -> JsonRpcMethodCallResult<views::StatusResponse> {
-        Status.call_on(self).await
-    }
-
-    pub async fn health(
-        &self,
-    ) -> JsonRpcMethodCallResult<near_jsonrpc_primitives::types::status::RpcHealthResponse> {
-        Health.call_on(self).await?;
-        Ok(near_jsonrpc_primitives::types::status::RpcHealthResponse)
-    }
-
-    pub async fn tx(
-        &self,
-        hash: CryptoHash,
-        id: AccountId,
-    ) -> JsonRpcMethodCallResult<views::FinalExecutionOutcomeView> {
-        Tx { hash, id }.call_on(self).await
-    }
-
     pub async fn chunk(&self, id: ChunkId) -> JsonRpcMethodCallResult<views::ChunkView> {
         Chunk { id }.call_on(self).await
-    }
-
-    pub async fn validators(
-        &self,
-        block_id: MaybeBlockId,
-    ) -> JsonRpcMethodCallResult<views::EpochValidatorInfo> {
-        Validators { block_id }.call_on(self).await
     }
 
     pub async fn gas_price(
@@ -334,21 +315,11 @@ impl NearJsonRpcClient {
         GasPrice { block_id }.call_on(self).await
     }
 
-    pub async fn query(
+    pub async fn health(
         &self,
-        request: near_jsonrpc_primitives::types::query::RpcQueryRequest,
-    ) -> Result<
-        near_jsonrpc_primitives::types::query::RpcQueryResponse,
-        JsonRpcError<MethodExecutionError>,
-    > {
-        Query(request).call_on(self).await
-    }
-
-    pub async fn block(
-        &self,
-        request: BlockReference,
-    ) -> JsonRpcMethodCallResult<views::BlockView> {
-        Block(request).call_on(self).await
+    ) -> JsonRpcMethodCallResult<near_jsonrpc_primitives::types::status::RpcHealthResponse> {
+        Health.call_on(self).await?;
+        Ok(near_jsonrpc_primitives::types::status::RpcHealthResponse)
     }
 
     pub async fn light_client_proof(
@@ -376,17 +347,33 @@ impl NearJsonRpcClient {
         NetworkInfo.call_on(self).await
     }
 
-    #[allow(non_snake_case)]
-    pub async fn EXPERIMENTAL_check_tx(
+    pub async fn query(
         &self,
-        tx: views::SignedTransactionView,
-    ) -> JsonRpcMethodCallResult<serde_json::Value> {
-        Experimental(CheckTx { tx }).call_on(self).await
+        request: near_jsonrpc_primitives::types::query::RpcQueryRequest,
+    ) -> Result<
+        near_jsonrpc_primitives::types::query::RpcQueryResponse,
+        JsonRpcError<MethodExecutionError>,
+    > {
+        Query(request).call_on(self).await
     }
 
-    #[allow(non_snake_case)]
-    pub async fn EXPERIMENTAL_genesis_config(&self) -> JsonRpcMethodCallResult<serde_json::Value> {
-        Experimental(GenesisConfig).call_on(self).await
+    pub async fn status(&self) -> JsonRpcMethodCallResult<views::StatusResponse> {
+        Status.call_on(self).await
+    }
+
+    pub async fn tx(
+        &self,
+        hash: CryptoHash,
+        id: AccountId,
+    ) -> JsonRpcMethodCallResult<views::FinalExecutionOutcomeView> {
+        Tx { hash, id }.call_on(self).await
+    }
+
+    pub async fn validators(
+        &self,
+        block_id: MaybeBlockId,
+    ) -> JsonRpcMethodCallResult<views::EpochValidatorInfo> {
+        Validators { block_id }.call_on(self).await
     }
 
     #[allow(non_snake_case)]
@@ -395,14 +382,6 @@ impl NearJsonRpcClient {
         tx: views::SignedTransactionView,
     ) -> JsonRpcMethodCallResult<serde_json::Value> {
         Experimental(BroadcastTxSync { tx }).call_on(self).await
-    }
-
-    #[allow(non_snake_case)]
-    pub async fn EXPERIMENTAL_tx_status(
-        &self,
-        tx: String,
-    ) -> JsonRpcMethodCallResult<serde_json::Value> {
-        Experimental(TxStatus { tx }).call_on(self).await
     }
 
     #[allow(non_snake_case)]
@@ -425,11 +404,25 @@ impl NearJsonRpcClient {
     }
 
     #[allow(non_snake_case)]
-    pub async fn EXPERIMENTAL_validators_ordered(
+    pub async fn EXPERIMENTAL_check_tx(
         &self,
-        request: near_jsonrpc_primitives::types::validator::RpcValidatorsOrderedRequest,
-    ) -> JsonRpcMethodCallResult<Vec<views::validator_stake_view::ValidatorStakeView>> {
-        Experimental(ValidatorsOrdered(request)).call_on(self).await
+        tx: views::SignedTransactionView,
+    ) -> JsonRpcMethodCallResult<serde_json::Value> {
+        Experimental(CheckTx { tx }).call_on(self).await
+    }
+
+    #[allow(non_snake_case)]
+    pub async fn EXPERIMENTAL_genesis_config(&self) -> JsonRpcMethodCallResult<serde_json::Value> {
+        Experimental(GenesisConfig).call_on(self).await
+    }
+
+    #[allow(non_snake_case)]
+    pub async fn EXPERIMENTAL_protocol_config(
+        &self,
+        request: near_jsonrpc_primitives::types::config::RpcProtocolConfigRequest,
+    ) -> JsonRpcMethodCallResult<near_jsonrpc_primitives::types::config::RpcProtocolConfigResponse>
+    {
+        Experimental(ProtocolConfig(request)).call_on(self).await
     }
 
     #[allow(non_snake_case)]
@@ -441,12 +434,19 @@ impl NearJsonRpcClient {
     }
 
     #[allow(non_snake_case)]
-    pub async fn EXPERIMENTAL_protocol_config(
+    pub async fn EXPERIMENTAL_tx_status(
         &self,
-        request: near_jsonrpc_primitives::types::config::RpcProtocolConfigRequest,
-    ) -> JsonRpcMethodCallResult<near_jsonrpc_primitives::types::config::RpcProtocolConfigResponse>
-    {
-        Experimental(ProtocolConfig(request)).call_on(self).await
+        tx: String,
+    ) -> JsonRpcMethodCallResult<serde_json::Value> {
+        Experimental(TxStatus { tx }).call_on(self).await
+    }
+
+    #[allow(non_snake_case)]
+    pub async fn EXPERIMENTAL_validators_ordered(
+        &self,
+        request: near_jsonrpc_primitives::types::validator::RpcValidatorsOrderedRequest,
+    ) -> JsonRpcMethodCallResult<Vec<views::validator_stake_view::ValidatorStakeView>> {
+        Experimental(ValidatorsOrdered(request)).call_on(self).await
     }
 
     #[cfg(feature = "sandbox")]
