@@ -430,7 +430,10 @@ impl NearJsonRpcClient {
         &self,
         hash: CryptoHash,
         id: AccountId,
-    ) -> JsonRpcMethodCallResult<views::FinalExecutionOutcomeView, RpcError> {
+    ) -> JsonRpcMethodCallResult<
+        views::FinalExecutionOutcomeView,
+        near_jsonrpc_primitives::types::transactions::RpcTransactionError,
+    > {
         Tx { hash, id }.call_on(self).await
     }
 
