@@ -393,7 +393,7 @@ impl NearJsonRpcClient {
         request: near_jsonrpc_primitives::types::light_client::RpcLightClientNextBlockRequest,
     ) -> JsonRpcMethodCallResult<
         near_jsonrpc_primitives::types::light_client::RpcLightClientNextBlockResponse,
-        RpcError,
+        near_jsonrpc_primitives::types::light_client::RpcLightClientNextBlockError,
     > {
         NextLightClientBlock(request).call_on(self).await
     }
