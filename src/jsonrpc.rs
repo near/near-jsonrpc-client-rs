@@ -371,16 +371,15 @@ impl NearJsonRpcClient {
         LightClientProof(request).call_on(self).await
     }
 
-    // todo: RpcLightClientNextBlockResponse doesn't impl Deserialize
-    // pub async fn next_light_client_block(
-    //     &self,
-    //     request: near_jsonrpc_primitives::types::light_client::RpcLightClientNextBlockRequest,
-    // ) -> RpcMethodCallResult<
-    //     near_jsonrpc_primitives::types::light_client::RpcLightClientNextBlockResponse,
-    //     RpcError,
-    // > {
-    //     NextLightClientBlock(request).call_on(self).await
-    // }
+    pub async fn next_light_client_block(
+        &self,
+        request: near_jsonrpc_primitives::types::light_client::RpcLightClientNextBlockRequest,
+    ) -> JsonRpcMethodCallResult<
+        near_jsonrpc_primitives::types::light_client::RpcLightClientNextBlockResponse,
+        RpcError,
+    > {
+        NextLightClientBlock(request).call_on(self).await
+    }
 
     pub async fn network_info(
         &self,

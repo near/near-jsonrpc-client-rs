@@ -20,9 +20,9 @@ reqwest = { version = "0.11.4", features = ["json"] }
 serde = "1.0.127"
 serde_json = "1.0.66"
 
-near-primitives = { git = "https://github.com/near/nearcore", rev="e242f71400111fe99a825fd8f5e53a82802c98b7" }
-near-client-primitives = { git = "https://github.com/near/nearcore", rev="e242f71400111fe99a825fd8f5e53a82802c98b7" }
-near-jsonrpc-primitives = { git = "https://github.com/near/nearcore", rev="e242f71400111fe99a825fd8f5e53a82802c98b7" }
+near-primitives = { git = "https://github.com/near/nearcore", rev="92a5986ec9e27481d808b3f46292b899f7520b1d" }
+near-client-primitives = { git = "https://github.com/near/nearcore", rev="92a5986ec9e27481d808b3f46292b899f7520b1d" }
+near-jsonrpc-primitives = { git = "https://github.com/near/nearcore", rev="92a5986ec9e27481d808b3f46292b899f7520b1d" }
 
 [dev-dependencies]
 tokio = { version = "1.1", features = ["rt", "macros"] }
