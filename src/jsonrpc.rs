@@ -16,6 +16,7 @@ use near_primitives::views;
 use super::NearClient;
 
 #[derive(Debug, Serialize)]
+#[serde(untagged)]
 pub enum ChunkId {
     BlockShardId(BlockId, ShardId),
     Hash(CryptoHash),
