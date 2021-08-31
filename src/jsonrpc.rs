@@ -334,7 +334,7 @@ impl NearJsonRpcClient {
     pub async fn broadcast_tx_async(
         &self,
         tx: views::SignedTransactionView,
-    ) -> JsonRpcMethodCallResult<String, RpcError> {
+    ) -> JsonRpcMethodCallResult<CryptoHash, ()> {
         BroadcastTxAsync { tx }.call_on(self).await
     }
 
