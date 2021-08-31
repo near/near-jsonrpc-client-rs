@@ -1,6 +1,6 @@
 //! RPC API Client for the NEAR Protocol
 
-use std::fmt;
+use std::{fmt, io};
 
 use thiserror::Error;
 
@@ -23,14 +23,20 @@ pub enum ChunkId {
 }
 
 pub enum ExperimentalJsonRpcMethod {
-    BroadcastTxSync { tx: views::SignedTransactionView },
+    BroadcastTxSync {
+        tx: near_primitives::transaction::SignedTransaction,
+    },
     Changes(near_jsonrpc_primitives::types::changes::RpcStateChangesInBlockRequest),
     ChangesInBlock(near_jsonrpc_primitives::types::changes::RpcStateChangesRequest),
-    CheckTx { tx: views::SignedTransactionView },
+    CheckTx {
+        tx: near_primitives::transaction::SignedTransaction,
+    },
     GenesisConfig,
     ProtocolConfig(near_jsonrpc_primitives::types::config::RpcProtocolConfigRequest),
     Receipt(near_jsonrpc_primitives::types::receipts::RpcReceiptRequest),
-    TxStatus { tx: String },
+    TxStatus {
+        tx: String,
+    },
     ValidatorsOrdered(near_jsonrpc_primitives::types::validator::RpcValidatorsOrderedRequest),
 }
 
@@ -53,10 +59,10 @@ pub enum AdversarialJsonRpcMethod {
 pub enum JsonRpcMethod {
     Block(BlockReference),
     BroadcastTxAsync {
-        tx: views::SignedTransactionView,
+        tx: near_primitives::transaction::SignedTransaction,
     },
     BroadcastTxCommit {
-        tx: views::SignedTransactionView,
+        tx: near_primitives::transaction::SignedTransaction,
     },
     Chunk {
         id: ChunkId,
@@ -98,7 +104,7 @@ use SandboxJsonRpcMethod::*;
 #[derive(Debug, Error)]
 pub enum JsonRpcTransportSendError {
     #[error("error while serializing payload: [{0}]")]
-    PayloadSerializeError(serde_json::Error),
+    PayloadSerializeError(io::Error),
     #[error("error while sending payload: [{0}]")]
     PayloadSendError(reqwest::Error),
 }
@@ -190,12 +196,26 @@ impl<E: fmt::Debug> fmt::Debug for JsonRpcError<E> {
 
 pub type JsonRpcMethodCallResult<T, E> = Result<T, JsonRpcError<E>>;
 
+fn serialize_signed_transaction(
+    tx: &near_primitives::transaction::SignedTransaction,
+) -> Result<String, io::Error> {
+    Ok(near_primitives::serialize::to_base64(
+        &borsh::BorshSerialize::try_to_vec(&tx)?,
+    ))
+}
+
 impl JsonRpcMethod {
-    fn method_and_params(&self) -> (&str, serde_json::Value) {
-        match self {
+    fn method_and_params(&self) -> Result<(&str, serde_json::Value), io::Error> {
+        let result = match self {
             Block(request) => ("block", json!(request)),
-            BroadcastTxAsync { tx } => ("broadcast_tx_async", json!([tx])),
-            BroadcastTxCommit { tx } => ("broadcast_tx_commit", json!([tx])),
+            BroadcastTxAsync { tx } => (
+                "broadcast_tx_async",
+                json!([serialize_signed_transaction(tx)?]),
+            ),
+            BroadcastTxCommit { tx } => (
+                "broadcast_tx_commit",
+                json!([serialize_signed_transaction(tx)?]),
+            ),
             Chunk { id } => ("chunk", json!([id])),
             GasPrice { block_id } => ("gas_price", json!([block_id])),
             Health => ("health", json!(null)),
@@ -207,10 +227,16 @@ impl JsonRpcMethod {
             Tx { hash, id } => ("tx", json!([hash, id])),
             Validators { block_id } => ("validators", json!([block_id])),
             Experimental(method) => match method {
-                BroadcastTxSync { tx } => ("EXPERIMENTAL_broadcast_tx_sync", json!([tx])),
+                BroadcastTxSync { tx } => (
+                    "EXPERIMENTAL_broadcast_tx_sync",
+                    json!([serialize_signed_transaction(tx)?]),
+                ),
                 Changes(request) => ("EXPERIMENTAL_changes", json!(request)),
                 ChangesInBlock(request) => ("EXPERIMENTAL_changes_in_block", json!(request)),
-                CheckTx { tx } => ("EXPERIMENTAL_check_tx", json!([tx])),
+                CheckTx { tx } => (
+                    "EXPERIMENTAL_check_tx",
+                    json!([serialize_signed_transaction(tx)?]),
+                ),
                 GenesisConfig => ("EXPERIMENTAL_genesis_config", json!(null)),
                 ProtocolConfig(request) => ("EXPERIMENTAL_protocol_config", json!(request)),
                 Receipt(request) => ("EXPERIMENTAL_receipt", json!(request)),
@@ -234,18 +260,23 @@ impl JsonRpcMethod {
                 GetSavedBlocks => ("adv_get_saved_blocks", json!(null)),
                 CheckStore => ("adv_check_store", json!(null)),
             },
-        }
+        };
+        Ok(result)
     }
 
     pub async fn call_on<T: DeserializeOwned, E: DeserializeOwned>(
         &self,
         rpc_client: &NearJsonRpcClient,
     ) -> JsonRpcMethodCallResult<T, E> {
-        let (method_name, params) = self.method_and_params();
+        let (method_name, params) = self.method_and_params().map_err(|err| {
+            JsonRpcError::TransportError(RpcTransportError::SendError(
+                JsonRpcTransportSendError::PayloadSerializeError(err),
+            ))
+        })?;
         let request_payload = Message::request(method_name.to_string(), Some(params));
         let request_payload = serde_json::to_vec(&request_payload).map_err(|err| {
             JsonRpcError::TransportError(RpcTransportError::SendError(
-                JsonRpcTransportSendError::PayloadSerializeError(err),
+                JsonRpcTransportSendError::PayloadSerializeError(err.into()),
             ))
         })?;
         let near_client = &rpc_client.near_client;
@@ -333,14 +364,14 @@ impl NearJsonRpcClient {
 
     pub async fn broadcast_tx_async(
         &self,
-        tx: views::SignedTransactionView,
+        tx: near_primitives::transaction::SignedTransaction,
     ) -> JsonRpcMethodCallResult<CryptoHash, ()> {
         BroadcastTxAsync { tx }.call_on(self).await
     }
 
     pub async fn broadcast_tx_commit(
         &self,
-        tx: views::SignedTransactionView,
+        tx: near_primitives::transaction::SignedTransaction,
     ) -> JsonRpcMethodCallResult<
         views::FinalExecutionOutcomeView,
         near_jsonrpc_primitives::types::transactions::RpcTransactionError,
@@ -450,7 +481,7 @@ impl NearJsonRpcClient {
     #[allow(non_snake_case)]
     pub async fn EXPERIMENTAL_broadcast_tx_sync(
         &self,
-        tx: views::SignedTransactionView,
+        tx: near_primitives::transaction::SignedTransaction,
     ) -> JsonRpcMethodCallResult<serde_json::Value, RpcError> {
         Experimental(BroadcastTxSync { tx }).call_on(self).await
     }
@@ -480,7 +511,7 @@ impl NearJsonRpcClient {
     #[allow(non_snake_case)]
     pub async fn EXPERIMENTAL_check_tx(
         &self,
-        tx: views::SignedTransactionView,
+        tx: near_primitives::transaction::SignedTransaction,
     ) -> JsonRpcMethodCallResult<serde_json::Value, RpcError> {
         Experimental(CheckTx { tx }).call_on(self).await
     }
