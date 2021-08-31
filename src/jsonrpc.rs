@@ -383,7 +383,7 @@ impl NearJsonRpcClient {
         request: near_jsonrpc_primitives::types::light_client::RpcLightClientExecutionProofRequest,
     ) -> JsonRpcMethodCallResult<
         near_jsonrpc_primitives::types::light_client::RpcLightClientExecutionProofResponse,
-        RpcError,
+        near_jsonrpc_primitives::types::light_client::RpcLightClientProofError,
     > {
         LightClientProof(request).call_on(self).await
     }
