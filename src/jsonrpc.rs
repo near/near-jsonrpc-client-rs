@@ -341,7 +341,10 @@ impl NearJsonRpcClient {
     pub async fn broadcast_tx_commit(
         &self,
         tx: views::SignedTransactionView,
-    ) -> JsonRpcMethodCallResult<views::FinalExecutionOutcomeView, RpcError> {
+    ) -> JsonRpcMethodCallResult<
+        views::FinalExecutionOutcomeView,
+        near_jsonrpc_primitives::types::transactions::RpcTransactionError,
+    > {
         BroadcastTxCommit { tx }.call_on(self).await
     }
 
