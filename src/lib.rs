@@ -105,7 +105,7 @@ mod tests {
         let status1 = jsonrpc_client.status().await;
 
         let status2 = JsonRpcMethod::Status
-            .call_on::<near_primitives::views::StatusResponse>(&jsonrpc_client)
+            .call_on::<near_primitives::views::StatusResponse, ()>(&jsonrpc_client)
             .await;
 
         println!("status via JSON_RPC method 1: {:?}", status1.unwrap());
