@@ -495,7 +495,7 @@ impl NearJsonRpcClient {
         request: near_jsonrpc_primitives::types::changes::RpcStateChangesInBlockRequest,
     ) -> JsonRpcMethodCallResult<
         near_jsonrpc_primitives::types::changes::RpcStateChangesResponse,
-        RpcError,
+        near_jsonrpc_primitives::types::changes::RpcStateChangesError,
     > {
         Experimental(Changes(request)).call_on(self).await
     }
