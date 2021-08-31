@@ -410,8 +410,10 @@ impl NearJsonRpcClient {
     pub async fn query(
         &self,
         request: near_jsonrpc_primitives::types::query::RpcQueryRequest,
-    ) -> JsonRpcMethodCallResult<near_jsonrpc_primitives::types::query::RpcQueryResponse, RpcError>
-    {
+    ) -> JsonRpcMethodCallResult<
+        near_jsonrpc_primitives::types::query::RpcQueryResponse,
+        near_jsonrpc_primitives::types::query::RpcQueryError,
+    > {
         Query(request).call_on(self).await
     }
 
