@@ -188,9 +188,7 @@ impl<E: fmt::Debug> fmt::Debug for JsonRpcError<E> {
     }
 }
 
-type MethodExecutionError = RpcError;
-
-pub type JsonRpcMethodCallResult<T> = Result<T, JsonRpcError<MethodExecutionError>>;
+pub type JsonRpcMethodCallResult<T, E> = Result<T, JsonRpcError<E>>;
 
 impl JsonRpcMethod {
     fn method_and_params(&self) -> (&str, serde_json::Value) {
@@ -239,10 +237,10 @@ impl JsonRpcMethod {
         }
     }
 
-    pub async fn call_on<T: DeserializeOwned>(
+    pub async fn call_on<T: DeserializeOwned, E: DeserializeOwned>(
         &self,
         rpc_client: &NearJsonRpcClient,
-    ) -> JsonRpcMethodCallResult<T> {
+    ) -> JsonRpcMethodCallResult<T, E> {
         let (method_name, params) = self.method_and_params();
         let request_payload = Message::request(method_name.to_string(), Some(params));
         let request_payload = serde_json::to_vec(&request_payload).map_err(|err| {
@@ -326,38 +324,39 @@ impl NearJsonRpcClient {
     pub async fn block(
         &self,
         request: BlockReference,
-    ) -> JsonRpcMethodCallResult<views::BlockView> {
+    ) -> JsonRpcMethodCallResult<views::BlockView, RpcError> {
         Block(request).call_on(self).await
     }
 
     pub async fn broadcast_tx_async(
         &self,
         tx: views::SignedTransactionView,
-    ) -> JsonRpcMethodCallResult<String> {
+    ) -> JsonRpcMethodCallResult<String, RpcError> {
         BroadcastTxAsync { tx }.call_on(self).await
     }
 
     pub async fn broadcast_tx_commit(
         &self,
         tx: views::SignedTransactionView,
-    ) -> JsonRpcMethodCallResult<views::FinalExecutionOutcomeView> {
+    ) -> JsonRpcMethodCallResult<views::FinalExecutionOutcomeView, RpcError> {
         BroadcastTxCommit { tx }.call_on(self).await
     }
 
-    pub async fn chunk(&self, id: ChunkId) -> JsonRpcMethodCallResult<views::ChunkView> {
+    pub async fn chunk(&self, id: ChunkId) -> JsonRpcMethodCallResult<views::ChunkView, RpcError> {
         Chunk { id }.call_on(self).await
     }
 
     pub async fn gas_price(
         &self,
         block_id: MaybeBlockId,
-    ) -> JsonRpcMethodCallResult<views::GasPriceView> {
+    ) -> JsonRpcMethodCallResult<views::GasPriceView, RpcError> {
         GasPrice { block_id }.call_on(self).await
     }
 
     pub async fn health(
         &self,
-    ) -> JsonRpcMethodCallResult<near_jsonrpc_primitives::types::status::RpcHealthResponse> {
+    ) -> JsonRpcMethodCallResult<near_jsonrpc_primitives::types::status::RpcHealthResponse, RpcError>
+    {
         Health.call_on(self).await?;
         Ok(near_jsonrpc_primitives::types::status::RpcHealthResponse)
     }
@@ -367,6 +366,7 @@ impl NearJsonRpcClient {
         request: near_jsonrpc_primitives::types::light_client::RpcLightClientExecutionProofRequest,
     ) -> JsonRpcMethodCallResult<
         near_jsonrpc_primitives::types::light_client::RpcLightClientExecutionProofResponse,
+        RpcError,
     > {
         LightClientProof(request).call_on(self).await
     }
@@ -377,27 +377,26 @@ impl NearJsonRpcClient {
     //     request: near_jsonrpc_primitives::types::light_client::RpcLightClientNextBlockRequest,
     // ) -> RpcMethodCallResult<
     //     near_jsonrpc_primitives::types::light_client::RpcLightClientNextBlockResponse,
+    //     RpcError,
     // > {
     //     NextLightClientBlock(request).call_on(self).await
     // }
 
     pub async fn network_info(
         &self,
-    ) -> JsonRpcMethodCallResult<near_client_primitives::types::NetworkInfoResponse> {
+    ) -> JsonRpcMethodCallResult<near_client_primitives::types::NetworkInfoResponse, RpcError> {
         NetworkInfo.call_on(self).await
     }
 
     pub async fn query(
         &self,
         request: near_jsonrpc_primitives::types::query::RpcQueryRequest,
-    ) -> Result<
-        near_jsonrpc_primitives::types::query::RpcQueryResponse,
-        JsonRpcError<MethodExecutionError>,
-    > {
+    ) -> JsonRpcMethodCallResult<near_jsonrpc_primitives::types::query::RpcQueryResponse, RpcError>
+    {
         Query(request).call_on(self).await
     }
 
-    pub async fn status(&self) -> JsonRpcMethodCallResult<views::StatusResponse> {
+    pub async fn status(&self) -> JsonRpcMethodCallResult<views::StatusResponse, RpcError> {
         Status.call_on(self).await
     }
 
@@ -405,14 +404,14 @@ impl NearJsonRpcClient {
         &self,
         hash: CryptoHash,
         id: AccountId,
-    ) -> JsonRpcMethodCallResult<views::FinalExecutionOutcomeView> {
+    ) -> JsonRpcMethodCallResult<views::FinalExecutionOutcomeView, RpcError> {
         Tx { hash, id }.call_on(self).await
     }
 
     pub async fn validators(
         &self,
         block_id: MaybeBlockId,
-    ) -> JsonRpcMethodCallResult<views::EpochValidatorInfo> {
+    ) -> JsonRpcMethodCallResult<views::EpochValidatorInfo, RpcError> {
         Validators { block_id }.call_on(self).await
     }
 
@@ -420,7 +419,7 @@ impl NearJsonRpcClient {
     pub async fn EXPERIMENTAL_broadcast_tx_sync(
         &self,
         tx: views::SignedTransactionView,
-    ) -> JsonRpcMethodCallResult<serde_json::Value> {
+    ) -> JsonRpcMethodCallResult<serde_json::Value, RpcError> {
         Experimental(BroadcastTxSync { tx }).call_on(self).await
     }
 
@@ -428,8 +427,10 @@ impl NearJsonRpcClient {
     pub async fn EXPERIMENTAL_changes(
         &self,
         request: near_jsonrpc_primitives::types::changes::RpcStateChangesInBlockRequest,
-    ) -> JsonRpcMethodCallResult<near_jsonrpc_primitives::types::changes::RpcStateChangesResponse>
-    {
+    ) -> JsonRpcMethodCallResult<
+        near_jsonrpc_primitives::types::changes::RpcStateChangesResponse,
+        RpcError,
+    > {
         Experimental(Changes(request)).call_on(self).await
     }
 
@@ -439,6 +440,7 @@ impl NearJsonRpcClient {
         request: near_jsonrpc_primitives::types::changes::RpcStateChangesRequest,
     ) -> JsonRpcMethodCallResult<
         near_jsonrpc_primitives::types::changes::RpcStateChangesInBlockResponse,
+        RpcError,
     > {
         Experimental(ChangesInBlock(request)).call_on(self).await
     }
@@ -447,12 +449,14 @@ impl NearJsonRpcClient {
     pub async fn EXPERIMENTAL_check_tx(
         &self,
         tx: views::SignedTransactionView,
-    ) -> JsonRpcMethodCallResult<serde_json::Value> {
+    ) -> JsonRpcMethodCallResult<serde_json::Value, RpcError> {
         Experimental(CheckTx { tx }).call_on(self).await
     }
 
     #[allow(non_snake_case)]
-    pub async fn EXPERIMENTAL_genesis_config(&self) -> JsonRpcMethodCallResult<serde_json::Value> {
+    pub async fn EXPERIMENTAL_genesis_config(
+        &self,
+    ) -> JsonRpcMethodCallResult<serde_json::Value, RpcError> {
         Experimental(GenesisConfig).call_on(self).await
     }
 
@@ -460,8 +464,10 @@ impl NearJsonRpcClient {
     pub async fn EXPERIMENTAL_protocol_config(
         &self,
         request: near_jsonrpc_primitives::types::config::RpcProtocolConfigRequest,
-    ) -> JsonRpcMethodCallResult<near_jsonrpc_primitives::types::config::RpcProtocolConfigResponse>
-    {
+    ) -> JsonRpcMethodCallResult<
+        near_jsonrpc_primitives::types::config::RpcProtocolConfigResponse,
+        RpcError,
+    > {
         Experimental(ProtocolConfig(request)).call_on(self).await
     }
 
@@ -469,7 +475,10 @@ impl NearJsonRpcClient {
     pub async fn EXPERIMENTAL_receipt(
         &self,
         request: near_jsonrpc_primitives::types::receipts::RpcReceiptRequest,
-    ) -> JsonRpcMethodCallResult<near_jsonrpc_primitives::types::receipts::RpcReceiptResponse> {
+    ) -> JsonRpcMethodCallResult<
+        near_jsonrpc_primitives::types::receipts::RpcReceiptResponse,
+        RpcError,
+    > {
         Experimental(Receipt(request)).call_on(self).await
     }
 
@@ -477,7 +486,7 @@ impl NearJsonRpcClient {
     pub async fn EXPERIMENTAL_tx_status(
         &self,
         tx: String,
-    ) -> JsonRpcMethodCallResult<serde_json::Value> {
+    ) -> JsonRpcMethodCallResult<serde_json::Value, RpcError> {
         Experimental(TxStatus { tx }).call_on(self).await
     }
 
@@ -485,7 +494,8 @@ impl NearJsonRpcClient {
     pub async fn EXPERIMENTAL_validators_ordered(
         &self,
         request: near_jsonrpc_primitives::types::validator::RpcValidatorsOrderedRequest,
-    ) -> JsonRpcMethodCallResult<Vec<views::validator_stake_view::ValidatorStakeView>> {
+    ) -> JsonRpcMethodCallResult<Vec<views::validator_stake_view::ValidatorStakeView>, RpcError>
+    {
         Experimental(ValidatorsOrdered(request)).call_on(self).await
     }
 
@@ -495,22 +505,30 @@ impl NearJsonRpcClient {
         request: near_jsonrpc_primitives::types::sandbox::RpcSandboxPatchStateRequest,
     ) -> JsonRpcMethodCallResult<
         near_jsonrpc_primitives::types::sandbox::RpcSandboxPatchStateResponse,
+        RpcError,
     > {
         Sandbox(PatchState(request)).call_on(self).await
     }
 
     #[cfg(feature = "adversarial")]
-    pub async fn adv_set_weight(&self, height: u64) -> JsonRpcMethodCallResult<serde_json::Value> {
+    pub async fn adv_set_weight(
+        &self,
+        height: u64,
+    ) -> JsonRpcMethodCallResult<serde_json::Value, RpcError> {
         Adversarial(SetWeight(height)).call_on(self).await
     }
 
     #[cfg(feature = "adversarial")]
-    pub async fn adv_disable_header_sync(&self) -> JsonRpcMethodCallResult<serde_json::Value> {
+    pub async fn adv_disable_header_sync(
+        &self,
+    ) -> JsonRpcMethodCallResult<serde_json::Value, RpcError> {
         Adversarial(DisableHeaderSync).call_on(self).await
     }
 
     #[cfg(feature = "adversarial")]
-    pub async fn adv_disable_doomslug(&self) -> JsonRpcMethodCallResult<serde_json::Value> {
+    pub async fn adv_disable_doomslug(
+        &self,
+    ) -> JsonRpcMethodCallResult<serde_json::Value, RpcError> {
         Adversarial(DisableDoomslug).call_on(self).await
     }
 
@@ -519,7 +537,7 @@ impl NearJsonRpcClient {
         &self,
         num_blocks: u64,
         only_valid: bool,
-    ) -> JsonRpcMethodCallResult<serde_json::Value> {
+    ) -> JsonRpcMethodCallResult<serde_json::Value, RpcError> {
         Adversarial(ProduceBlocks {
             num_blocks,
             only_valid,
@@ -532,17 +550,19 @@ impl NearJsonRpcClient {
     pub async fn adv_switch_to_height(
         &self,
         height: u64,
-    ) -> JsonRpcMethodCallResult<serde_json::Value> {
+    ) -> JsonRpcMethodCallResult<serde_json::Value, RpcError> {
         Adversarial(SwitchToHeight(height)).call_on(self).await
     }
 
     #[cfg(feature = "adversarial")]
-    pub async fn adv_get_saved_blocks(&self) -> JsonRpcMethodCallResult<serde_json::Value> {
+    pub async fn adv_get_saved_blocks(
+        &self,
+    ) -> JsonRpcMethodCallResult<serde_json::Value, RpcError> {
         Adversarial(GetSavedBlocks).call_on(self).await
     }
 
     #[cfg(feature = "adversarial")]
-    pub async fn adv_check_store(&self) -> JsonRpcMethodCallResult<serde_json::Value> {
+    pub async fn adv_check_store(&self) -> JsonRpcMethodCallResult<serde_json::Value, RpcError> {
         Adversarial(CheckStore).call_on(self).await
     }
 }
