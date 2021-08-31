@@ -370,8 +370,10 @@ impl NearJsonRpcClient {
 
     pub async fn health(
         &self,
-    ) -> JsonRpcMethodCallResult<near_jsonrpc_primitives::types::status::RpcHealthResponse, RpcError>
-    {
+    ) -> JsonRpcMethodCallResult<
+        near_jsonrpc_primitives::types::status::RpcHealthResponse,
+        near_jsonrpc_primitives::types::status::RpcStatusError,
+    > {
         Health.call_on(self).await?;
         Ok(near_jsonrpc_primitives::types::status::RpcHealthResponse)
     }
