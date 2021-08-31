@@ -482,7 +482,10 @@ impl NearJsonRpcClient {
     pub async fn EXPERIMENTAL_broadcast_tx_sync(
         &self,
         tx: near_primitives::transaction::SignedTransaction,
-    ) -> JsonRpcMethodCallResult<serde_json::Value, RpcError> {
+    ) -> JsonRpcMethodCallResult<
+        near_jsonrpc_primitives::types::transactions::RpcBroadcastTxSyncResponse,
+        near_jsonrpc_primitives::types::transactions::RpcTransactionError,
+    > {
         Experimental(BroadcastTxSync { tx }).call_on(self).await
     }
 
