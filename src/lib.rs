@@ -10,10 +10,11 @@
 //!
 //! ```
 //! # #![allow(deprecated)]
-//! # use near_api_providers::NearClient;
+//! use near_api_providers::{NearClient, NEAR_TESTNET_RPC_ENDPOINT_URL};
+//!
 //! # #[tokio::main]
 //! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! let near_client = NearClient::new().connect("https://rpc.testnet.near.org");
+//! let near_client = NearClient::new().connect(NEAR_TESTNET_RPC_ENDPOINT_URL);
 //!
 //! let jsonrpc_client = near_client.as_jsonrpc();
 //! let http_client    = near_client.as_http()   ;
@@ -28,6 +29,9 @@
 
 pub mod http;
 pub mod jsonrpc;
+
+pub const NEAR_MAINNET_RPC_ENDPOINT_URL: &str = "http://rpc.mainnet.near.org";
+pub const NEAR_TESTNET_RPC_ENDPOINT_URL: &str = "http://rpc.testnet.near.org";
 
 /// A generic RPC/HTTP NEAR Client builder.
 ///
