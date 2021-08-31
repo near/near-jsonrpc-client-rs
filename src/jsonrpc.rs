@@ -131,22 +131,61 @@ pub enum RpcTransportError {
     RecvError(JsonRpcTransportRecvError),
 }
 
-#[derive(Debug, Error)]
-pub enum JsonRpcServerError<E: fmt::Debug + fmt::Display> {
-    #[error("request validation error: [{0:?}]")]
+pub enum JsonRpcServerError<E> {
     RequestValidationError(RpcRequestValidationErrorKind),
-    #[error("handler error: [{0}]")]
     HandlerError(E),
-    #[error("internal error: [{0}]")]
     InternalError(serde_json::Value),
 }
 
-#[derive(Debug, Error)]
-pub enum JsonRpcError<E: fmt::Debug + fmt::Display> {
-    #[error(transparent)]
+impl<E: fmt::Debug + fmt::Display> std::error::Error for JsonRpcServerError<E> {}
+
+impl<E: fmt::Display> fmt::Display for JsonRpcServerError<E> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::RequestValidationError(err) => {
+                write!(f, "request validation error: [{:?}]", err)
+            }
+            Self::HandlerError(err) => write!(f, "handler error: [{}]", err),
+            Self::InternalError(err) => write!(f, "internal error: [{}]", err),
+        }
+    }
+}
+
+impl<E: fmt::Debug> fmt::Debug for JsonRpcServerError<E> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::RequestValidationError(err) => {
+                f.debug_tuple("RequestValidationError").field(err).finish()
+            }
+            Self::HandlerError(err) => f.debug_tuple("HandlerError").field(err).finish(),
+            Self::InternalError(err) => f.debug_tuple("InternalError").field(err).finish(),
+        }
+    }
+}
+
+pub enum JsonRpcError<E> {
     TransportError(RpcTransportError),
-    #[error(transparent)]
     ServerError(JsonRpcServerError<E>),
+}
+
+impl<E: fmt::Debug + fmt::Display> std::error::Error for JsonRpcError<E> {}
+
+impl<E: fmt::Display> fmt::Display for JsonRpcError<E> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::TransportError(err) => fmt::Display::fmt(err, f),
+            Self::ServerError(err) => fmt::Display::fmt(err, f),
+        }
+    }
+}
+
+impl<E: fmt::Debug> fmt::Debug for JsonRpcError<E> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::TransportError(err) => f.debug_tuple("TransportError").field(err).finish(),
+            Self::ServerError(err) => f.debug_tuple("ServerError").field(err).finish(),
+        }
+    }
 }
 
 type MethodExecutionError = RpcError;
