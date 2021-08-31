@@ -361,7 +361,10 @@ impl NearJsonRpcClient {
     pub async fn gas_price(
         &self,
         block_id: MaybeBlockId,
-    ) -> JsonRpcMethodCallResult<views::GasPriceView, RpcError> {
+    ) -> JsonRpcMethodCallResult<
+        views::GasPriceView,
+        near_jsonrpc_primitives::types::gas_price::RpcGasPriceError,
+    > {
         GasPrice { block_id }.call_on(self).await
     }
 
