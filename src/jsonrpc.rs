@@ -324,7 +324,10 @@ impl NearJsonRpcClient {
     pub async fn block(
         &self,
         request: BlockReference,
-    ) -> JsonRpcMethodCallResult<views::BlockView, RpcError> {
+    ) -> JsonRpcMethodCallResult<
+        views::BlockView,
+        near_jsonrpc_primitives::types::blocks::RpcBlockError,
+    > {
         Block(request).call_on(self).await
     }
 
