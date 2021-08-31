@@ -348,7 +348,13 @@ impl NearJsonRpcClient {
         BroadcastTxCommit { tx }.call_on(self).await
     }
 
-    pub async fn chunk(&self, id: ChunkId) -> JsonRpcMethodCallResult<views::ChunkView, RpcError> {
+    pub async fn chunk(
+        &self,
+        id: ChunkId,
+    ) -> JsonRpcMethodCallResult<
+        views::ChunkView,
+        near_jsonrpc_primitives::types::chunks::RpcChunkError,
+    > {
         Chunk { id }.call_on(self).await
     }
 
