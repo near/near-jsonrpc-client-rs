@@ -440,7 +440,10 @@ impl NearJsonRpcClient {
     pub async fn validators(
         &self,
         block_id: MaybeBlockId,
-    ) -> JsonRpcMethodCallResult<views::EpochValidatorInfo, RpcError> {
+    ) -> JsonRpcMethodCallResult<
+        views::EpochValidatorInfo,
+        near_jsonrpc_primitives::types::validator::RpcValidatorError,
+    > {
         Validators { block_id }.call_on(self).await
     }
 
