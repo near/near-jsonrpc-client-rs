@@ -400,7 +400,10 @@ impl NearJsonRpcClient {
 
     pub async fn network_info(
         &self,
-    ) -> JsonRpcMethodCallResult<near_client_primitives::types::NetworkInfoResponse, RpcError> {
+    ) -> JsonRpcMethodCallResult<
+        near_client_primitives::types::NetworkInfoResponse,
+        near_jsonrpc_primitives::types::network_info::RpcNetworkInfoError,
+    > {
         NetworkInfo.call_on(self).await
     }
 
