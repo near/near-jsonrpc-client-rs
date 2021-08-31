@@ -80,9 +80,7 @@ pub struct NearHttpClient {
 }
 
 impl NearHttpClient {
-    pub async fn status(
-        &self,
-    ) -> HttpMethodCallResult<near_jsonrpc_primitives::types::status::RpcStatusResponse> {
+    pub async fn status(&self) -> HttpMethodCallResult<near_primitives::views::StatusResponse> {
         http_method("status").call_on(self).await
     }
 

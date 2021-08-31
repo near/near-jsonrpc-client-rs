@@ -417,7 +417,12 @@ impl NearJsonRpcClient {
         Query(request).call_on(self).await
     }
 
-    pub async fn status(&self) -> JsonRpcMethodCallResult<views::StatusResponse, RpcError> {
+    pub async fn status(
+        &self,
+    ) -> JsonRpcMethodCallResult<
+        views::StatusResponse,
+        near_jsonrpc_primitives::types::status::RpcStatusError,
+    > {
         Status.call_on(self).await
     }
 
