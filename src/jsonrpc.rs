@@ -33,7 +33,7 @@ pub enum ExperimentalJsonRpcMethod {
     },
     GenesisConfig,
     ProtocolConfig(near_jsonrpc_primitives::types::blocks::BlockReference),
-    Receipt(near_jsonrpc_primitives::types::receipts::RpcReceiptRequest),
+    Receipt(near_jsonrpc_primitives::types::receipts::ReceiptReference),
     TxStatus {
         tx: String,
     },
@@ -543,10 +543,10 @@ impl NearJsonRpcClient {
     #[allow(non_snake_case)]
     pub async fn EXPERIMENTAL_receipt(
         &self,
-        request: near_jsonrpc_primitives::types::receipts::RpcReceiptRequest,
+        request: near_jsonrpc_primitives::types::receipts::ReceiptReference,
     ) -> JsonRpcMethodCallResult<
-        near_jsonrpc_primitives::types::receipts::RpcReceiptResponse,
-        RpcError,
+        near_primitives::views::ReceiptView,
+        near_jsonrpc_primitives::types::receipts::RpcReceiptError,
     > {
         Experimental(Receipt(request)).call_on(self).await
     }
