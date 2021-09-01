@@ -35,7 +35,7 @@ pub enum ExperimentalJsonRpcMethod {
     ProtocolConfig(near_jsonrpc_primitives::types::blocks::BlockReference),
     Receipt(near_jsonrpc_primitives::types::receipts::ReceiptReference),
     TxStatus {
-        tx: String,
+        tx: near_primitives::transaction::SignedTransaction,
     },
     ValidatorsOrdered(near_jsonrpc_primitives::types::validator::RpcValidatorsOrderedRequest),
 }
@@ -240,7 +240,10 @@ impl JsonRpcMethod {
                 GenesisConfig => ("EXPERIMENTAL_genesis_config", json!(null)),
                 ProtocolConfig(request) => ("EXPERIMENTAL_protocol_config", json!(request)),
                 Receipt(request) => ("EXPERIMENTAL_receipt", json!(request)),
-                TxStatus { tx } => ("EXPERIMENTAL_tx_status", json!([tx])),
+                TxStatus { tx } => (
+                    "EXPERIMENTAL_tx_status",
+                    json!([serialize_signed_transaction(tx)?]),
+                ),
                 ValidatorsOrdered(request) => ("EXPERIMENTAL_validators_ordered", json!(request)),
             },
             #[cfg(feature = "sandbox")]
@@ -554,8 +557,11 @@ impl NearJsonRpcClient {
     #[allow(non_snake_case)]
     pub async fn EXPERIMENTAL_tx_status(
         &self,
-        tx: String,
-    ) -> JsonRpcMethodCallResult<serde_json::Value, RpcError> {
+        tx: near_primitives::transaction::SignedTransaction,
+    ) -> JsonRpcMethodCallResult<
+        views::FinalExecutionOutcomeWithReceiptView,
+        near_jsonrpc_primitives::types::transactions::RpcTransactionError,
+    > {
         Experimental(TxStatus { tx }).call_on(self).await
     }
 
