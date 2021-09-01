@@ -563,8 +563,10 @@ impl NearJsonRpcClient {
     pub async fn EXPERIMENTAL_validators_ordered(
         &self,
         request: near_jsonrpc_primitives::types::validator::RpcValidatorsOrderedRequest,
-    ) -> JsonRpcMethodCallResult<Vec<views::validator_stake_view::ValidatorStakeView>, RpcError>
-    {
+    ) -> JsonRpcMethodCallResult<
+        near_jsonrpc_primitives::types::validator::RpcValidatorsOrderedResponse,
+        near_jsonrpc_primitives::types::validator::RpcValidatorError,
+    > {
         Experimental(ValidatorsOrdered(request)).call_on(self).await
     }
 
