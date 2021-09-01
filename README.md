@@ -37,14 +37,14 @@ Generic, low-level interfaces for interacting with the NEAR Protocol via JSON_RP
   // This is useful if you have multiple clients to call methods on
 
   use near_api_providers::{jsonrpc::JsonRpcMethod, NearClient};
-  use near_api_providers::{NEAR_MAINNET_RPC_ENDPOINT_URL, NEAR_TESTNET_RPC_ENDPOINT_URL};
+  use near_api_providers::{NEAR_MAINNET_RPC_URL, NEAR_TESTNET_RPC_URL};
   use near_jsonrpc_primitives::views::FinalExecutionOutcomeView;
   use near_primitives::types::AccountId;
 
   let client_builder = NearClient::new(); // instantiate once, reuse
 
-  let mainnet_jsonrpc_client = client_builder.connect(NEAR_MAINNET_RPC_ENDPOINT_URL).as_jsonrpc();
-  let testnet_jsonrpc_client = client_builder.connect(NEAR_TESTNET_RPC_ENDPOINT_URL).as_jsonrpc();
+  let mainnet_jsonrpc_client = client_builder.connect(NEAR_MAINNET_RPC_URL).as_jsonrpc();
+  let testnet_jsonrpc_client = client_builder.connect(NEAR_TESTNET_RPC_URL).as_jsonrpc();
 
   let method = RpcMethod::Tx {
       // this method can be reused
