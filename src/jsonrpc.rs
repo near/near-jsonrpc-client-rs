@@ -308,7 +308,14 @@ impl JsonRpcMethod {
                 let err = match if err.error_struct.is_some() {
                     err
                 } else {
-                    RpcError::new_internal_error(None, format!("<no data>"))
+                    loop {
+                        if let RpcError { data: Some(err), .. } = err {
+                            if let Ok(info) = serde_json::from_value::<String>(err) {
+                                break RpcError::new_internal_error(None, info);
+                            };
+                        };
+                        break RpcError::new_internal_error(None, format!("<no data>"));
+                    }
                 }
                 .error_struct
                 .unwrap()
@@ -588,25 +595,21 @@ impl NearJsonRpcClient {
     }
 
     #[cfg(feature = "adversarial")]
-    pub async fn adv_set_weight(
-        &self,
-        height: u64,
-    ) -> JsonRpcMethodCallResult<serde_json::Value, RpcError> {
-        Adversarial(SetWeight(height)).call_on(self).await
+    pub async fn adv_set_weight(&self, height: u64) -> JsonRpcMethodCallResult<(), ()> {
+        Adversarial(SetWeight(height)).call_on(self).await?;
+        Ok(())
     }
 
     #[cfg(feature = "adversarial")]
-    pub async fn adv_disable_header_sync(
-        &self,
-    ) -> JsonRpcMethodCallResult<serde_json::Value, RpcError> {
-        Adversarial(DisableHeaderSync).call_on(self).await
+    pub async fn adv_disable_header_sync(&self) -> JsonRpcMethodCallResult<(), ()> {
+        Adversarial(DisableHeaderSync).call_on(self).await?;
+        Ok(())
     }
 
     #[cfg(feature = "adversarial")]
-    pub async fn adv_disable_doomslug(
-        &self,
-    ) -> JsonRpcMethodCallResult<serde_json::Value, RpcError> {
-        Adversarial(DisableDoomslug).call_on(self).await
+    pub async fn adv_disable_doomslug(&self) -> JsonRpcMethodCallResult<(), ()> {
+        Adversarial(DisableDoomslug).call_on(self).await?;
+        Ok(())
     }
 
     #[cfg(feature = "adversarial")]
@@ -614,32 +617,29 @@ impl NearJsonRpcClient {
         &self,
         num_blocks: u64,
         only_valid: bool,
-    ) -> JsonRpcMethodCallResult<serde_json::Value, RpcError> {
+    ) -> JsonRpcMethodCallResult<(), ()> {
         Adversarial(ProduceBlocks {
             num_blocks,
             only_valid,
         })
         .call_on(self)
-        .await
+        .await?;
+        Ok(())
     }
 
     #[cfg(feature = "adversarial")]
-    pub async fn adv_switch_to_height(
-        &self,
-        height: u64,
-    ) -> JsonRpcMethodCallResult<serde_json::Value, RpcError> {
-        Adversarial(SwitchToHeight(height)).call_on(self).await
+    pub async fn adv_switch_to_height(&self, height: u64) -> JsonRpcMethodCallResult<(), ()> {
+        Adversarial(SwitchToHeight(height)).call_on(self).await?;
+        Ok(())
     }
 
     #[cfg(feature = "adversarial")]
-    pub async fn adv_get_saved_blocks(
-        &self,
-    ) -> JsonRpcMethodCallResult<serde_json::Value, RpcError> {
+    pub async fn adv_get_saved_blocks(&self) -> JsonRpcMethodCallResult<u64, ()> {
         Adversarial(GetSavedBlocks).call_on(self).await
     }
 
     #[cfg(feature = "adversarial")]
-    pub async fn adv_check_store(&self) -> JsonRpcMethodCallResult<serde_json::Value, RpcError> {
+    pub async fn adv_check_store(&self) -> JsonRpcMethodCallResult<u64, ()> {
         Adversarial(CheckStore).call_on(self).await
     }
 }
