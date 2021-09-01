@@ -36,25 +36,29 @@ Generic, low-level interfaces for interacting with the NEAR Protocol via JSON_RP
   // Here, we manually construct a method and execute that on a client
   // This is useful if you have multiple clients to call methods on
 
-  use near_primitives::types::AccountId;
   use near_api_providers::{jsonrpc::JsonRpcMethod, NearClient};
+  use near_api_providers::{NEAR_MAINNET_RPC_URL, NEAR_TESTNET_RPC_URL};
   use near_jsonrpc_primitives::views::FinalExecutionOutcomeView;
+  use near_primitives::types::AccountId;
 
   let client_builder = NearClient::new(); // instantiate once, reuse
 
-  let jsonrpc_client_1 = client_builder.connect("http://localhost:3030").as_jsonrpc();
-  let jsonrpc_client_2 = client_builder.connect("http://rpc.testnet.near.org").as_jsonrpc();
+  let mainnet_jsonrpc_client = client_builder.connect(NEAR_MAINNET_RPC_URL).as_jsonrpc();
+  let testnet_jsonrpc_client = client_builder.connect(NEAR_TESTNET_RPC_URL).as_jsonrpc();
 
-  let method = RpcMethod::Tx { // this method can be reused
+  let method = RpcMethod::Tx {
+      // this method can be reused
       id: "miraclx.near".parse::<AccountId>()?,
       hash: "9FtHUFBQsZ2MG77K3x3MJ9wjX3UT8zE1TczCrhZEcG8U".parse::<CryptoHash>()?,
   };
 
-  let tx_status_1: FinalExecutionOutcomeView = method.call_on(&jsonrpc_client_1).await?;
-  let tx_status_2: FinalExecutionOutcomeView = method.call_on(&jsonrpc_client_2).await?;
+  let tx_status_on_mainnet: FinalExecutionOutcomeView =
+      method.call_on(&mainnet_jsonrpc_client).await?;
+  let tx_status_on_testnet: FinalExecutionOutcomeView =
+      method.call_on(&testnet_jsonrpc_client).await?;
 
-  println!("{:?}", tx_status_1);
-  println!("{:?}", tx_status_2);
+  println!("{:?}", tx_status_on_mainnet);
+  println!("{:?}", tx_status_on_testnet);
   ```
 
 ## Testing
