@@ -27,12 +27,12 @@ pub enum ExperimentalJsonRpcMethod {
         tx: near_primitives::transaction::SignedTransaction,
     },
     Changes(near_jsonrpc_primitives::types::changes::RpcStateChangesInBlockRequest),
-    ChangesInBlock(near_jsonrpc_primitives::types::blocks::BlockReference),
+    ChangesInBlock(BlockReference),
     CheckTx {
         tx: near_primitives::transaction::SignedTransaction,
     },
     GenesisConfig,
-    ProtocolConfig(near_jsonrpc_primitives::types::blocks::BlockReference),
+    ProtocolConfig(BlockReference),
     Receipt(near_jsonrpc_primitives::types::receipts::ReceiptReference),
     TxStatus {
         tx: near_primitives::transaction::SignedTransaction,
@@ -513,7 +513,7 @@ impl NearJsonRpcClient {
     #[allow(non_snake_case)]
     pub async fn EXPERIMENTAL_changes_in_block(
         &self,
-        request: near_jsonrpc_primitives::types::blocks::BlockReference,
+        request: BlockReference,
     ) -> JsonRpcMethodCallResult<
         near_jsonrpc_primitives::types::changes::RpcStateChangesInBlockResponse,
         near_jsonrpc_primitives::types::changes::RpcStateChangesError,
@@ -542,7 +542,7 @@ impl NearJsonRpcClient {
     #[allow(non_snake_case)]
     pub async fn EXPERIMENTAL_protocol_config(
         &self,
-        request: near_jsonrpc_primitives::types::blocks::BlockReference,
+        request: BlockReference,
     ) -> JsonRpcMethodCallResult<
         near_chain_configs::ProtocolConfigView,
         near_jsonrpc_primitives::types::config::RpcProtocolConfigError,
