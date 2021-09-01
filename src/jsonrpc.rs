@@ -27,7 +27,7 @@ pub enum ExperimentalJsonRpcMethod {
         tx: near_primitives::transaction::SignedTransaction,
     },
     Changes(near_jsonrpc_primitives::types::changes::RpcStateChangesInBlockRequest),
-    ChangesInBlock(near_jsonrpc_primitives::types::changes::RpcStateChangesRequest),
+    ChangesInBlock(near_jsonrpc_primitives::types::blocks::BlockReference),
     CheckTx {
         tx: near_primitives::transaction::SignedTransaction,
     },
@@ -503,10 +503,10 @@ impl NearJsonRpcClient {
     #[allow(non_snake_case)]
     pub async fn EXPERIMENTAL_changes_in_block(
         &self,
-        request: near_jsonrpc_primitives::types::changes::RpcStateChangesRequest,
+        request: near_jsonrpc_primitives::types::blocks::BlockReference,
     ) -> JsonRpcMethodCallResult<
         near_jsonrpc_primitives::types::changes::RpcStateChangesInBlockResponse,
-        RpcError,
+        near_jsonrpc_primitives::types::changes::RpcStateChangesError,
     > {
         Experimental(ChangesInBlock(request)).call_on(self).await
     }
