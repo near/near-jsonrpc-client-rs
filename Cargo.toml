@@ -21,10 +21,10 @@ borsh = "0.8.1"
 serde = "1.0.127"
 serde_json = "1.0.66"
 
-near-primitives = { git = "https://github.com/miraclx/nearcore", rev="d61c7d25f6fc972d89f9e3f6e8309c6f3dd5029c" }
-near-chain-configs = { git = "https://github.com/miraclx/nearcore", rev="d61c7d25f6fc972d89f9e3f6e8309c6f3dd5029c" }
-near-client-primitives = { git = "https://github.com/miraclx/nearcore", rev="d61c7d25f6fc972d89f9e3f6e8309c6f3dd5029c" }
-near-jsonrpc-primitives = { git = "https://github.com/miraclx/nearcore", rev="d61c7d25f6fc972d89f9e3f6e8309c6f3dd5029c" }
+near-primitives = { git = "https://github.com/miraclx/nearcore", rev="8c86d449bbbf40a997fe8a49d62b45980d76d9a3" }
+near-chain-configs = { git = "https://github.com/miraclx/nearcore", rev="8c86d449bbbf40a997fe8a49d62b45980d76d9a3" }
+near-client-primitives = { git = "https://github.com/miraclx/nearcore", rev="8c86d449bbbf40a997fe8a49d62b45980d76d9a3" }
+near-jsonrpc-primitives = { git = "https://github.com/miraclx/nearcore", rev="8c86d449bbbf40a997fe8a49d62b45980d76d9a3" }
 
 [dev-dependencies]
 tokio = { version = "1.1", features = ["rt", "macros"] }

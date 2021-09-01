@@ -576,7 +576,7 @@ impl NearJsonRpcClient {
         request: near_jsonrpc_primitives::types::sandbox::RpcSandboxPatchStateRequest,
     ) -> JsonRpcMethodCallResult<
         near_jsonrpc_primitives::types::sandbox::RpcSandboxPatchStateResponse,
-        RpcError,
+        near_jsonrpc_primitives::types::sandbox::RpcSandboxPatchStateError,
     > {
         Sandbox(PatchState(request)).call_on(self).await
     }
