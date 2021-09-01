@@ -525,7 +525,7 @@ impl NearJsonRpcClient {
     #[allow(non_snake_case)]
     pub async fn EXPERIMENTAL_genesis_config(
         &self,
-    ) -> JsonRpcMethodCallResult<serde_json::Value, RpcError> {
+    ) -> JsonRpcMethodCallResult<near_chain_configs::GenesisConfig, ()> {
         Experimental(GenesisConfig).call_on(self).await
     }
 
