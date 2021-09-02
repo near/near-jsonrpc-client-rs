@@ -1,11 +1,11 @@
 [package]
-name = "near-api-providers"
+name = "near-jsonrpc-client"
 version = "0.1.0"
 authors = ["Near Inc <hello@nearprotocol.com>"]
 edition = "2018"
 license = "Apache-2.0"
-repository = "https://github.com/near/near-api-rs"
-homepage = "https://github.com/near/near-api-rs"
+repository = "https://github.com/near/near-jsonrpc-client-rs"
+homepage = "https://github.com/near/near-jsonrpc-client-rs"
 description = "Generic, low-level interfaces for interacting with the NEAR Protocol via JSON_RPC / HTTP"
 
 [dependencies]
