@@ -1,4 +1,4 @@
-# near-api-providers (N-AR providers)
+# near-jsonrpc-client
 
 Generic, low-level interfaces for interacting with the NEAR Protocol via JSON_RPC / HTTP.
 
@@ -9,7 +9,7 @@ Generic, low-level interfaces for interacting with the NEAR Protocol via JSON_RP
 - Calling JSON_RPC/HTTP methods:
 
   ```rust
-  use near_api_providers::NearClient;
+  use near_jsonrpc_client::NearClient;
 
   // creates a generic JSON_RPC/HTTP NEAR Client
   let near_client = NearClient::new().connect("http://localhost:3030");
@@ -36,8 +36,8 @@ Generic, low-level interfaces for interacting with the NEAR Protocol via JSON_RP
   // Here, we manually construct a method and execute that on a client
   // This is useful if you have multiple clients to call methods on
 
-  use near_api_providers::{jsonrpc::JsonRpcMethod, NearClient};
-  use near_api_providers::{NEAR_MAINNET_RPC_URL, NEAR_TESTNET_RPC_URL};
+  use near_jsonrpc_client::{jsonrpc::JsonRpcMethod, NearClient};
+  use near_jsonrpc_client::{NEAR_MAINNET_RPC_URL, NEAR_TESTNET_RPC_URL};
   use near_jsonrpc_primitives::views::FinalExecutionOutcomeView;
   use near_primitives::types::AccountId;
 
@@ -75,7 +75,7 @@ Generic, low-level interfaces for interacting with the NEAR Protocol via JSON_RP
 - Execute the test
 
   ```console
-  git clone https://github.com/near/near-api-providers-rs
-  cd near-api-providers-rs
+  git clone https://github.com/near/near-jsonrpc-client-rs
+  cd near-jsonrpc-client-rs
   cargo test -- --nocapture
   ```

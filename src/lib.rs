@@ -10,7 +10,7 @@
 //!
 //! ```
 //! # #![allow(deprecated)]
-//! use near_api_providers::{NearClient, NEAR_TESTNET_RPC_URL};
+//! use near_jsonrpc_client::{NearClient, NEAR_TESTNET_RPC_URL};
 //!
 //! # #[tokio::main]
 //! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -72,7 +72,7 @@ impl NearClient {
     /// ## Example
     ///
     /// ```
-    /// # use near_api_providers::NearClient;
+    /// # use near_jsonrpc_client::NearClient;
     /// let client_builder = NearClient::new();
     ///
     /// let near_mainnet_client = client_builder.connect("https://rpc.mainnet.near.org");
