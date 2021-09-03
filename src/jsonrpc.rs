@@ -1,4 +1,5 @@
 //! RPC API Client for the NEAR Protocol
+#![deprecated(note = "deprecacted in favor of NearClient::call() the and RpcMethod trait")]
 
 use std::io;
 

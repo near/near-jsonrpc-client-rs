@@ -27,9 +27,15 @@
 //! # }
 //! ```
 
+use near_jsonrpc_primitives::errors::{RpcError, RpcErrorKind};
+use near_jsonrpc_primitives::message::{from_slice, Message};
+
 pub mod errors;
 pub mod http;
 pub mod jsonrpc;
+pub mod methods;
+
+use errors::*;
 
 pub const NEAR_MAINNET_RPC_URL: &str = "https://rpc.mainnet.near.org";
 pub const NEAR_TESTNET_RPC_URL: &str = "https://rpc.testnet.near.org";
@@ -64,6 +70,8 @@ pub struct NearClient {
     client: reqwest::Client,
 }
 
+pub type JsonRpcMethodCallResult<T, E> = Result<T, JsonRpcError<E>>;
+
 impl NearClient {
     /// Construct a new NearClient for any server.
     ///
@@ -85,7 +93,98 @@ impl NearClient {
         }
     }
 
+    pub async fn call<M: methods::RpcMethod>(
+        &self,
+        method: &M,
+    ) -> JsonRpcMethodCallResult<M::Result, M::Error> {
+        let (method_name, params) = (
+            M::METHOD_NAME,
+            method.params().map_err(|err| {
+                JsonRpcError::TransportError(RpcTransportError::SendError(
+                    JsonRpcTransportSendError::PayloadSerializeError(err),
+                ))
+            })?,
+        );
+        let request_payload = Message::request(method_name.to_string(), Some(params));
+        let request_payload = serde_json::to_vec(&request_payload).map_err(|err| {
+            JsonRpcError::TransportError(RpcTransportError::SendError(
+                JsonRpcTransportSendError::PayloadSerializeError(err.into()),
+            ))
+        })?;
+        let request = self
+            .client
+            .post(&self.server_addr)
+            .header("Content-Type", "application/json")
+            .body(request_payload);
+        let response = request.send().await.map_err(|err| {
+            JsonRpcError::TransportError(RpcTransportError::SendError(
+                JsonRpcTransportSendError::PayloadSendError(err),
+            ))
+        })?;
+        let response_payload = response.bytes().await.map_err(|err| {
+            JsonRpcError::TransportError(RpcTransportError::RecvError(
+                JsonRpcTransportRecvError::PayloadRecvError(err),
+            ))
+        })?;
+        let response_message = from_slice(&response_payload).map_err(|err| {
+            JsonRpcError::TransportError(RpcTransportError::RecvError(
+                JsonRpcTransportRecvError::PayloadParseError(err),
+            ))
+        })?;
+        if let Message::Response(response) = response_message {
+            let response_result = response.result.or_else(|err| {
+                let err = match if err.error_struct.is_some() {
+                    err
+                } else {
+                    loop {
+                        if let RpcError { data: Some(err), .. } = err {
+                            if let Ok(info) = serde_json::from_value::<String>(err) {
+                                break RpcError::new_internal_error(None, info);
+                            };
+                        };
+                        break RpcError::new_internal_error(None, format!("<no data>"));
+                    }
+                }
+                .error_struct
+                .unwrap()
+                {
+                    RpcErrorKind::HandlerError(handler_error) => {
+                        JsonRpcError::ServerError(JsonRpcServerError::HandlerError(
+                            serde_json::from_value(handler_error).map_err(|err| {
+                                JsonRpcError::TransportError(RpcTransportError::RecvError(
+                                    JsonRpcTransportRecvError::ResponseParseError(
+                                        JsonRpcTransportHandlerResponseError::ErrorMessageParseError(
+                                            err,
+                                        ),
+                                    ),
+                                ))
+                            })?,
+                        ))
+                    }
+                    RpcErrorKind::RequestValidationError(err) => {
+                        JsonRpcError::ServerError(JsonRpcServerError::RequestValidationError(err))
+                    }
+                    RpcErrorKind::InternalError(err) => {
+                        JsonRpcError::ServerError(JsonRpcServerError::InternalError(err))
+                    }
+                };
+                Err(err)
+            })?;
+            return serde_json::from_value(response_result).map_err(|err| {
+                JsonRpcError::TransportError(RpcTransportError::RecvError(
+                    JsonRpcTransportRecvError::ResponseParseError(
+                        JsonRpcTransportHandlerResponseError::ResultParseError(err),
+                    ),
+                ))
+            });
+        }
+        Err(JsonRpcError::TransportError(RpcTransportError::RecvError(
+            JsonRpcTransportRecvError::UnexpectedServerResponse(response_message),
+        )))
+    }
+
     /// Create a dedicated client for querying the server via RPC API.
+    #[deprecated(note = "deprecacted in favor of NearClient::call() the and RpcMethod trait")]
     pub fn as_jsonrpc(&self) -> jsonrpc::NearJsonRpcClient {
         jsonrpc::NearJsonRpcClient {
             near_client: self.clone(),
