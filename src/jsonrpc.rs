@@ -1,19 +1,17 @@
 //! RPC API Client for the NEAR Protocol
 
-use std::{fmt, io};
-
-use thiserror::Error;
+use std::io;
 
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::json;
 
-use near_jsonrpc_primitives::errors::{RpcError, RpcErrorKind, RpcRequestValidationErrorKind};
-use near_jsonrpc_primitives::message::{self, from_slice, Message};
+use near_jsonrpc_primitives::errors::{RpcError, RpcErrorKind};
+use near_jsonrpc_primitives::message::{from_slice, Message};
 use near_primitives::hash::CryptoHash;
 use near_primitives::types::{AccountId, BlockId, BlockReference, MaybeBlockId, ShardId};
 use near_primitives::views;
 
-use super::NearClient;
+use super::{errors::*, NearClient};
 
 #[derive(Debug, Serialize)]
 #[serde(untagged)]
@@ -100,99 +98,6 @@ use ExperimentalJsonRpcMethod::*;
 use JsonRpcMethod::*;
 #[cfg(feature = "sandbox")]
 use SandboxJsonRpcMethod::*;
-
-#[derive(Debug, Error)]
-pub enum JsonRpcTransportSendError {
-    #[error("error while serializing payload: [{0}]")]
-    PayloadSerializeError(io::Error),
-    #[error("error while sending payload: [{0}]")]
-    PayloadSendError(reqwest::Error),
-}
-
-#[derive(Debug, Error)]
-pub enum JsonRpcTransportHandlerResponseError {
-    #[error("error while parsing method call result: [{0}]")]
-    ResultParseError(serde_json::Error),
-    #[error("error while parsing method call error message: [{0}]")]
-    ErrorMessageParseError(serde_json::Error),
-}
-
-#[derive(Debug, Error)]
-pub enum JsonRpcTransportRecvError {
-    #[error("unexpected server response: [{0:?}]")]
-    UnexpectedServerResponse(Message),
-    #[error("error while reading response: [{0}]")]
-    PayloadRecvError(reqwest::Error),
-    #[error("error while parsing server response: [{0:?}]")]
-    PayloadParseError(message::Broken),
-    #[error(transparent)]
-    ResponseParseError(JsonRpcTransportHandlerResponseError),
-}
-
-#[derive(Debug, Error)]
-pub enum RpcTransportError {
-    #[error(transparent)]
-    SendError(JsonRpcTransportSendError),
-    #[error(transparent)]
-    RecvError(JsonRpcTransportRecvError),
-}
-
-pub enum JsonRpcServerError<E> {
-    RequestValidationError(RpcRequestValidationErrorKind),
-    HandlerError(E),
-    InternalError(serde_json::Value),
-}
-
-impl<E: fmt::Debug + fmt::Display> std::error::Error for JsonRpcServerError<E> {}
-
-impl<E: fmt::Display> fmt::Display for JsonRpcServerError<E> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::RequestValidationError(err) => {
-                write!(f, "request validation error: [{:?}]", err)
-            }
-            Self::HandlerError(err) => write!(f, "handler error: [{}]", err),
-            Self::InternalError(err) => write!(f, "internal error: [{}]", err),
-        }
-    }
-}
-
-impl<E: fmt::Debug> fmt::Debug for JsonRpcServerError<E> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::RequestValidationError(err) => {
-                f.debug_tuple("RequestValidationError").field(err).finish()
-            }
-            Self::HandlerError(err) => f.debug_tuple("HandlerError").field(err).finish(),
-            Self::InternalError(err) => f.debug_tuple("InternalError").field(err).finish(),
-        }
-    }
-}
-
-pub enum JsonRpcError<E> {
-    TransportError(RpcTransportError),
-    ServerError(JsonRpcServerError<E>),
-}
-
-impl<E: fmt::Debug + fmt::Display> std::error::Error for JsonRpcError<E> {}
-
-impl<E: fmt::Display> fmt::Display for JsonRpcError<E> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::TransportError(err) => fmt::Display::fmt(err, f),
-            Self::ServerError(err) => fmt::Display::fmt(err, f),
-        }
-    }
-}
-
-impl<E: fmt::Debug> fmt::Debug for JsonRpcError<E> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::TransportError(err) => f.debug_tuple("TransportError").field(err).finish(),
-            Self::ServerError(err) => f.debug_tuple("ServerError").field(err).finish(),
-        }
-    }
-}
 
 pub type JsonRpcMethodCallResult<T, E> = Result<T, JsonRpcError<E>>;
 
