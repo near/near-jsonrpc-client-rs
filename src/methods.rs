@@ -35,6 +35,7 @@ macro_rules! impl_method {
             }
         }
     ) => {
+        #[allow(non_snake_case)]
         pub mod $method_name {
             use super::*;
 
@@ -330,6 +331,177 @@ impl_method! {
             type Error = RpcValidatorError;
 
             params(&self) { json!([self]) }
+        }
+    }
+}
+
+impl_method! {
+    EXPERIMENTAL_broadcast_tx_sync: {
+        exports: {
+            pub use near_jsonrpc_primitives::types::transactions::{
+                RpcBroadcastTxSyncResponse, RpcTransactionError,
+            };
+            pub use near_primitives::transaction::SignedTransaction;
+
+            #[derive(Debug)]
+            pub struct RpcBroadcastTxSyncRequest {
+                pub signed_transaction: SignedTransaction,
+            }
+
+            impl From<RpcBroadcastTxSyncRequest>
+                for near_jsonrpc_primitives::types::transactions::RpcBroadcastTransactionRequest
+            {
+                fn from(this: RpcBroadcastTxSyncRequest) -> Self {
+                    Self { signed_transaction: this.signed_transaction }
+                }
+            }
+        }
+
+        impl RpcMethod for RpcBroadcastTxSyncRequest {
+            type Result = RpcBroadcastTxSyncResponse;
+            type Error = RpcTransactionError;
+
+            params(&self) {
+                json!([serialize_signed_transaction(&self.signed_transaction)?])
+            }
+        }
+    }
+}
+
+impl_method! {
+    EXPERIMENTAL_changes: {
+        exports: {
+            pub use near_jsonrpc_primitives::types::changes::{
+                RpcStateChangesError, RpcStateChangesInBlockByTypeRequest,
+                RpcStateChangesInBlockResponse,
+            };
+        }
+
+        impl RpcMethod for RpcStateChangesInBlockByTypeRequest {
+            type Result = RpcStateChangesInBlockResponse;
+            type Error = RpcStateChangesError;
+
+            params(&self) { json!(self) }
+        }
+    }
+}
+
+impl_method! {
+    EXPERIMENTAL_changes_in_block: {
+        exports: {
+            pub use near_jsonrpc_primitives::types::changes::{
+                RpcStateChangesError, RpcStateChangesInBlockRequest,
+                RpcStateChangesInBlockByTypeResponse,
+            };
+        }
+
+        impl RpcMethod for RpcStateChangesInBlockRequest {
+            type Result = RpcStateChangesInBlockByTypeResponse;
+            type Error = RpcStateChangesError;
+
+            params(&self) { json!(self) }
+        }
+    }
+}
+
+impl_method! {
+    EXPERIMENTAL_check_tx: {
+        exports: {
+            pub use near_jsonrpc_primitives::types::transactions::{
+                RpcBroadcastTxSyncResponse, RpcTransactionError,
+            };
+            pub use near_primitives::transaction::SignedTransaction;
+
+            #[derive(Debug)]
+            pub struct RpcCheckTxRequest {
+                pub signed_transaction: SignedTransaction,
+            }
+
+            impl From<RpcCheckTxRequest>
+                for near_jsonrpc_primitives::types::transactions::RpcBroadcastTransactionRequest
+            {
+                fn from(this: RpcCheckTxRequest) -> Self {
+                    Self { signed_transaction: this.signed_transaction }
+                }
+            }
+        }
+
+        impl RpcMethod for RpcCheckTxRequest {
+            type Result = RpcBroadcastTxSyncResponse;
+            type Error = RpcTransactionError;
+
+            params(&self) {
+                json!([serialize_signed_transaction(&self.signed_transaction)?])
+            }
+        }
+    }
+}
+
+impl_method! {
+    EXPERIMENTAL_genesis_config: {
+        exports: {
+            pub use near_chain_configs::GenesisConfig;
+
+            #[derive(Debug)]
+            pub struct RpcGenesisConfigRequest;
+        }
+
+        impl RpcMethod for RpcGenesisConfigRequest {
+            type Result = GenesisConfig;
+            type Error = ();
+        }
+    }
+}
+
+impl_method! {
+    EXPERIMENTAL_protocol_config: {
+        exports: {
+            pub use near_chain_configs::ProtocolConfigView;
+            pub use near_jsonrpc_primitives::types::config::{
+                RpcProtocolConfigError, RpcProtocolConfigRequest,
+            };
+        }
+
+        impl RpcMethod for RpcProtocolConfigRequest {
+            type Result = ProtocolConfigView;
+            type Error = RpcProtocolConfigError;
+
+            params(&self) { json!(self) }
+        }
+    }
+}
+
+impl_method! {
+    EXPERIMENTAL_receipt: {
+        exports: {
+            pub use near_jsonrpc_primitives::types::receipts::{
+                RpcReceiptError, RpcReceiptRequest,
+            };
+            pub use near_primitives::views::ReceiptView;
+        }
+
+        impl RpcMethod for RpcReceiptRequest {
+            type Result = ReceiptView;
+            type Error = RpcReceiptError;
+
+            params(&self) { json!(self) }
+        }
+    }
+}
+
+impl_method! {
+    EXPERIMENTAL_validators_ordered: {
+        exports: {
+            pub use near_jsonrpc_primitives::types::validator::{
+                RpcValidatorError, RpcValidatorsOrderedRequest, RpcValidatorsOrderedResponse,
+            };
+        }
+
+        impl RpcMethod for RpcValidatorsOrderedRequest {
+            type Result = RpcValidatorsOrderedResponse;
+            type Error = RpcValidatorError;
+
+            params(&self) { json!(self) }
         }
     }
 }
