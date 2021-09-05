@@ -3,7 +3,7 @@ use std::io;
 use serde_json::json;
 
 mod chk {
-    /// this lets us make the RpcMethod trait public but non-implementable by it's users outside this crate
+    // this lets us make the RpcMethod trait public but non-implementable by users outside this crate
     pub trait ValidRpcMethod {}
 }
 
