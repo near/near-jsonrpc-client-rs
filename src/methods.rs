@@ -20,6 +20,10 @@ where
     fn params(&self) -> Result<serde_json::Value, io::Error> {
         Ok(serde_json::json!(null))
     }
+
+    fn parse_result(value: serde_json::Value) -> Result<Self::Result, serde_json::Error> {
+        serde_json::from_value(value)
+    }
 }
 
 macro_rules! impl_method {
@@ -31,7 +35,8 @@ macro_rules! impl_method {
                 type $type_variant_1:ident = $variant_1_ty:ty;
                 type $type_variant_2:ident = $variant_2_ty:ty;
 
-                $(params(&$this:ident) { $param_exec:expr })?
+                $(params(&$this:ident) $param_exec:block )?
+                $(parse_result($value:ident) $result_parser:block )?
             }
         }
     ) => {
@@ -52,6 +57,12 @@ macro_rules! impl_method {
                 $(
                     fn params(&$this) -> Result<serde_json::Value, io::Error> {
                         Ok($param_exec)
+                    }
+                )?
+
+                $(
+                    fn parse_result($value: serde_json::Value) -> Result<Self::Result, serde_json::Error> {
+                        Ok($result_parser)
                     }
                 )?
             }
@@ -521,6 +532,142 @@ impl_method! {
             type Error = RpcSandboxPatchStateError;
 
             params(&self) { json!(self) }
+        }
+    }
+}
+
+#[cfg(feature = "adversarial")]
+impl_method! {
+    adv_set_weight: {
+        exports: {
+            #[derive(Debug)]
+            pub struct RpcAdversarialSetWeightRequest { pub height: u64 }
+        }
+
+        impl RpcMethod for RpcAdversarialSetWeightRequest {
+            type Result = ();
+            type Error = ();
+
+            params(&self) { json!(self.height) }
+            parse_result(value) {
+                serde_json::from_value(value)?;
+                ()
+            }
+        }
+    }
+}
+
+#[cfg(feature = "adversarial")]
+impl_method! {
+    adv_disable_header_sync: {
+        exports: {
+            #[derive(Debug)]
+            pub struct RpcAdversarialDisableHeaderSyncRequest;
+        }
+
+        impl RpcMethod for RpcAdversarialDisableHeaderSyncRequest {
+            type Result = ();
+            type Error = ();
+
+            parse_result(value) {
+                serde_json::from_value(value)?;
+                ()
+            }
+        }
+    }
+}
+
+#[cfg(feature = "adversarial")]
+impl_method! {
+    adv_disable_doomslug: {
+        exports: {
+            #[derive(Debug)]
+            pub struct RpcAdversarialDisableDoomslugRequest;
+        }
+
+        impl RpcMethod for RpcAdversarialDisableDoomslugRequest {
+            type Result = ();
+            type Error = ();
+
+            parse_result(value) {
+                serde_json::from_value(value)?;
+                ()
+            }
+        }
+    }
+}
+
+#[cfg(feature = "adversarial")]
+impl_method! {
+    adv_produce_blocks: {
+        exports: {
+            #[derive(Debug)]
+            pub struct RpcAdversarialProduceBlocksRequest {
+                pub num_blocks: u64,
+                pub only_valid: bool,
+            }
+        }
+
+        impl RpcMethod for RpcAdversarialProduceBlocksRequest {
+            type Result = ();
+            type Error = ();
+
+            params(&self) { json!([self.num_blocks, self.only_valid]) }
+            parse_result(value) {
+                serde_json::from_value(value)?;
+                ()
+            }
+        }
+    }
+}
+
+#[cfg(feature = "adversarial")]
+impl_method! {
+    adv_switch_to_height: {
+        exports: {
+            #[derive(Debug)]
+            pub struct RpcAdversarialSwitchToHeightRequest { pub height: u64 }
+        }
+
+        impl RpcMethod for RpcAdversarialSwitchToHeightRequest {
+            type Result = ();
+            type Error = ();
+
+            params(&self) { json!([self.height]) }
+            parse_result(value) {
+                serde_json::from_value(value)?;
+                ()
+            }
+        }
+    }
+}
+
+#[cfg(feature = "adversarial")]
+impl_method! {
+    adv_get_saved_blocks: {
+        exports: {
+            #[derive(Debug)]
+            pub struct RpcAdversarialGetSavedBlocksRequest;
+        }
+
+        impl RpcMethod for RpcAdversarialGetSavedBlocksRequest {
+            type Result = u64;
+            type Error = ();
+        }
+    }
+}
+
+#[cfg(feature = "adversarial")]
+impl_method! {
+    adv_check_store: {
+        exports: {
+            #[derive(Debug)]
+            pub struct RpcAdversarialCheckStoreRequest;
+        }
+
+        impl RpcMethod for RpcAdversarialCheckStoreRequest {
+            type Result = u64;
+            type Error = ();
         }
     }
 }

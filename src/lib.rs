@@ -170,7 +170,7 @@ impl NearClient {
                 };
                 Err(err)
             })?;
-            return serde_json::from_value(response_result).map_err(|err| {
+            return M::parse_result(response_result).map_err(|err| {
                 JsonRpcError::TransportError(RpcTransportError::RecvError(
                     JsonRpcTransportRecvError::ResponseParseError(
                         JsonRpcTransportHandlerResponseError::ResultParseError(err),
