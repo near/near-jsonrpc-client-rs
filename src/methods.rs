@@ -89,14 +89,14 @@ impl_method! {
             pub use near_primitives::transaction::SignedTransaction;
 
             #[derive(Debug)]
-            pub struct RpcTxAsyncRequest {
+            pub struct RpcBroadcastTxAsyncRequest {
                 pub signed_transaction: SignedTransaction,
             }
 
-            impl From<RpcTxAsyncRequest>
+            impl From<RpcBroadcastTxAsyncRequest>
                 for near_jsonrpc_primitives::types::transactions::RpcBroadcastTransactionRequest
             {
-                fn from(this: RpcTxAsyncRequest) -> Self {
+                fn from(this: RpcBroadcastTxAsyncRequest) -> Self {
                     Self {
                         signed_transaction: this.signed_transaction,
                     }
@@ -104,7 +104,7 @@ impl_method! {
             }
         }
 
-        impl RpcMethod for RpcTxAsyncRequest {
+        impl RpcMethod for RpcBroadcastTxAsyncRequest {
             type Result = CryptoHash;
             type Error = ();
 
@@ -123,14 +123,14 @@ impl_method! {
             pub use near_primitives::views::FinalExecutionOutcomeView;
 
             #[derive(Debug)]
-            pub struct RpcTxCommitRequest {
+            pub struct RpcBroadcastTxCommitRequest {
                 pub signed_transaction: SignedTransaction,
             }
 
-            impl From<RpcTxCommitRequest>
+            impl From<RpcBroadcastTxCommitRequest>
                 for near_jsonrpc_primitives::types::transactions::RpcBroadcastTransactionRequest
             {
-                fn from(this: RpcTxCommitRequest) -> Self {
+                fn from(this: RpcBroadcastTxCommitRequest) -> Self {
                     Self {
                         signed_transaction: this.signed_transaction,
                     }
@@ -138,7 +138,7 @@ impl_method! {
             }
         }
 
-        impl RpcMethod for RpcTxCommitRequest {
+        impl RpcMethod for RpcBroadcastTxCommitRequest {
             type Result = FinalExecutionOutcomeView;
             type Error = RpcTransactionError;
 
