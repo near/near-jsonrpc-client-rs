@@ -1,0 +1,40 @@
+name: rustdoc
+
+on:
+  push:
+    branches:
+    - master
+
+env:
+  CARGO_INCREMENTAL: 0
+  CARGO_NET_RETRY: 10
+  RUSTFLAGS: -D warnings
+  RUSTUP_MAX_RETRIES: 10
+
+jobs:
+  rustdoc:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Install Rust Toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        profile: minimal
+        default: true
+
+    - name: Build Documentation
+      run: |
+        cargo doc --all-features --no-deps
+        echo '<meta http-equiv=refresh content=0;url=near_jsonrpc_client/index.html>' > ./target/doc/index.html
+
+    - name: Deploy Docs
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_branch: gh-pages
+        publish_dir: ./target/doc
+        force_orphan: true
