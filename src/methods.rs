@@ -505,3 +505,22 @@ impl_method! {
         }
     }
 }
+
+#[cfg(feature = "sandbox")]
+impl_method! {
+    sandbox_patch_state: {
+        exports: {
+            pub use near_jsonrpc_primitives::types::sandbox::{
+                RpcSandboxPatchStateError, RpcSandboxPatchStateRequest,
+                RpcSandboxPatchStateResponse,
+            };
+        }
+
+        impl RpcMethod for RpcSandboxPatchStateRequest {
+            type Result = RpcSandboxPatchStateResponse;
+            type Error = RpcSandboxPatchStateError;
+
+            params(&self) { json!(self) }
+        }
+    }
+}
