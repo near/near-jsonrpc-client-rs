@@ -304,13 +304,12 @@ impl_method! {
     tx: {
         exports: {
             use near_jsonrpc_primitives::types::transactions::TransactionInfo;
-            pub use near_jsonrpc_primitives::types::transactions::{
-                RpcTransactionError, RpcTransactionStatusCommonRequest,
-            };
+            pub use near_jsonrpc_primitives::types::transactions::RpcTransactionError;
             pub use near_primitives::views::FinalExecutionOutcomeViewEnum;
+            pub type RpcTransactionStatusRequest = near_jsonrpc_primitives::types::transactions::RpcTransactionStatusCommonRequest;
         }
 
-        impl RpcMethod for RpcTransactionStatusCommonRequest {
+        impl RpcMethod for RpcTransactionStatusRequest {
             type Result = FinalExecutionOutcomeViewEnum;
             type Error = RpcTransactionError;
 
