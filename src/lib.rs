@@ -125,13 +125,14 @@ impl JsonRpcClient {
                 let err = match if err.error_struct.is_some() {
                     err
                 } else {
-                    loop {
-                        if let RpcError { data: Some(err), .. } = err {
-                            if let Ok(info) = serde_json::from_value::<String>(err) {
-                                break RpcError::new_internal_error(None, info);
-                            };
-                        };
-                        break RpcError::new_internal_error(None, format!("<no data>"));
+                    if let RpcError { data: Some(err), .. } = err {
+                        if let Ok(info) = serde_json::from_value::<String>(err) {
+                            RpcError::new_internal_error(None, info)
+                        } else {
+                            RpcError::new_internal_error(None, format!("<no data>"))
+                        }
+                    } else {
+                        RpcError::new_internal_error(None, format!("<no data>"))
                     }
                 }
                 .error_struct
