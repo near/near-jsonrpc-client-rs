@@ -16,7 +16,7 @@ and construct a request using the `methods::tx::RpcTransactionStatusRequest` str
 use near_jsonrpc_client::{methods, JsonRpcClient};
 use near_jsonrpc_primitives::types::transactions::TransactionInfo;
 
-// create and connect to a NEAR JSON-RPC server
+// create a client and connect to a NEAR JSON-RPC server
 let mainnet_client = JsonRpcClient::new().connect("https://archival-rpc.mainnet.near.org");
 
 let tx_status_request = methods::tx::RpcTransactionStatusRequest {
