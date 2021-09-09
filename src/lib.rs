@@ -1,5 +1,3 @@
-// #![deprecated(note = "this crate is unstable and hence, unfit for use.")]
-
 //! Generic, low-level interfaces for interacting with the NEAR Protocol via JSON_RPC / HTTP.
 //!
 //! It's recommended to use the higher-level `near-api` library instead. Rust version coming soon.
@@ -76,6 +74,7 @@ impl JsonRpcClient {
     /// let mainnet_client = client_connector.connect("https://rpc.mainnet.near.org");
     /// let testnet_client = client_connector.connect("https://rpc.testnet.near.org");
     /// ```
+    #[deprecated(note = "this crate is still under development")]
     pub fn new() -> JsonRpcClientConnector {
         JsonRpcClientConnector {
             client: reqwest::Client::new(),
