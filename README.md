@@ -1,65 +1,36 @@
 # near-jsonrpc-client
 
-Generic, low-level interfaces for interacting with the NEAR Protocol via JSON_RPC / HTTP.
+Lower-level JSON RPC API for interfacing with the NEAR Protocol.
+
+It's recommended to use the higher-level `near-api` library instead. Rust version coming soon.
 
 > DO NOT USE: this crate is unfinalized and therefore, unfit for use.
 
 ## Usage
 
-- Calling JSON_RPC/HTTP methods:
+Each one of the valid JSON RPC methods are defined in the `methods` module.
+For instance, to make a `tx` request, you start with the `tx` module
+and construct a request using the `methods::tx::RpcTransactionStatusRequest` struct.
 
-  ```rust
-  use near_jsonrpc_client::NearClient;
+```rust
+use near_jsonrpc_client::{methods, JsonRpcClient};
+use near_jsonrpc_primitives::types::transactions::TransactionInfo;
 
-  // creates a generic JSON_RPC/HTTP NEAR Client
-  let near_client = NearClient::new().connect("http://localhost:3030");
+// create a client and connect to a NEAR JSON-RPC server
+let mainnet_client = JsonRpcClient::new().connect("https://archival-rpc.mainnet.near.org");
 
-  // creates an JSON_RPC interface based off the existing NEAR Client
-  let jsonrpc_client = near_client.as_jsonrpc();
+let tx_status_request = methods::tx::RpcTransactionStatusRequest {
+    transaction_info: TransactionInfo::TransactionId {
+        hash: "9FtHUFBQsZ2MG77K3x3MJ9wjX3UT8zE1TczCrhZEcG8U".parse()?,
+        account_id: "miraclx.near".parse()?,
+    },
+};
 
-  // creates an HTTP interface based off the existing NEAR Client
-  let http_client = near_client.as_http();
+// call a method on the server via the connected client
+let tx_status = mainnet_client.call(&tx_status_request).await?;
 
-  // The convenience methods on NearJsonRpcClient aid simplicity
-  let status1 = jsonrpc_client.status().await?;
-
-  // The convenience methods on NearHttpClient aid simplicity
-  let status2 = http_client.status().await?;
-
-  println!("{:?}", status1);
-  println!("{:?}", status2);
-  ```
-
-- More involved syntax, decoupling method construction, execution and allowing method reuse
-
-  ```rust
-  // Here, we manually construct a method and execute that on a client
-  // This is useful if you have multiple clients to call methods on
-
-  use near_jsonrpc_client::{jsonrpc::JsonRpcMethod, NearClient};
-  use near_jsonrpc_client::{NEAR_MAINNET_RPC_URL, NEAR_TESTNET_RPC_URL};
-  use near_jsonrpc_primitives::views::FinalExecutionOutcomeView;
-  use near_primitives::types::AccountId;
-
-  let client_builder = NearClient::new(); // instantiate once, reuse
-
-  let mainnet_jsonrpc_client = client_builder.connect(NEAR_MAINNET_RPC_URL).as_jsonrpc();
-  let testnet_jsonrpc_client = client_builder.connect(NEAR_TESTNET_RPC_URL).as_jsonrpc();
-
-  let method = RpcMethod::Tx {
-      // this method can be reused
-      id: "miraclx.near".parse::<AccountId>()?,
-      hash: "9FtHUFBQsZ2MG77K3x3MJ9wjX3UT8zE1TczCrhZEcG8U".parse::<CryptoHash>()?,
-  };
-
-  let tx_status_on_mainnet: FinalExecutionOutcomeView =
-      method.call_on(&mainnet_jsonrpc_client).await?;
-  let tx_status_on_testnet: FinalExecutionOutcomeView =
-      method.call_on(&testnet_jsonrpc_client).await?;
-
-  println!("{:?}", tx_status_on_mainnet);
-  println!("{:?}", tx_status_on_testnet);
-  ```
+println!("{:?}", tx_status);
+```
 
 ## Testing
 
