@@ -27,21 +27,65 @@ where
 }
 
 macro_rules! impl_method {
-    (
+    (@main
         $method_name:ident: {
+            $(#![$meta:meta])*
             $(exports: { $($exports:tt)+ })?
 
-            impl RpcMethod for $request_ty:ty {
-                type $type_variant_1:ident = $variant_1_ty:ty;
-                type $type_variant_2:ident = $variant_2_ty:ty;
+            import_scope: $import_scope:expr;
 
-                $(params(&$this:ident) $param_exec:block )?
-                $(parse_result($value:ident) $result_parser:block )?
+            let constructor = $constructor_str:expr;
+            let constructor_import = $constructor_import_str:expr;
+            let constructor_call = $constructor_call_str:expr;
+            let result = $result_str:expr;
+            let result_import = $result_import_str:expr;
+            let error = $error_str:expr;
+            let error_import = $error_import_str:expr;
+
+            impl RpcMethod for $request_ty:ty {
+                type Result = $result_ty:ty;
+                type Error = $error_ty:ty;
+
+                $(params(&$this:ident) $param_exec:block)?
+                $(parse_result($value:ident) $result_parser:block)?
             }
         }
     ) => {
         #[allow(non_snake_case)]
         pub mod $method_name {
+            $(#![$meta])*
+            #![doc = ""]
+            //! # Example
+            //!
+            //! ```ignore
+            //! use near_jsonrpc_client::{errors, methods, JsonRpcClient, JsonRpcMethodCallResult};
+            //!
+            #![doc = $import_scope]
+            #![doc = $constructor_import_str]
+            #![doc = $result_import_str]
+            #![doc = $error_import_str]
+            //! };
+            //!
+            //! let mainnet_client = JsonRpcClient::new().connect("https://rpc.mainnet.near.org");
+            //!
+            #![doc = $constructor_call_str]
+            //!
+            //! let result: errors::JsonRpcMethodCallResult<
+            #![doc = $result_import_str]
+            #![doc = $error_import_str]
+            //! > = mainnet_client.call(&request);
+            //! ```
+            //!
+            //! - RPC Method Constructor: [
+            #![doc = $constructor_str]
+            //! ]
+            //! - RPC Method Response Type: [
+            #![doc = $result_str]
+            //! ]
+            //! - RPC Method Error Type: [
+            #![doc = $error_str]
+            //! ]
+
             use super::*;
 
             $($($exports)+)?
@@ -49,8 +93,8 @@ macro_rules! impl_method {
             impl chk::ValidRpcMethod for $request_ty {}
 
             impl RpcMethod for $request_ty {
-                type $type_variant_1 = $variant_1_ty;
-                type $type_variant_2 = $variant_2_ty;
+                type Result = $result_ty;
+                type Error = $error_ty;
 
                 const METHOD_NAME: &'static str = stringify!($method_name);
 
@@ -67,6 +111,43 @@ macro_rules! impl_method {
                 )?
             }
         }
+    };
+    (
+        $method_name:ident: {
+            $(#![$meta:meta])*
+            $(exports: { $($exports:tt)+ })?
+
+            impl RpcMethod for $request_ty:ty {
+                type Result = $result_ty:ty;
+                type Error = $error_ty:ty;
+
+                $(params(&$this:ident) $param_exec:block)?
+                $(parse_result($value:ident) $result_parser:block)?
+            }
+        }
+    ) => {
+        impl_method!(@main $method_name: {
+            $(#![$meta])*
+            $(exports: { $($exports)+ })?
+
+            import_scope: concat!("use methods::", stringify!($method_name), "::{");
+
+            let constructor = stringify!($request_ty);
+            let constructor_import = concat!("    ", stringify!($request_ty), ",");
+            let constructor_call = concat!("let request = ", stringify!($request_ty), " {...}; // <-- create a valid request here");
+            let result = stringify!($result_ty);
+            let result_import = concat!("    ", stringify!($result_ty), ",");
+            let error = stringify!($error_ty);
+            let error_import = concat!("    ", stringify!($error_ty), ",");
+
+            impl RpcMethod for $request_ty {
+                type Result = $result_ty;
+                type Error = $error_ty;
+
+                $(params(&$this) $param_exec)?
+                $(parse_result($value) $result_parser)?
+            }
+        });
     };
 }
 
@@ -114,11 +195,13 @@ impl_method! {
                     }
                 }
             }
+
+            pub type RpcBroadcastTxAsyncError = ();
         }
 
         impl RpcMethod for RpcBroadcastTxAsyncRequest {
             type Result = CryptoHash;
-            type Error = ();
+            type Error = RpcBroadcastTxAsyncError;
 
             params(&self) {
                 json!([serialize_signed_transaction(&self.signed_transaction)?])
@@ -454,11 +537,13 @@ impl_method! {
 
             #[derive(Debug)]
             pub struct RpcGenesisConfigRequest;
+
+            pub type RpcGenesisConfigError = ();
         }
 
         impl RpcMethod for RpcGenesisConfigRequest {
             type Result = GenesisConfig;
-            type Error = ();
+            type Error = RpcGenesisConfigError;
         }
     }
 }
@@ -541,11 +626,14 @@ impl_method! {
         exports: {
             #[derive(Debug)]
             pub struct RpcAdversarialSetWeightRequest { pub height: u64 }
+
+            pub type RpcAdversarialSetWeightResponse = ();
+            pub type RpcAdversarialSetWeightError = ();
         }
 
         impl RpcMethod for RpcAdversarialSetWeightRequest {
-            type Result = ();
-            type Error = ();
+            type Result = RpcAdversarialSetWeightResponse;
+            type Error = RpcAdversarialSetWeightError;
 
             params(&self) { json!(self.height) }
             parse_result(value) {
@@ -562,11 +650,14 @@ impl_method! {
         exports: {
             #[derive(Debug)]
             pub struct RpcAdversarialDisableHeaderSyncRequest;
+
+            pub type RpcAdversarialDisableHeaderSyncResponse = ();
+            pub type RpcAdversarialDisableHeaderSyncError = ();
         }
 
         impl RpcMethod for RpcAdversarialDisableHeaderSyncRequest {
-            type Result = ();
-            type Error = ();
+            type Result = RpcAdversarialDisableHeaderSyncResponse;
+            type Error = RpcAdversarialDisableHeaderSyncError;
 
             parse_result(value) {
                 serde_json::from_value(value)?;
@@ -582,11 +673,14 @@ impl_method! {
         exports: {
             #[derive(Debug)]
             pub struct RpcAdversarialDisableDoomslugRequest;
+
+            pub type RpcAdversarialDisableDoomslugResponse = ();
+            pub type RpcAdversarialDisableDoomslugError = ();
         }
 
         impl RpcMethod for RpcAdversarialDisableDoomslugRequest {
-            type Result = ();
-            type Error = ();
+            type Result = RpcAdversarialDisableDoomslugResponse;
+            type Error = RpcAdversarialDisableDoomslugError;
 
             parse_result(value) {
                 serde_json::from_value(value)?;
@@ -605,11 +699,14 @@ impl_method! {
                 pub num_blocks: u64,
                 pub only_valid: bool,
             }
+
+            pub type RpcAdversarialProduceBlocksResponse = ();
+            pub type RpcAdversarialProduceBlocksError = ();
         }
 
         impl RpcMethod for RpcAdversarialProduceBlocksRequest {
-            type Result = ();
-            type Error = ();
+            type Result = RpcAdversarialProduceBlocksResponse;
+            type Error = RpcAdversarialProduceBlocksError;
 
             params(&self) { json!([self.num_blocks, self.only_valid]) }
             parse_result(value) {
@@ -626,11 +723,14 @@ impl_method! {
         exports: {
             #[derive(Debug)]
             pub struct RpcAdversarialSwitchToHeightRequest { pub height: u64 }
+
+            pub type RpcAdversarialSwitchToHeightResponse = ();
+            pub type RpcAdversarialSwitchToHeightError = ();
         }
 
         impl RpcMethod for RpcAdversarialSwitchToHeightRequest {
-            type Result = ();
-            type Error = ();
+            type Result = RpcAdversarialSwitchToHeightResponse;
+            type Error = RpcAdversarialSwitchToHeightError;
 
             params(&self) { json!([self.height]) }
             parse_result(value) {
@@ -647,11 +747,14 @@ impl_method! {
         exports: {
             #[derive(Debug)]
             pub struct RpcAdversarialGetSavedBlocksRequest;
+
+            pub type RpcAdversarialGetSavedBlocksResponse = u64;
+            pub type RpcAdversarialGetSavedBlocksError = ();
         }
 
         impl RpcMethod for RpcAdversarialGetSavedBlocksRequest {
-            type Result = u64;
-            type Error = ();
+            type Result = RpcAdversarialGetSavedBlocksResponse;
+            type Error = RpcAdversarialGetSavedBlocksError;
         }
     }
 }
@@ -662,11 +765,14 @@ impl_method! {
         exports: {
             #[derive(Debug)]
             pub struct RpcAdversarialCheckStoreRequest;
+
+            pub type RpcAdversarialCheckStoreResponse = u64;
+            pub type RpcAdversarialCheckStoreError = ();
         }
 
         impl RpcMethod for RpcAdversarialCheckStoreRequest {
-            type Result = u64;
-            type Error = ();
+            type Result = RpcAdversarialCheckStoreResponse;
+            type Error = RpcAdversarialCheckStoreError;
         }
     }
 }
