@@ -154,9 +154,11 @@ impl JsonRpcClient {
                     RpcErrorKind::RequestValidationError(err) => {
                         JsonRpcError::ServerError(JsonRpcServerError::RequestValidationError(err))
                     }
-                    RpcErrorKind::InternalError(err) => {
-                        JsonRpcError::ServerError(JsonRpcServerError::InternalError(err))
-                    }
+                    RpcErrorKind::InternalError(err) => JsonRpcError::ServerError(
+                        JsonRpcServerError::InternalError {
+                            info: err["info"]["error_message"].as_str().unwrap_or("<no data>").to_string()
+                        }
+                    )
                 };
                 Err(err)
             })?;

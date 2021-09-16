@@ -45,7 +45,7 @@ pub enum RpcTransportError {
 pub enum JsonRpcServerError<E> {
     RequestValidationError(RpcRequestValidationErrorKind),
     HandlerError(E),
-    InternalError(serde_json::Value),
+    InternalError { info: String },
 }
 
 impl<E: fmt::Debug + fmt::Display> std::error::Error for JsonRpcServerError<E> {}
@@ -57,7 +57,7 @@ impl<E: fmt::Display> fmt::Display for JsonRpcServerError<E> {
                 write!(f, "request validation error: [{:?}]", err)
             }
             Self::HandlerError(err) => write!(f, "handler error: [{}]", err),
-            Self::InternalError(err) => write!(f, "internal error: [{}]", err),
+            Self::InternalError { info } => write!(f, "internal error: [{}]", info),
         }
     }
 }
