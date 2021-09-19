@@ -22,6 +22,8 @@
 //! # }
 //! ```
 
+use std::{fmt, sync::Arc};
+
 use near_jsonrpc_primitives::errors::{RpcError, RpcErrorKind};
 use near_jsonrpc_primitives::message::{from_slice, Message};
 
@@ -44,21 +46,37 @@ pub struct JsonRpcClientConnector {
 impl JsonRpcClientConnector {
     pub fn connect(&self, server_addr: &str) -> JsonRpcClient {
         JsonRpcClient {
-            server_addr: server_addr.to_string(),
-            client: self.client.clone(),
+            inner: Arc::new(JsonRpcInnerClient {
+                server_addr: server_addr.to_string(),
+                client: self.client.clone(),
+            }),
         }
     }
 }
 
-/// A NEAR JSON RPC Client.
-#[derive(Debug, Clone)]
-pub struct JsonRpcClient {
+struct JsonRpcInnerClient {
     server_addr: String,
     client: reqwest::Client,
 }
 
+/// A NEAR JSON RPC Client.
+#[derive(Clone)]
+pub struct JsonRpcClient {
+    inner: Arc<JsonRpcInnerClient>,
+}
+
+impl fmt::Debug for JsonRpcClient {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut builder = f.debug_struct("JsonRpcClient");
+        builder.field("server_addr", &self.inner.server_addr);
+        builder.field("client", &self.inner.client);
+        builder.finish()
+    }
+}
+
 pub type JsonRpcMethodCallResult<T, E> = Result<T, JsonRpcError<E>>;
 
+#[deprecated(note = "this crate is still under development")]
 impl JsonRpcClient {
     /// Create a new client connector.
     ///
@@ -74,16 +92,21 @@ impl JsonRpcClient {
     /// let mainnet_client = client_connector.connect("https://rpc.mainnet.near.org");
     /// let testnet_client = client_connector.connect("https://rpc.testnet.near.org");
     /// ```
-    #[deprecated(note = "this crate is still under development")]
     pub fn new() -> JsonRpcClientConnector {
         JsonRpcClientConnector {
             client: reqwest::Client::new(),
         }
     }
 
+    pub fn with(client: reqwest::Client) -> JsonRpcClientConnector {
+        JsonRpcClientConnector { client }
+    }
+}
+
+impl JsonRpcClient {
     /// Method executor for the client.
     pub async fn call<M: methods::RpcMethod>(
-        &self,
+        self,
         method: &M,
     ) -> JsonRpcMethodCallResult<M::Result, M::Error> {
         let (method_name, params) = (
@@ -101,8 +124,9 @@ impl JsonRpcClient {
             ))
         })?;
         let request = self
+            .inner
             .client
-            .post(&self.server_addr)
+            .post(&self.inner.server_addr)
             .header("Content-Type", "application/json")
             .body(request_payload);
         let response = request.send().await.map_err(|err| {
