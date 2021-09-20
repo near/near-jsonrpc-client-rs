@@ -12,7 +12,7 @@
 //!
 //! # #[tokio::main]
 //! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! let testnet_client = JsonRpcClient::new().connect(NEAR_TESTNET_RPC_URL);
+//! let testnet_client = JsonRpcClient::connect(NEAR_TESTNET_RPC_URL);
 //!
 //! let status_request = methods::status::RpcStatusRequest;
 //! let server_status = testnet_client.call(&status_request).await?;
@@ -27,6 +27,8 @@ use std::{fmt, sync::Arc};
 use near_jsonrpc_primitives::errors::{RpcError, RpcErrorKind};
 use near_jsonrpc_primitives::message::{from_slice, Message};
 
+use lazy_static::lazy_static;
+
 pub mod errors;
 pub mod methods;
 
@@ -36,6 +38,10 @@ pub const NEAR_MAINNET_RPC_URL: &str = "https://rpc.mainnet.near.org";
 pub const NEAR_TESTNET_RPC_URL: &str = "https://rpc.testnet.near.org";
 pub const NEAR_MAINNET_ARCHIVAL_RPC_URL: &str = "https://archival-rpc.mainnet.near.org";
 pub const NEAR_TESTNET_ARCHIVAL_RPC_URL: &str = "https://archival-rpc.testnet.near.org";
+
+lazy_static! {
+    static ref DEFAULT_CONNECTOR: JsonRpcClientConnector = JsonRpcClient::new();
+}
 
 /// NEAR JSON RPC client connector.
 #[derive(Clone)]
@@ -74,14 +80,40 @@ impl fmt::Debug for JsonRpcClient {
     }
 }
 
-pub type JsonRpcMethodCallResult<T, E> = Result<T, JsonRpcError<E>>;
-
 #[deprecated(note = "this crate is still under development")]
 impl JsonRpcClient {
-    /// Create a new client connector.
+    /// Connect to a JSON RPC server using the default connector.
     ///
-    /// If you intend to use the client more than once,
-    /// it is advised to create a client once and **reuse** it.
+    /// It's virtually the same as calling `new()` and then `connect(server_addr)`.
+    /// Only, this method optimally reuses the same connector across invocations.
+    ///
+    /// ## Example
+    ///
+    /// ```
+    /// use near_jsonrpc_client::{methods, JsonRpcClient};
+    ///
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let mainnet_client = JsonRpcClient::connect("https://rpc.testnet.near.org");
+    ///
+    /// let status_request = methods::status::RpcStatusRequest;
+    /// let server_status = mainnet_client.call(&status_request).await?;
+    ///
+    /// println!("{:?}", server_status);
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn connect(server_addr: &str) -> JsonRpcClient {
+        DEFAULT_CONNECTOR.connect(server_addr)
+    }
+
+    /// Manually create a new client connector.
+    ///
+    /// It's recommended to use the `connect` method instead as that method optimally
+    /// reuses the default connector across invocations.
+    ///
+    /// However, if for some reason you still need to manually create a new connector, you can do so.
+    /// Just remember to properly **reuse** it as much as possible.
     ///
     /// ## Example
     ///
@@ -98,10 +130,31 @@ impl JsonRpcClient {
         }
     }
 
+    /// Create a new client constructor using a custom web client.
+    ///
+    /// This is useful if you want to customize the `reqwest::Client` instance used by the JsonRpcClient.
+    ///
+    /// ## Example
+    ///
+    /// ```
+    /// use near_jsonrpc_client::JsonRpcClient;
+    ///
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let webClient = reqwest::Client::builder()
+    ///     .proxy(reqwest::Proxy::all("https://192.168.1.1:4825")?)
+    ///     .build()?;
+    ///
+    /// let testnet_client = JsonRpcClient::with(webClient).connect("https://rpc.testnet.near.org");
+    /// # Ok(())
+    /// # }
+    /// ```
     pub fn with(client: reqwest::Client) -> JsonRpcClientConnector {
         JsonRpcClientConnector { client }
     }
 }
+
+pub type JsonRpcMethodCallResult<T, E> = Result<T, JsonRpcError<E>>;
 
 impl JsonRpcClient {
     /// Method executor for the client.
@@ -208,7 +261,7 @@ mod tests {
 
     #[tokio::test]
     async fn check_jsonrpc_status() {
-        let client = JsonRpcClient::new().connect(RPC_SERVER_ADDR);
+        let client = JsonRpcClient::connect(RPC_SERVER_ADDR);
         let method = methods::status::RpcStatusRequest;
         let status = client.call(&method).await;
 

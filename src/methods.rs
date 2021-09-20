@@ -66,7 +66,7 @@ macro_rules! impl_method {
             #![doc = $error_import_str]
             //! };
             //!
-            //! let mainnet_client = JsonRpcClient::new().connect("https://rpc.mainnet.near.org");
+            //! let mainnet_client = JsonRpcClient::connect("https://rpc.mainnet.near.org");
             //!
             #![doc = $constructor_call_str]
             //!
