@@ -70,7 +70,7 @@ macro_rules! impl_method {
             //!
             #![doc = $constructor_call_str]
             //!
-            //! let result: errors::JsonRpcMethodCallResult<
+            //! let result: JsonRpcMethodCallResult<
             #![doc = $result_import_str]
             #![doc = $error_import_str]
             //! > = mainnet_client.call(&request);
