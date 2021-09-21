@@ -423,7 +423,7 @@ impl_method! {
             type Result = EpochValidatorInfo;
             type Error = RpcValidatorError;
 
-            params(&self) { json!([self]) }
+            params(&self) { json!(self) }
         }
     }
 }

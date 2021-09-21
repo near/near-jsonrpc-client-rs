@@ -22,10 +22,10 @@ borsh = "0.9"
 serde = "1.0.127"
 serde_json = "1.0.66"
 
-near-primitives = { git = "https://github.com/near/nearcore", rev="526381542c1e5c0012d89fc308f370e45543374f" }
-near-chain-configs = { git = "https://github.com/near/nearcore", rev="526381542c1e5c0012d89fc308f370e45543374f" }
-near-client-primitives = { git = "https://github.com/near/nearcore", rev="526381542c1e5c0012d89fc308f370e45543374f" }
-near-jsonrpc-primitives = { git = "https://github.com/near/nearcore", rev="526381542c1e5c0012d89fc308f370e45543374f" }
+near-primitives = { git = "https://github.com/near/nearcore", rev="4306275e57edf6a918e73b2b442ffb110761a264" }
+near-chain-configs = { git = "https://github.com/near/nearcore", rev="4306275e57edf6a918e73b2b442ffb110761a264" }
+near-client-primitives = { git = "https://github.com/near/nearcore", rev="4306275e57edf6a918e73b2b442ffb110761a264" }
+near-jsonrpc-primitives = { git = "https://github.com/near/nearcore", rev="4306275e57edf6a918e73b2b442ffb110761a264" }
 
 [dev-dependencies]
 tokio = { version = "1.1", features = ["rt", "macros"] }
