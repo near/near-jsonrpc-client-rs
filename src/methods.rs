@@ -386,14 +386,28 @@ impl_method! {
 impl_method! {
     tx: {
         exports: {
-            use near_jsonrpc_primitives::types::transactions::TransactionInfo;
             pub use near_jsonrpc_primitives::types::transactions::RpcTransactionError;
-            pub use near_primitives::views::FinalExecutionOutcomeViewEnum;
-            pub type RpcTransactionStatusRequest = near_jsonrpc_primitives::types::transactions::RpcTransactionStatusCommonRequest;
+            pub use near_jsonrpc_primitives::types::transactions::TransactionInfo;
+            pub use near_primitives::views::FinalExecutionOutcomeView;
+
+            #[derive(Debug)]
+            pub struct RpcTransactionStatusRequest {
+                pub transaction_info: TransactionInfo,
+            }
+
+            impl From<RpcTransactionStatusRequest>
+                for near_jsonrpc_primitives::types::transactions::RpcTransactionStatusCommonRequest
+            {
+                fn from(this: RpcTransactionStatusRequest) -> Self {
+                    Self {
+                        transaction_info: this.transaction_info,
+                    }
+                }
+            }
         }
 
         impl RpcMethod for RpcTransactionStatusRequest {
-            type Result = FinalExecutionOutcomeViewEnum;
+            type Result = FinalExecutionOutcomeView;
             type Error = RpcTransactionError;
 
             params(&self) {
@@ -580,6 +594,47 @@ impl_method! {
             type Error = RpcReceiptError;
 
             params(&self) { json!(self) }
+        }
+    }
+}
+
+impl_method! {
+    EXPERIMENTAL_tx_status: {
+        exports: {
+            pub use near_jsonrpc_primitives::types::transactions::RpcTransactionError;
+            pub use near_jsonrpc_primitives::types::transactions::TransactionInfo;
+            pub use near_primitives::views::FinalExecutionOutcomeWithReceiptView;
+
+            #[derive(Debug)]
+            pub struct RpcTransactionStatusRequest {
+                pub transaction_info: TransactionInfo,
+            }
+
+            impl From<RpcTransactionStatusRequest>
+                for near_jsonrpc_primitives::types::transactions::RpcTransactionStatusCommonRequest
+            {
+                fn from(this: RpcTransactionStatusRequest) -> Self {
+                    Self {
+                        transaction_info: this.transaction_info,
+                    }
+                }
+            }
+        }
+
+        impl RpcMethod for RpcTransactionStatusRequest {
+            type Result = FinalExecutionOutcomeWithReceiptView;
+            type Error = RpcTransactionError;
+
+            params(&self) {
+                match &self.transaction_info {
+                    TransactionInfo::Transaction(signed_transaction) => {
+                        json!([serialize_signed_transaction(&signed_transaction)?])
+                    }
+                    TransactionInfo::TransactionId { hash, account_id } => {
+                        json!([hash, account_id])
+                    }
+                }
+            }
         }
     }
 }
