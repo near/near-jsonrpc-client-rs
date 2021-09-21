@@ -58,7 +58,7 @@ macro_rules! impl_method {
             //! # Example
             //!
             //! ```ignore
-            //! use near_jsonrpc_client::{errors, methods, JsonRpcClient, JsonRpcMethodCallResult};
+            //! use near_jsonrpc_client::{methods, JsonRpcClient, JsonRpcMethodCallResult};
             //!
             #![doc = $import_scope]
             #![doc = $constructor_import_str]
