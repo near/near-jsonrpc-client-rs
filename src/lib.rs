@@ -197,48 +197,69 @@ impl JsonRpcClient {
                 JsonRpcTransportRecvError::PayloadParseError(err),
             ))
         })?;
+
         if let Message::Response(response) = response_message {
-            let response_result = response.result.or_else(|err| {
-                let err = match if err.error_struct.is_some() {
-                    err
-                } else {
-                    if let RpcError { data: Some(err), .. } = err {
-                        if let Ok(info) = serde_json::from_value::<String>(err) {
-                            RpcError::new_internal_error(None, info)
-                        } else {
-                            RpcError::new_internal_error(None, format!("<no data>"))
+            let response_result = match response.result {
+                Ok(response_result) => response_result,
+                Err(err) => {
+                    let mut handler_parse_error = None;
+                    match err.error_struct {
+                        Some(RpcErrorKind::HandlerError(handler_error)) => {
+                            match serde_json::from_value(handler_error) {
+                                Ok(handler_error) => {
+                                    return Err(JsonRpcError::ServerError(
+                                        JsonRpcServerError::HandlerError(handler_error),
+                                    ))
+                                }
+                                Err(err) => {
+                                    handler_parse_error.replace(err);
+                                }
+                            }
                         }
-                    } else {
-                        RpcError::new_internal_error(None, format!("<no data>"))
+                        Some(RpcErrorKind::RequestValidationError(err)) => {
+                            return Err(JsonRpcError::ServerError(
+                                JsonRpcServerError::RequestValidationError(err),
+                            ));
+                        }
+                        Some(RpcErrorKind::InternalError(err)) => {
+                            return Err(JsonRpcError::ServerError(
+                                JsonRpcServerError::InternalError {
+                                    info: err["info"]["error_message"]
+                                        .as_str()
+                                        .unwrap_or("<no data>")
+                                        .to_string(),
+                                },
+                            ))
+                        }
+                        None => {}
                     }
-                }
-                .error_struct
-                .unwrap()
-                {
-                    RpcErrorKind::HandlerError(handler_error) => {
-                        JsonRpcError::ServerError(JsonRpcServerError::HandlerError(
-                            serde_json::from_value(handler_error).map_err(|err| {
-                                JsonRpcError::TransportError(RpcTransportError::RecvError(
-                                    JsonRpcTransportRecvError::ResponseParseError(
-                                        JsonRpcTransportHandlerResponseError::ErrorMessageParseError(
-                                            err,
-                                        ),
-                                    ),
+                    if let Some(raw_err_data) = err.data {
+                        match M::parse_raw_error(raw_err_data) {
+                            Ok(handler_error) => {
+                                return Err(JsonRpcError::ServerError(
+                                    JsonRpcServerError::HandlerError(handler_error),
                                 ))
-                            })?,
-                        ))
-                    }
-                    RpcErrorKind::RequestValidationError(err) => {
-                        JsonRpcError::ServerError(JsonRpcServerError::RequestValidationError(err))
-                    }
-                    RpcErrorKind::InternalError(err) => JsonRpcError::ServerError(
-                        JsonRpcServerError::InternalError {
-                            info: err["info"]["error_message"].as_str().unwrap_or("<no data>").to_string()
+                            }
+                            Err(err) => {
+                                handler_parse_error.replace(err);
+                            }
                         }
-                    )
-                };
-                Err(err)
-            })?;
+                    }
+                    if let Some(err) = handler_parse_error {
+                        return Err(JsonRpcError::TransportError(RpcTransportError::RecvError(
+                            JsonRpcTransportRecvError::ResponseParseError(
+                                JsonRpcTransportHandlerResponseError::ErrorMessageParseError(err),
+                            ),
+                        )));
+                    }
+                    return Err(JsonRpcError::ServerError(
+                        JsonRpcServerError::NonContextualError {
+                            code: err.code,
+                            message: err.message,
+                        },
+                    ));
+                }
+            };
             return M::parse_result(response_result).map_err(|err| {
                 JsonRpcError::TransportError(RpcTransportError::RecvError(
                     JsonRpcTransportRecvError::ResponseParseError(

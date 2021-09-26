@@ -46,6 +46,7 @@ pub enum JsonRpcServerError<E> {
     RequestValidationError(RpcRequestValidationErrorKind),
     HandlerError(E),
     InternalError { info: String },
+    NonContextualError { code: i64, message: String },
 }
 
 impl<E: fmt::Debug + fmt::Display> std::error::Error for JsonRpcServerError<E> {}
@@ -58,6 +59,11 @@ impl<E: fmt::Display> fmt::Display for JsonRpcServerError<E> {
             }
             Self::HandlerError(err) => write!(f, "handler error: [{}]", err),
             Self::InternalError { info } => write!(f, "internal error: [{}]", info),
+            Self::NonContextualError { code, message } => write!(
+                f,
+                "error response lacks context: {{code = {}}} {{message = {}}}",
+                code, message
+            ),
         }
     }
 }

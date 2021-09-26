@@ -24,6 +24,10 @@ where
     fn parse_result(value: serde_json::Value) -> Result<Self::Result, serde_json::Error> {
         serde_json::from_value(value)
     }
+
+    fn parse_raw_error(value: serde_json::Value) -> Result<Self::Error, serde_json::Error> {
+        serde_json::from_value(value)
+    }
 }
 
 macro_rules! impl_method {
@@ -47,7 +51,8 @@ macro_rules! impl_method {
                 type Error = $error_ty:ty;
 
                 $(params(&$this:ident) $param_exec:block)?
-                $(parse_result($value:ident) $result_parser:block)?
+                $(parse_result($result_value:ident) $result_parser:block)?
+                $(parse_raw_error($raw_err_value:ident) $raw_err_parser:block)?
             }
         }
     ) => {
@@ -105,8 +110,14 @@ macro_rules! impl_method {
                 )?
 
                 $(
-                    fn parse_result($value: serde_json::Value) -> Result<Self::Result, serde_json::Error> {
+                    fn parse_result($result_value: serde_json::Value) -> Result<Self::Result, serde_json::Error> {
                         Ok($result_parser)
+                    }
+                )?
+
+                $(
+                    fn parse_raw_error($raw_err_value: serde_json::Value) -> Result<Self::Error, serde_json::Error> {
+                        Ok($raw_err_parser)
                     }
                 )?
             }
@@ -122,7 +133,8 @@ macro_rules! impl_method {
                 type Error = $error_ty:ty;
 
                 $(params(&$this:ident) $param_exec:block)?
-                $(parse_result($value:ident) $result_parser:block)?
+                $(parse_result($result_value:ident) $result_parser:block)?
+                $(parse_raw_error($raw_value:ident) $raw_err_parser:block)?
             }
         }
     ) => {
@@ -145,7 +157,8 @@ macro_rules! impl_method {
                 type Error = $error_ty;
 
                 $(params(&$this) $param_exec)?
-                $(parse_result($value) $result_parser)?
+                $(parse_result($result_value) $result_parser)?
+                $(parse_raw_error($raw_value) $raw_err_parser)?
             }
         });
     };
