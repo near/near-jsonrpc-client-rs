@@ -55,7 +55,7 @@ pub trait RpcHandlerError: serde::de::DeserializeOwned + chk::ValidRpcMarkerTrai
 macro_rules! impl_method {
     (
         $(#[$meta:meta])*
-        $method_name:ident: {
+        pub mod $method_name:ident {
             $($body:tt)+
         }
     ) => {
@@ -121,7 +121,7 @@ mod shared_structs {
 }
 
 impl_method! {
-    block: {
+    pub mod block {
         pub use near_jsonrpc_primitives::types::blocks::RpcBlockError;
         pub use near_jsonrpc_primitives::types::blocks::RpcBlockRequest;
         pub use near_primitives::views::BlockView;
@@ -150,7 +150,7 @@ fn serialize_signed_transaction(
 }
 
 impl_method! {
-    broadcast_tx_async:  {
+    pub mod broadcast_tx_async {
         pub use near_primitives::hash::CryptoHash;
         pub use near_primitives::transaction::SignedTransaction;
 
@@ -188,7 +188,7 @@ impl_method! {
 }
 
 impl_method! {
-    broadcast_tx_commit: {
+    pub mod broadcast_tx_commit {
         pub use near_jsonrpc_primitives::types::transactions::RpcTransactionError;
         pub use near_primitives::transaction::SignedTransaction;
         pub use near_primitives::views::FinalExecutionOutcomeView;
@@ -220,7 +220,7 @@ impl_method! {
 }
 
 impl_method! {
-    chunk: {
+    pub mod chunk {
         pub use near_jsonrpc_primitives::types::chunks::{RpcChunkError, RpcChunkRequest};
         pub use near_primitives::views::ChunkView;
 
@@ -240,7 +240,7 @@ impl_method! {
 }
 
 impl_method! {
-    gas_price: {
+    pub mod gas_price {
         pub use near_jsonrpc_primitives::types::gas_price::{
             RpcGasPriceError, RpcGasPriceRequest,
         };
@@ -262,7 +262,7 @@ impl_method! {
 }
 
 impl_method! {
-    health: {
+    pub mod health {
         pub use near_jsonrpc_primitives::types::status::{
             RpcHealthResponse, RpcStatusError,
         };
@@ -280,7 +280,7 @@ impl_method! {
 }
 
 impl_method! {
-    light_client_proof: {
+    pub mod light_client_proof {
         pub use near_jsonrpc_primitives::types::light_client::{
             RpcLightClientExecutionProofRequest, RpcLightClientExecutionProofResponse,
             RpcLightClientProofError,
@@ -302,7 +302,7 @@ impl_method! {
 }
 
 impl_method! {
-    next_light_client_block: {
+    pub mod next_light_client_block {
         pub use near_jsonrpc_primitives::types::light_client::{
             RpcLightClientNextBlockError, RpcLightClientNextBlockRequest,
         };
@@ -325,7 +325,7 @@ impl_method! {
 }
 
 impl_method! {
-    network_info: {
+    pub mod network_info {
         pub use near_client_primitives::types::NetworkInfoResponse;
         pub use near_jsonrpc_primitives::types::network_info::RpcNetworkInfoError;
 
@@ -344,7 +344,7 @@ impl_method! {
 }
 
 impl_method! {
-    query: {
+    pub mod query {
         pub use near_jsonrpc_primitives::types::query::{
             RpcQueryError, RpcQueryRequest, RpcQueryResponse,
         };
@@ -365,7 +365,7 @@ impl_method! {
 }
 
 impl_method! {
-    status: {
+    pub mod status {
         pub use near_jsonrpc_primitives::types::status::RpcStatusError;
         pub use near_primitives::views::StatusResponse;
 
@@ -382,7 +382,7 @@ impl_method! {
 }
 
 impl_method! {
-    tx: {
+    pub mod tx {
         pub use near_jsonrpc_primitives::types::transactions::RpcTransactionError;
         pub use near_jsonrpc_primitives::types::transactions::TransactionInfo;
         pub use near_primitives::views::FinalExecutionOutcomeView;
@@ -423,7 +423,7 @@ impl_method! {
 }
 
 impl_method! {
-    validators: {
+    pub mod validators {
         pub use near_jsonrpc_primitives::types::validator::{
             RpcValidatorError, RpcValidatorRequest,
         };
@@ -443,7 +443,7 @@ impl_method! {
 }
 
 impl_method! {
-    EXPERIMENTAL_broadcast_tx_sync: {
+    pub mod EXPERIMENTAL_broadcast_tx_sync {
         pub use near_jsonrpc_primitives::types::transactions::{
             RpcBroadcastTxSyncResponse, RpcTransactionError,
         };
@@ -474,7 +474,7 @@ impl_method! {
 }
 
 impl_method! {
-    EXPERIMENTAL_changes: {
+    pub mod EXPERIMENTAL_changes {
         pub use near_jsonrpc_primitives::types::changes::{
             RpcStateChangesError, RpcStateChangesInBlockByTypeRequest,
             RpcStateChangesInBlockResponse,
@@ -494,7 +494,7 @@ impl_method! {
 }
 
 impl_method! {
-    EXPERIMENTAL_changes_in_block: {
+    pub mod EXPERIMENTAL_changes_in_block {
         pub use near_jsonrpc_primitives::types::changes::{
             RpcStateChangesError, RpcStateChangesInBlockRequest,
             RpcStateChangesInBlockByTypeResponse,
@@ -514,7 +514,7 @@ impl_method! {
 }
 
 impl_method! {
-    EXPERIMENTAL_check_tx: {
+    pub mod EXPERIMENTAL_check_tx {
         pub use near_jsonrpc_primitives::types::transactions::{
             RpcBroadcastTxSyncResponse, RpcTransactionError,
         };
@@ -545,7 +545,7 @@ impl_method! {
 }
 
 impl_method! {
-    EXPERIMENTAL_genesis_config: {
+    pub mod EXPERIMENTAL_genesis_config {
         pub use near_chain_configs::GenesisConfig;
 
         #[derive(Debug)]
@@ -566,7 +566,7 @@ impl_method! {
 }
 
 impl_method! {
-    EXPERIMENTAL_protocol_config: {
+    pub mod EXPERIMENTAL_protocol_config {
         pub use near_chain_configs::ProtocolConfigView;
         pub use near_jsonrpc_primitives::types::config::{
             RpcProtocolConfigError, RpcProtocolConfigRequest,
@@ -588,7 +588,7 @@ impl_method! {
 }
 
 impl_method! {
-    EXPERIMENTAL_receipt: {
+    pub mod EXPERIMENTAL_receipt {
         pub use near_jsonrpc_primitives::types::receipts::{
             RpcReceiptError, RpcReceiptRequest,
         };
@@ -610,7 +610,7 @@ impl_method! {
 }
 
 impl_method! {
-    EXPERIMENTAL_tx_status: {
+    pub mod EXPERIMENTAL_tx_status {
         pub use near_jsonrpc_primitives::types::transactions::RpcTransactionError;
         pub use near_jsonrpc_primitives::types::transactions::TransactionInfo;
         pub use near_primitives::views::FinalExecutionOutcomeWithReceiptView;
@@ -653,7 +653,7 @@ impl_method! {
 }
 
 impl_method! {
-    EXPERIMENTAL_validators_ordered: {
+    pub mod EXPERIMENTAL_validators_ordered {
         pub use near_jsonrpc_primitives::types::validator::{
             RpcValidatorError, RpcValidatorsOrderedRequest, RpcValidatorsOrderedResponse,
         };
@@ -673,7 +673,7 @@ impl_method! {
 
 #[cfg(feature = "sandbox")]
 impl_method! {
-    sandbox_patch_state: {
+    pub mod sandbox_patch_state {
         pub use near_jsonrpc_primitives::types::sandbox::{
             RpcSandboxPatchStateError, RpcSandboxPatchStateRequest,
             RpcSandboxPatchStateResponse,
@@ -696,7 +696,7 @@ impl_method! {
 
 #[cfg(feature = "adversarial")]
 impl_method! {
-    adv_set_weight: {
+    pub mod adv_set_weight {
         #[derive(Debug)]
         pub struct RpcAdversarialSetWeightRequest { pub height: u64 }
 
@@ -727,7 +727,7 @@ impl_method! {
 
 #[cfg(feature = "adversarial")]
 impl_method! {
-    adv_disable_header_sync: {
+    pub mod adv_disable_header_sync {
         #[derive(Debug)]
         pub struct RpcAdversarialDisableHeaderSyncRequest;
 
@@ -754,7 +754,7 @@ impl_method! {
 
 #[cfg(feature = "adversarial")]
 impl_method! {
-    adv_disable_doomslug: {
+    pub mod adv_disable_doomslug {
             #[derive(Debug)]
         pub struct RpcAdversarialDisableDoomslugRequest;
 
@@ -781,7 +781,7 @@ impl_method! {
 
 #[cfg(feature = "adversarial")]
 impl_method! {
-    adv_produce_blocks: {
+    pub mod adv_produce_blocks {
         #[derive(Debug)]
         pub struct RpcAdversarialProduceBlocksRequest {
             pub num_blocks: u64,
@@ -815,7 +815,7 @@ impl_method! {
 
 #[cfg(feature = "adversarial")]
 impl_method! {
-    adv_switch_to_height: {
+    pub mod adv_switch_to_height {
         #[derive(Debug)]
         pub struct RpcAdversarialSwitchToHeightRequest { pub height: u64 }
 
@@ -846,7 +846,7 @@ impl_method! {
 
 #[cfg(feature = "adversarial")]
 impl_method! {
-    adv_get_saved_blocks: {
+    pub mod adv_get_saved_blocks {
         #[derive(Debug)]
         pub struct RpcAdversarialGetSavedBlocksRequest;
 
@@ -869,7 +869,7 @@ impl_method! {
 
 #[cfg(feature = "adversarial")]
 impl_method! {
-    adv_check_store: {
+    pub mod adv_check_store {
         #[derive(Debug)]
         pub struct RpcAdversarialCheckStoreRequest;
 
