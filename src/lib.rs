@@ -15,7 +15,7 @@
 //! let testnet_client = JsonRpcClient::connect(NEAR_TESTNET_RPC_URL);
 //!
 //! let status_request = methods::status::RpcStatusRequest;
-//! let server_status = testnet_client.call(&status_request).await?;
+//! let server_status = testnet_client.call(status_request).await?;
 //!
 //! println!("{:?}", server_status);
 //! # Ok(())
@@ -24,7 +24,7 @@
 
 use std::{fmt, sync::Arc};
 
-use near_jsonrpc_primitives::errors::{RpcError, RpcErrorKind};
+use near_jsonrpc_primitives::errors::RpcErrorKind;
 use near_jsonrpc_primitives::message::{from_slice, Message};
 
 use lazy_static::lazy_static;
@@ -97,7 +97,7 @@ impl JsonRpcClient {
     /// let mainnet_client = JsonRpcClient::connect("https://rpc.testnet.near.org");
     ///
     /// let status_request = methods::status::RpcStatusRequest;
-    /// let server_status = mainnet_client.call(&status_request).await?;
+    /// let server_status = mainnet_client.call(status_request).await?;
     ///
     /// println!("{:?}", server_status);
     /// # Ok(())
@@ -160,7 +160,7 @@ impl JsonRpcClient {
     /// Method executor for the client.
     pub async fn call<M: methods::RpcMethod>(
         self,
-        method: &M,
+        method: M,
     ) -> JsonRpcMethodCallResult<M::Result, M::Error> {
         let (method_name, params) = (
             M::METHOD_NAME,
@@ -234,15 +234,16 @@ impl JsonRpcClient {
                         None => {}
                     }
                     if let Some(raw_err_data) = err.data {
-                        match M::parse_raw_error(raw_err_data) {
-                            Ok(handler_error) => {
+                        match methods::RpcHandlerError::parse_raw_error(raw_err_data) {
+                            Some(Ok(handler_error)) => {
                                 return Err(JsonRpcError::ServerError(
                                     JsonRpcServerError::HandlerError(handler_error),
                                 ))
                             }
-                            Err(err) => {
+                            Some(Err(err)) => {
                                 handler_parse_error.replace(err);
                             }
+                            None => {}
                         }
                     }
                     if let Some(err) = handler_parse_error {
@@ -260,7 +261,7 @@ impl JsonRpcClient {
                     ));
                 }
             };
-            return M::parse_result(response_result).map_err(|err| {
+            return methods::RpcHandlerResult::parse_result(response_result).map_err(|err| {
                 JsonRpcError::TransportError(RpcTransportError::RecvError(
                     JsonRpcTransportRecvError::ResponseParseError(
                         JsonRpcTransportHandlerResponseError::ResultParseError(err),
@@ -284,7 +285,7 @@ mod tests {
     async fn check_jsonrpc_status() {
         let client = JsonRpcClient::connect(RPC_SERVER_ADDR);
         let method = methods::status::RpcStatusRequest;
-        let status = client.call(&method).await;
+        let status = client.call(method).await;
 
         println!("status of [{}]: {:?}", RPC_SERVER_ADDR, status.unwrap());
     }

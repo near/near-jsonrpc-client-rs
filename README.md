@@ -27,7 +27,7 @@ let tx_status_request = methods::tx::RpcTransactionStatusRequest {
 };
 
 // call a method on the server via the connected client
-let tx_status = mainnet_client.call(&tx_status_request).await?;
+let tx_status = mainnet_client.call(tx_status_request).await?;
 
 println!("{:?}", tx_status);
 ```
