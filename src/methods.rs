@@ -1,6 +1,5 @@
 use std::io;
 
-use serde::Deserialize;
 use serde_json::json;
 
 mod chk {
@@ -74,22 +73,35 @@ macro_rules! impl_method {
 
 macro_rules! impl_ {
     (RpcMethod for $for_type:ty { $($body:tt)+ }) => {
+        impl chk::ValidRpcMarkerTrait for $for_type {}
         impl_!(@final RpcMethod for $for_type {
             const METHOD_NAME: &'static str = METHOD_NAME;
             $($body)+
         });
     };
     ($valid_trait:ident for $for_type:ty { $($body:tt)* }) => {
+        impl chk::ValidRpcMarkerTrait for $for_type {}
         impl_!(@final $valid_trait for $for_type { $($body)* });
     };
     (@final $valid_trait:ident for $for_type:ty { $($body:tt)* }) => {
-        impl chk::ValidRpcMarkerTrait for $for_type {}
         impl $valid_trait for $for_type { $($body)* }
     };
 }
 
 mod shared_structs {
     use super::{chk, RpcHandlerError, RpcHandlerResult};
+
+    impl chk::ValidRpcMarkerTrait for () {}
+
+    // broadcast_tx_async, EXPERIMENTAL_genesis_config, adv_*
+    impl_!(@final RpcHandlerError for () {});
+
+    // adv_*
+    impl_!(@final RpcHandlerResult for () {
+        fn parse_result(_value: serde_json::Value) -> Result<Self, serde_json::Error> {
+            Ok(())
+        }
+    });
 
     // broadcast_tx_commit, tx
     impl_!(RpcHandlerResult for near_primitives::views::FinalExecutionOutcomeView {});
@@ -169,16 +181,11 @@ impl_method! {
             }
         }
 
-        #[derive(Debug, Deserialize)]
-        pub struct RpcBroadcastTxAsyncError;
-
         impl_!(RpcHandlerResult for CryptoHash {});
-
-        impl_!(RpcHandlerError for RpcBroadcastTxAsyncError {});
 
         impl_!(RpcMethod for RpcBroadcastTxAsyncRequest {
             type Result = CryptoHash;
-            type Error = RpcBroadcastTxAsyncError;
+            type Error = ();
 
             fn params(&self) -> Result<serde_json::Value, io::Error> {
                 Ok(json!([serialize_signed_transaction(&self.signed_transaction)?]))
@@ -551,16 +558,11 @@ impl_method! {
         #[derive(Debug)]
         pub struct RpcGenesisConfigRequest;
 
-        #[derive(Debug, Deserialize)]
-        pub struct RpcGenesisConfigError;
-
         impl_!(RpcHandlerResult for GenesisConfig {});
-
-        impl_!(RpcHandlerError for RpcGenesisConfigError {});
 
         impl_!(RpcMethod for RpcGenesisConfigRequest {
             type Result = GenesisConfig;
-            type Error = RpcGenesisConfigError;
+            type Error = ();
         });
     }
 }
@@ -700,23 +702,9 @@ impl_method! {
         #[derive(Debug)]
         pub struct RpcAdversarialSetWeightRequest { pub height: u64 }
 
-        #[derive(Debug, Deserialize)]
-        pub struct RpcAdversarialSetWeightResponse;
-
-        #[derive(Debug, Deserialize)]
-        pub struct RpcAdversarialSetWeightError;
-
-        impl_!(RpcHandlerResult for RpcAdversarialSetWeightResponse {
-            fn parse_result(_value: serde_json::Value) -> Result<Self, serde_json::Error> {
-                Ok(RpcAdversarialSetWeightResponse)
-            }
-        });
-
-        impl_!(RpcHandlerError for RpcAdversarialSetWeightError {});
-
         impl_!(RpcMethod for RpcAdversarialSetWeightRequest {
-            type Result = RpcAdversarialSetWeightResponse;
-            type Error = RpcAdversarialSetWeightError;
+            type Result = ();
+            type Error = ();
 
             fn params(&self) -> Result<serde_json::Value, io::Error> {
                 Ok(json!(self.height))
@@ -731,23 +719,9 @@ impl_method! {
         #[derive(Debug)]
         pub struct RpcAdversarialDisableHeaderSyncRequest;
 
-        #[derive(Debug, Deserialize)]
-        pub struct RpcAdversarialDisableHeaderSyncResponse;
-
-        #[derive(Debug, Deserialize)]
-        pub struct RpcAdversarialDisableHeaderSyncError;
-
-        impl_!(RpcHandlerResult for RpcAdversarialDisableHeaderSyncResponse {
-            fn parse_result(_value: serde_json::Value) -> Result<Self, serde_json::Error> {
-                Ok(RpcAdversarialDisableHeaderSyncResponse)
-            }
-        });
-
-        impl_!(RpcHandlerError for RpcAdversarialDisableHeaderSyncError {});
-
         impl_!(RpcMethod for RpcAdversarialDisableHeaderSyncRequest {
-            type Result = RpcAdversarialDisableHeaderSyncResponse;
-            type Error = RpcAdversarialDisableHeaderSyncError;
+            type Result = ();
+            type Error = ();
         });
     }
 }
@@ -755,26 +729,12 @@ impl_method! {
 #[cfg(feature = "adversarial")]
 impl_method! {
     pub mod adv_disable_doomslug {
-            #[derive(Debug)]
+        #[derive(Debug)]
         pub struct RpcAdversarialDisableDoomslugRequest;
 
-        #[derive(Debug, Deserialize)]
-        pub struct RpcAdversarialDisableDoomslugResponse;
-
-        #[derive(Debug, Deserialize)]
-        pub struct RpcAdversarialDisableDoomslugError;
-
-        impl_!(RpcHandlerResult for RpcAdversarialDisableDoomslugResponse {
-            fn parse_result(_value: serde_json::Value) -> Result<Self, serde_json::Error> {
-                Ok(RpcAdversarialDisableDoomslugResponse)
-            }
-        });
-
-        impl_!(RpcHandlerError for RpcAdversarialDisableDoomslugError {});
-
         impl_!(RpcMethod for RpcAdversarialDisableDoomslugRequest {
-            type Result = RpcAdversarialDisableDoomslugResponse;
-            type Error = RpcAdversarialDisableDoomslugError;
+            type Result = ();
+            type Error = ();
         });
     }
 }
@@ -788,23 +748,9 @@ impl_method! {
             pub only_valid: bool,
         }
 
-        #[derive(Debug, Deserialize)]
-        pub struct RpcAdversarialProduceBlocksResponse;
-
-        #[derive(Debug, Deserialize)]
-        pub struct RpcAdversarialProduceBlocksError;
-
-        impl_!(RpcHandlerResult for RpcAdversarialProduceBlocksResponse {
-            fn parse_result(_value: serde_json::Value) -> Result<Self, serde_json::Error> {
-                Ok(RpcAdversarialProduceBlocksResponse)
-            }
-        });
-
-        impl_!(RpcHandlerError for RpcAdversarialProduceBlocksError {});
-
         impl_!(RpcMethod for RpcAdversarialProduceBlocksRequest {
-            type Result = RpcAdversarialProduceBlocksResponse;
-            type Error = RpcAdversarialProduceBlocksError;
+            type Result = ();
+            type Error = ();
 
             fn params(&self) -> Result<serde_json::Value, io::Error> {
                 Ok(json!([self.num_blocks, self.only_valid]))
@@ -819,23 +765,9 @@ impl_method! {
         #[derive(Debug)]
         pub struct RpcAdversarialSwitchToHeightRequest { pub height: u64 }
 
-        #[derive(Debug, Deserialize)]
-        pub struct RpcAdversarialSwitchToHeightResponse;
-
-        #[derive(Debug, Deserialize)]
-        pub struct RpcAdversarialSwitchToHeightError;
-
-        impl_!(RpcHandlerResult for RpcAdversarialSwitchToHeightResponse {
-            fn parse_result(_value: serde_json::Value) -> Result<Self, serde_json::Error> {
-                Ok(RpcAdversarialSwitchToHeightResponse)
-            }
-        });
-
-        impl_!(RpcHandlerError for RpcAdversarialSwitchToHeightError {});
-
         impl_!(RpcMethod for RpcAdversarialSwitchToHeightRequest {
-            type Result = RpcAdversarialSwitchToHeightResponse;
-            type Error = RpcAdversarialSwitchToHeightError;
+            type Result = ();
+            type Error = ();
 
             fn params(&self) -> Result<serde_json::Value, io::Error> {
                 Ok(json!([self.height]))
@@ -847,22 +779,19 @@ impl_method! {
 #[cfg(feature = "adversarial")]
 impl_method! {
     pub mod adv_get_saved_blocks {
+        use serde::Deserialize;
+
         #[derive(Debug)]
         pub struct RpcAdversarialGetSavedBlocksRequest;
 
         #[derive(Debug, Deserialize)]
         pub struct RpcAdversarialGetSavedBlocksResponse(pub u64);
 
-        #[derive(Debug, Deserialize)]
-        pub struct RpcAdversarialGetSavedBlocksError;
-
         impl_!(RpcHandlerResult for RpcAdversarialGetSavedBlocksResponse {});
-
-        impl_!(RpcHandlerError for RpcAdversarialGetSavedBlocksError {});
 
         impl_!(RpcMethod for RpcAdversarialGetSavedBlocksRequest {
             type Result = RpcAdversarialGetSavedBlocksResponse;
-            type Error = RpcAdversarialGetSavedBlocksError;
+            type Error = ();
         });
     }
 }
@@ -870,22 +799,19 @@ impl_method! {
 #[cfg(feature = "adversarial")]
 impl_method! {
     pub mod adv_check_store {
+        use serde::Deserialize;
+
         #[derive(Debug)]
         pub struct RpcAdversarialCheckStoreRequest;
 
         #[derive(Debug, Deserialize)]
         pub struct RpcAdversarialCheckStoreResponse(pub u64);
 
-        #[derive(Debug, Deserialize)]
-        pub struct RpcAdversarialCheckStoreError;
-
         impl_!(RpcHandlerResult for RpcAdversarialCheckStoreResponse {});
-
-        impl_!(RpcHandlerError for RpcAdversarialCheckStoreError {});
 
         impl_!(RpcMethod for RpcAdversarialCheckStoreRequest {
             type Result = RpcAdversarialCheckStoreResponse;
-            type Error = RpcAdversarialCheckStoreError;
+            type Error = ();
         });
     }
 }
