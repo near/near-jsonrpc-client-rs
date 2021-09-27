@@ -1,16 +1,17 @@
 use std::io;
 
+use serde::Deserialize;
 use serde_json::json;
 
 mod chk {
     // this lets us make the RpcMethod trait public but non-implementable by users outside this crate
-    pub trait ValidRpcMethod {}
+    pub trait ValidRpcMarkerTrait {}
 }
 
-pub trait RpcMethod: chk::ValidRpcMethod
+pub trait RpcMethod: chk::ValidRpcMarkerTrait
 where
-    Self::Result: serde::de::DeserializeOwned,
-    Self::Error: serde::de::DeserializeOwned,
+    Self::Result: RpcHandlerResult,
+    Self::Error: RpcHandlerError,
 {
     type Result;
     type Error;
@@ -18,165 +19,125 @@ where
     const METHOD_NAME: &'static str;
 
     fn params(&self) -> Result<serde_json::Value, io::Error> {
-        Ok(serde_json::json!(null))
+        Ok(json!(null))
     }
+}
 
-    fn parse_result(value: serde_json::Value) -> Result<Self::Result, serde_json::Error> {
-        serde_json::from_value(value)
+impl<T> chk::ValidRpcMarkerTrait for &T where T: chk::ValidRpcMarkerTrait {}
+impl<T> RpcMethod for &T
+where
+    T: RpcMethod,
+{
+    type Result = T::Result;
+    type Error = T::Error;
+
+    const METHOD_NAME: &'static str = T::METHOD_NAME;
+
+    fn params(&self) -> Result<serde_json::Value, io::Error> {
+        T::params(self)
     }
+}
 
-    fn parse_raw_error(value: serde_json::Value) -> Result<Self::Error, serde_json::Error> {
+pub trait RpcHandlerResult: serde::de::DeserializeOwned + chk::ValidRpcMarkerTrait {
+    fn parse_result(value: serde_json::Value) -> Result<Self, serde_json::Error> {
         serde_json::from_value(value)
     }
 }
 
+pub trait RpcHandlerError: serde::de::DeserializeOwned + chk::ValidRpcMarkerTrait {
+    /// parser for the `.data` field in RpcError, not `.error_struct`
+    /// this would only ever be used if `.error_struct` can't be deserialized
+    fn parse_raw_error(_value: serde_json::Value) -> Option<Result<Self, serde_json::Error>> {
+        None
+    }
+}
+
 macro_rules! impl_method {
-    (@main
+    (
+        $(#[$meta:meta])*
         $method_name:ident: {
-            $(#![$meta:meta])*
-            $(exports: { $($exports:tt)+ })?
-
-            import_scope: $import_scope:expr;
-
-            let constructor = $constructor_str:expr;
-            let constructor_import = $constructor_import_str:expr;
-            let constructor_call = $constructor_call_str:expr;
-            let result = $result_str:expr;
-            let result_import = $result_import_str:expr;
-            let error = $error_str:expr;
-            let error_import = $error_import_str:expr;
-
-            impl RpcMethod for $request_ty:ty {
-                type Result = $result_ty:ty;
-                type Error = $error_ty:ty;
-
-                $(params(&$this:ident) $param_exec:block)?
-                $(parse_result($result_value:ident) $result_parser:block)?
-                $(parse_raw_error($raw_err_value:ident) $raw_err_parser:block)?
-            }
+            $($body:tt)+
         }
     ) => {
         #[allow(non_snake_case)]
         pub mod $method_name {
             $(#![$meta])*
-            #![doc = ""]
-            //! # Example
-            //!
-            //! ```ignore
-            //! use near_jsonrpc_client::{methods, JsonRpcClient, JsonRpcMethodCallResult};
-            //!
-            #![doc = $import_scope]
-            #![doc = $constructor_import_str]
-            #![doc = $result_import_str]
-            #![doc = $error_import_str]
-            //! };
-            //!
-            //! let mainnet_client = JsonRpcClient::connect("https://rpc.mainnet.near.org");
-            //!
-            #![doc = $constructor_call_str]
-            //!
-            //! let result: JsonRpcMethodCallResult<
-            #![doc = $result_import_str]
-            #![doc = $error_import_str]
-            //! > = mainnet_client.call(&request);
-            //! ```
-            //!
-            //! - RPC Method Constructor: [
-            #![doc = $constructor_str]
-            //! ]
-            //! - RPC Method Response Type: [
-            #![doc = $result_str]
-            //! ]
-            //! - RPC Method Error Type: [
-            #![doc = $error_str]
-            //! ]
 
             use super::*;
 
-            $($($exports)+)?
+            const METHOD_NAME: &'static str = stringify!($method_name);
 
-            impl chk::ValidRpcMethod for $request_ty {}
-
-            impl RpcMethod for $request_ty {
-                type Result = $result_ty;
-                type Error = $error_ty;
-
-                const METHOD_NAME: &'static str = stringify!($method_name);
-
-                $(
-                    fn params(&$this) -> Result<serde_json::Value, io::Error> {
-                        Ok($param_exec)
-                    }
-                )?
-
-                $(
-                    fn parse_result($result_value: serde_json::Value) -> Result<Self::Result, serde_json::Error> {
-                        Ok($result_parser)
-                    }
-                )?
-
-                $(
-                    fn parse_raw_error($raw_err_value: serde_json::Value) -> Result<Self::Error, serde_json::Error> {
-                        Ok($raw_err_parser)
-                    }
-                )?
-            }
+            $($body)+
         }
-    };
-    (
-        $method_name:ident: {
-            $(#![$meta:meta])*
-            $(exports: { $($exports:tt)+ })?
+    }
+}
 
-            impl RpcMethod for $request_ty:ty {
-                type Result = $result_ty:ty;
-                type Error = $error_ty:ty;
-
-                $(params(&$this:ident) $param_exec:block)?
-                $(parse_result($result_value:ident) $result_parser:block)?
-                $(parse_raw_error($raw_value:ident) $raw_err_parser:block)?
-            }
-        }
-    ) => {
-        impl_method!(@main $method_name: {
-            $(#![$meta])*
-            $(exports: { $($exports)+ })?
-
-            import_scope: concat!("use methods::", stringify!($method_name), "::{");
-
-            let constructor = stringify!($request_ty);
-            let constructor_import = concat!("    ", stringify!($request_ty), ",");
-            let constructor_call = concat!("let request = ", stringify!($request_ty), " {...}; // <-- create a valid request here");
-            let result = stringify!($result_ty);
-            let result_import = concat!("    ", stringify!($result_ty), ",");
-            let error = stringify!($error_ty);
-            let error_import = concat!("    ", stringify!($error_ty), ",");
-
-            impl RpcMethod for $request_ty {
-                type Result = $result_ty;
-                type Error = $error_ty;
-
-                $(params(&$this) $param_exec)?
-                $(parse_result($result_value) $result_parser)?
-                $(parse_raw_error($raw_value) $raw_err_parser)?
-            }
+macro_rules! impl_ {
+    (RpcMethod for $for_type:ty { $($body:tt)+ }) => {
+        impl_!(@final RpcMethod for $for_type {
+            const METHOD_NAME: &'static str = METHOD_NAME;
+            $($body)+
         });
     };
+    ($valid_trait:ident for $for_type:ty { $($body:tt)* }) => {
+        impl_!(@final $valid_trait for $for_type { $($body)* });
+    };
+    (@final $valid_trait:ident for $for_type:ty { $($body:tt)* }) => {
+        impl chk::ValidRpcMarkerTrait for $for_type {}
+        impl $valid_trait for $for_type { $($body)* }
+    };
+}
+
+mod shared_structs {
+    use super::{chk, RpcHandlerError, RpcHandlerResult};
+
+    // broadcast_tx_commit, tx
+    impl_!(RpcHandlerResult for near_primitives::views::FinalExecutionOutcomeView {});
+
+    // broadcast_tx_commit, tx, EXPERIMENTAL_check_tx, EXPERIMENTAL_tx_status
+    impl_!(RpcHandlerError for near_jsonrpc_primitives::types::transactions::RpcTransactionError {
+        fn parse_raw_error(value: serde_json::Value) -> Option<Result<Self, serde_json::Error>> {
+            match serde_json::from_value::<near_jsonrpc_primitives::errors::ServerError>(value) {
+                Ok(near_jsonrpc_primitives::errors::ServerError::TxExecutionError(
+                    near_primitives::errors::TxExecutionError::InvalidTxError(context),
+                )) => Some(Ok(Self::InvalidTransaction { context })),
+                Err(err) => Some(Err(err)),
+                _ => None,
+            }
+        }
+    });
+
+    // health, status
+    impl_!(RpcHandlerError for near_jsonrpc_primitives::types::status::RpcStatusError {});
+
+    // EXPERIMENTAL_changes, EXPERIMENTAL_changes_in_block
+    impl_!(RpcHandlerError for near_jsonrpc_primitives::types::changes::RpcStateChangesError {});
+
+    // EXPERIMENTAL_broadcast_tx_sync, EXPERIMENTAL_check_tx
+    impl_!(RpcHandlerResult for near_jsonrpc_primitives::types::transactions::RpcBroadcastTxSyncResponse {});
+
+    // validators, EXPERIMENTAL_validators_ordered
+    impl_!(RpcHandlerError for near_jsonrpc_primitives::types::validator::RpcValidatorError {});
 }
 
 impl_method! {
     block: {
-        exports: {
-            pub use near_jsonrpc_primitives::types::blocks::{RpcBlockError, RpcBlockRequest};
-            pub use near_primitives::views::BlockView;
-        }
+        pub use near_jsonrpc_primitives::types::blocks::RpcBlockError;
+        pub use near_jsonrpc_primitives::types::blocks::RpcBlockRequest;
+        pub use near_primitives::views::BlockView;
 
-        impl RpcMethod for RpcBlockRequest {
+        impl_!(RpcHandlerResult for BlockView {});
+
+        impl_!(RpcHandlerError for RpcBlockError {});
+
+        impl_!(RpcMethod for RpcBlockRequest {
             type Result = BlockView;
             type Error = RpcBlockError;
 
-            params(&self) { json!([self]) }
-        }
+            fn params(&self) -> Result<serde_json::Value, io::Error> {
+                Ok(json!([self]))
+            }
+        });
     }
 }
 
@@ -189,658 +150,742 @@ fn serialize_signed_transaction(
 }
 
 impl_method! {
-    broadcast_tx_async: {
-        exports: {
-            pub use near_primitives::hash::CryptoHash;
-            pub use near_primitives::transaction::SignedTransaction;
+    broadcast_tx_async:  {
+        pub use near_primitives::hash::CryptoHash;
+        pub use near_primitives::transaction::SignedTransaction;
 
-            #[derive(Debug)]
-            pub struct RpcBroadcastTxAsyncRequest {
-                pub signed_transaction: SignedTransaction,
-            }
-
-            impl From<RpcBroadcastTxAsyncRequest>
-                for near_jsonrpc_primitives::types::transactions::RpcBroadcastTransactionRequest
-            {
-                fn from(this: RpcBroadcastTxAsyncRequest) -> Self {
-                    Self {
-                        signed_transaction: this.signed_transaction,
-                    }
-                }
-            }
-
-            pub type RpcBroadcastTxAsyncError = ();
+        #[derive(Debug)]
+        pub struct RpcBroadcastTxAsyncRequest {
+            pub signed_transaction: SignedTransaction,
         }
 
-        impl RpcMethod for RpcBroadcastTxAsyncRequest {
+        impl From<RpcBroadcastTxAsyncRequest>
+            for near_jsonrpc_primitives::types::transactions::RpcBroadcastTransactionRequest
+        {
+            fn from(this: RpcBroadcastTxAsyncRequest) -> Self {
+                Self {
+                    signed_transaction: this.signed_transaction,
+                }
+            }
+        }
+
+        #[derive(Debug, Deserialize)]
+        pub struct RpcBroadcastTxAsyncError;
+
+        impl_!(RpcHandlerResult for CryptoHash {});
+
+        impl_!(RpcHandlerError for RpcBroadcastTxAsyncError {});
+
+        impl_!(RpcMethod for RpcBroadcastTxAsyncRequest {
             type Result = CryptoHash;
             type Error = RpcBroadcastTxAsyncError;
 
-            params(&self) {
-                json!([serialize_signed_transaction(&self.signed_transaction)?])
+            fn params(&self) -> Result<serde_json::Value, io::Error> {
+                Ok(json!([serialize_signed_transaction(&self.signed_transaction)?]))
             }
-        }
+        });
     }
 }
 
 impl_method! {
     broadcast_tx_commit: {
-        exports: {
-            pub use near_jsonrpc_primitives::types::transactions::RpcTransactionError;
-            pub use near_primitives::transaction::SignedTransaction;
-            pub use near_primitives::views::FinalExecutionOutcomeView;
+        pub use near_jsonrpc_primitives::types::transactions::RpcTransactionError;
+        pub use near_primitives::transaction::SignedTransaction;
+        pub use near_primitives::views::FinalExecutionOutcomeView;
 
-            #[derive(Debug)]
-            pub struct RpcBroadcastTxCommitRequest {
-                pub signed_transaction: SignedTransaction,
-            }
+        #[derive(Debug)]
+        pub struct RpcBroadcastTxCommitRequest {
+            pub signed_transaction: SignedTransaction,
+        }
 
-            impl From<RpcBroadcastTxCommitRequest>
-                for near_jsonrpc_primitives::types::transactions::RpcBroadcastTransactionRequest
-            {
-                fn from(this: RpcBroadcastTxCommitRequest) -> Self {
-                    Self {
-                        signed_transaction: this.signed_transaction,
-                    }
+        impl From<RpcBroadcastTxCommitRequest>
+            for near_jsonrpc_primitives::types::transactions::RpcBroadcastTransactionRequest
+        {
+            fn from(this: RpcBroadcastTxCommitRequest) -> Self {
+                Self {
+                    signed_transaction: this.signed_transaction,
                 }
             }
         }
 
-        impl RpcMethod for RpcBroadcastTxCommitRequest {
+        impl_!(RpcMethod for RpcBroadcastTxCommitRequest {
             type Result = FinalExecutionOutcomeView;
             type Error = RpcTransactionError;
 
-            params(&self) {
-                json!([serialize_signed_transaction(&self.signed_transaction)?])
+            fn params(&self) -> Result<serde_json::Value, io::Error> {
+                Ok(json!([serialize_signed_transaction(&self.signed_transaction)?]))
             }
-        }
+        });
     }
 }
 
 impl_method! {
     chunk: {
-        exports: {
-            pub use near_jsonrpc_primitives::types::chunks::{RpcChunkError, RpcChunkRequest};
-            pub use near_primitives::views::ChunkView;
-        }
+        pub use near_jsonrpc_primitives::types::chunks::{RpcChunkError, RpcChunkRequest};
+        pub use near_primitives::views::ChunkView;
 
-        impl RpcMethod for RpcChunkRequest {
+        impl_!(RpcHandlerResult for ChunkView {});
+
+        impl_!(RpcHandlerError for RpcChunkError {});
+
+        impl_!(RpcMethod for RpcChunkRequest {
             type Result = ChunkView;
             type Error = RpcChunkError;
 
-            params(&self) { json!([self]) }
-        }
+            fn params(&self) -> Result<serde_json::Value, io::Error> {
+                Ok(json!([self]))
+            }
+        });
     }
 }
 
 impl_method! {
     gas_price: {
-        exports: {
-            pub use near_jsonrpc_primitives::types::gas_price::{
-                RpcGasPriceError, RpcGasPriceRequest,
-            };
-            pub use near_primitives::views::GasPriceView;
-        }
+        pub use near_jsonrpc_primitives::types::gas_price::{
+            RpcGasPriceError, RpcGasPriceRequest,
+        };
+        pub use near_primitives::views::GasPriceView;
 
-        impl RpcMethod for RpcGasPriceRequest {
+        impl_!(RpcHandlerResult for GasPriceView {});
+
+        impl_!(RpcHandlerError for RpcGasPriceError {});
+
+        impl_!(RpcMethod for RpcGasPriceRequest {
             type Result = GasPriceView;
             type Error = RpcGasPriceError;
 
-            params(&self) { json!([self]) }
-        }
+            fn params(&self) -> Result<serde_json::Value, io::Error> {
+                Ok(json!([self]))
+            }
+        });
     }
 }
 
 impl_method! {
     health: {
-        exports: {
-            pub use near_jsonrpc_primitives::types::status::{
-                RpcHealthResponse, RpcStatusResponse,
-            };
+        pub use near_jsonrpc_primitives::types::status::{
+            RpcHealthResponse, RpcStatusError,
+        };
 
-            #[derive(Debug)]
-            pub struct RpcHealthRequest;
-        }
+        #[derive(Debug)]
+        pub struct RpcHealthRequest;
 
-        impl RpcMethod for RpcHealthRequest {
+        impl_!(RpcHandlerResult for RpcHealthResponse {});
+
+        impl_!(RpcMethod for RpcHealthRequest {
             type Result = RpcHealthResponse;
-            type Error = RpcStatusResponse;
-        }
+            type Error = RpcStatusError;
+        });
     }
 }
 
 impl_method! {
     light_client_proof: {
-        exports: {
-            pub use near_jsonrpc_primitives::types::light_client::{
-                RpcLightClientExecutionProofRequest, RpcLightClientExecutionProofResponse,
-                RpcLightClientProofError,
-            };
-        }
+        pub use near_jsonrpc_primitives::types::light_client::{
+            RpcLightClientExecutionProofRequest, RpcLightClientExecutionProofResponse,
+            RpcLightClientProofError,
+        };
 
-        impl RpcMethod for RpcLightClientExecutionProofRequest {
+        impl_!(RpcHandlerResult for RpcLightClientExecutionProofResponse {});
+
+        impl_!(RpcHandlerError for RpcLightClientProofError {});
+
+        impl_!(RpcMethod for RpcLightClientExecutionProofRequest {
             type Result = RpcLightClientExecutionProofResponse;
             type Error = RpcLightClientProofError;
 
-            params(&self) { json!(self) }
-        }
+            fn params(&self) -> Result<serde_json::Value, io::Error> {
+                Ok(json!(self))
+            }
+        });
     }
 }
 
 impl_method! {
     next_light_client_block: {
-        exports: {
-            pub use near_jsonrpc_primitives::types::light_client::{
-                RpcLightClientNextBlockError, RpcLightClientNextBlockRequest,
-            };
-            pub use near_primitives::views::LightClientBlockView;
-        }
+        pub use near_jsonrpc_primitives::types::light_client::{
+            RpcLightClientNextBlockError, RpcLightClientNextBlockRequest,
+        };
+        pub use near_primitives::views::LightClientBlockView;
+        pub type RpcLightClientNextBlockResponse = Option<LightClientBlockView>;
 
-        impl RpcMethod for RpcLightClientNextBlockRequest {
-            type Result = Option<LightClientBlockView>;
+        impl_!(RpcHandlerResult for RpcLightClientNextBlockResponse {});
+
+        impl_!(RpcHandlerError for RpcLightClientNextBlockError {});
+
+        impl_!(RpcMethod for RpcLightClientNextBlockRequest {
+            type Result = RpcLightClientNextBlockResponse;
             type Error = RpcLightClientNextBlockError;
 
-            params(&self) { json!(self) }
-        }
+            fn params(&self) -> Result<serde_json::Value, io::Error> {
+                Ok(json!(self))
+            }
+        });
     }
 }
 
 impl_method! {
     network_info: {
-        exports: {
-            pub use near_client_primitives::types::NetworkInfoResponse;
-            pub use near_jsonrpc_primitives::types::network_info::RpcNetworkInfoError;
+        pub use near_client_primitives::types::NetworkInfoResponse;
+        pub use near_jsonrpc_primitives::types::network_info::RpcNetworkInfoError;
 
-            #[derive(Debug)]
-            pub struct RpcNetworkInfoRequest;
-        }
+        #[derive(Debug)]
+        pub struct RpcNetworkInfoRequest;
 
-        impl RpcMethod for RpcNetworkInfoRequest {
+        impl_!(RpcHandlerResult for NetworkInfoResponse {});
+
+        impl_!(RpcHandlerError for RpcNetworkInfoError {});
+
+        impl_!(RpcMethod for RpcNetworkInfoRequest {
             type Result = NetworkInfoResponse;
             type Error = RpcNetworkInfoError;
-        }
+        });
     }
 }
 
 impl_method! {
     query: {
-        exports: {
-            pub use near_jsonrpc_primitives::types::query::{
-                RpcQueryError, RpcQueryRequest, RpcQueryResponse,
-            };
-        }
+        pub use near_jsonrpc_primitives::types::query::{
+            RpcQueryError, RpcQueryRequest, RpcQueryResponse,
+        };
 
-        impl RpcMethod for RpcQueryRequest {
+        impl_!(RpcHandlerResult for RpcQueryResponse {});
+
+        impl_!(RpcHandlerError for RpcQueryError {});
+
+        impl_!(RpcMethod for RpcQueryRequest {
             type Result = RpcQueryResponse;
             type Error = RpcQueryError;
 
-            params(&self) { json!(self) }
-        }
+            fn params(&self) -> Result<serde_json::Value, io::Error> {
+                Ok(json!(self))
+            }
+        });
     }
 }
 
 impl_method! {
     status: {
-        exports: {
-            pub use near_jsonrpc_primitives::types::status::RpcStatusError;
-            pub use near_primitives::views::StatusResponse;
+        pub use near_jsonrpc_primitives::types::status::RpcStatusError;
+        pub use near_primitives::views::StatusResponse;
 
-            #[derive(Debug)]
-            pub struct RpcStatusRequest;
-        }
+        #[derive(Debug)]
+        pub struct RpcStatusRequest;
 
-        impl RpcMethod for RpcStatusRequest {
+        impl_!(RpcHandlerResult for StatusResponse {});
+
+        impl_!(RpcMethod for RpcStatusRequest {
             type Result = StatusResponse;
             type Error = RpcStatusError;
-        }
+        });
     }
 }
 
 impl_method! {
     tx: {
-        exports: {
-            pub use near_jsonrpc_primitives::types::transactions::RpcTransactionError;
-            pub use near_jsonrpc_primitives::types::transactions::TransactionInfo;
-            pub use near_primitives::views::FinalExecutionOutcomeView;
+        pub use near_jsonrpc_primitives::types::transactions::RpcTransactionError;
+        pub use near_jsonrpc_primitives::types::transactions::TransactionInfo;
+        pub use near_primitives::views::FinalExecutionOutcomeView;
 
-            #[derive(Debug)]
-            pub struct RpcTransactionStatusRequest {
-                pub transaction_info: TransactionInfo,
-            }
+        #[derive(Debug)]
+        pub struct RpcTransactionStatusRequest {
+            pub transaction_info: TransactionInfo,
+        }
 
-            impl From<RpcTransactionStatusRequest>
-                for near_jsonrpc_primitives::types::transactions::RpcTransactionStatusCommonRequest
-            {
-                fn from(this: RpcTransactionStatusRequest) -> Self {
-                    Self {
-                        transaction_info: this.transaction_info,
-                    }
+        impl From<RpcTransactionStatusRequest>
+            for near_jsonrpc_primitives::types::transactions::RpcTransactionStatusCommonRequest
+        {
+            fn from(this: RpcTransactionStatusRequest) -> Self {
+                Self {
+                    transaction_info: this.transaction_info,
                 }
             }
         }
 
-        impl RpcMethod for RpcTransactionStatusRequest {
+        impl_!(RpcMethod for RpcTransactionStatusRequest {
             type Result = FinalExecutionOutcomeView;
             type Error = RpcTransactionError;
 
-            params(&self) {
-                match &self.transaction_info {
-                    TransactionInfo::Transaction(signed_transaction) => {
-                        json!([serialize_signed_transaction(&signed_transaction)?])
+            fn params(&self) -> Result<serde_json::Value, io::Error> {
+                Ok(
+                    match &self.transaction_info {
+                        TransactionInfo::Transaction(signed_transaction) => {
+                            json!([serialize_signed_transaction(&signed_transaction)?])
+                        }
+                        TransactionInfo::TransactionId { hash, account_id } => {
+                            json!([hash, account_id])
+                        }
                     }
-                    TransactionInfo::TransactionId { hash, account_id } => {
-                        json!([hash, account_id])
-                    }
-                }
+                )
             }
-        }
+        });
     }
 }
 
 impl_method! {
     validators: {
-        exports: {
-            pub use near_jsonrpc_primitives::types::validator::{
-                RpcValidatorError, RpcValidatorRequest,
-            };
-            pub use near_primitives::views::EpochValidatorInfo;
-        }
+        pub use near_jsonrpc_primitives::types::validator::{
+            RpcValidatorError, RpcValidatorRequest,
+        };
+        pub use near_primitives::views::EpochValidatorInfo;
 
-        impl RpcMethod for RpcValidatorRequest {
+        impl_!(RpcHandlerResult for EpochValidatorInfo {});
+
+        impl_!(RpcMethod for RpcValidatorRequest {
             type Result = EpochValidatorInfo;
             type Error = RpcValidatorError;
 
-            params(&self) { json!(self) }
-        }
+            fn params(&self) -> Result<serde_json::Value, io::Error> {
+                Ok(json!(self))
+            }
+        });
     }
 }
 
 impl_method! {
     EXPERIMENTAL_broadcast_tx_sync: {
-        exports: {
-            pub use near_jsonrpc_primitives::types::transactions::{
-                RpcBroadcastTxSyncResponse, RpcTransactionError,
-            };
-            pub use near_primitives::transaction::SignedTransaction;
+        pub use near_jsonrpc_primitives::types::transactions::{
+            RpcBroadcastTxSyncResponse, RpcTransactionError,
+        };
+        pub use near_primitives::transaction::SignedTransaction;
 
-            #[derive(Debug)]
-            pub struct RpcBroadcastTxSyncRequest {
-                pub signed_transaction: SignedTransaction,
-            }
+        #[derive(Debug)]
+        pub struct RpcBroadcastTxSyncRequest {
+            pub signed_transaction: SignedTransaction,
+        }
 
-            impl From<RpcBroadcastTxSyncRequest>
-                for near_jsonrpc_primitives::types::transactions::RpcBroadcastTransactionRequest
-            {
-                fn from(this: RpcBroadcastTxSyncRequest) -> Self {
-                    Self { signed_transaction: this.signed_transaction }
-                }
+        impl From<RpcBroadcastTxSyncRequest>
+            for near_jsonrpc_primitives::types::transactions::RpcBroadcastTransactionRequest
+        {
+            fn from(this: RpcBroadcastTxSyncRequest) -> Self {
+                Self { signed_transaction: this.signed_transaction }
             }
         }
 
-        impl RpcMethod for RpcBroadcastTxSyncRequest {
+        impl_!(RpcMethod for RpcBroadcastTxSyncRequest {
             type Result = RpcBroadcastTxSyncResponse;
             type Error = RpcTransactionError;
 
-            params(&self) {
-                json!([serialize_signed_transaction(&self.signed_transaction)?])
+            fn params(&self) -> Result<serde_json::Value, io::Error> {
+                Ok(json!([serialize_signed_transaction(&self.signed_transaction)?]))
             }
-        }
+        });
     }
 }
 
 impl_method! {
     EXPERIMENTAL_changes: {
-        exports: {
-            pub use near_jsonrpc_primitives::types::changes::{
-                RpcStateChangesError, RpcStateChangesInBlockByTypeRequest,
-                RpcStateChangesInBlockResponse,
-            };
-        }
+        pub use near_jsonrpc_primitives::types::changes::{
+            RpcStateChangesError, RpcStateChangesInBlockByTypeRequest,
+            RpcStateChangesInBlockResponse,
+        };
 
-        impl RpcMethod for RpcStateChangesInBlockByTypeRequest {
+        impl_!(RpcHandlerResult for RpcStateChangesInBlockResponse {});
+
+        impl_!(RpcMethod for RpcStateChangesInBlockByTypeRequest {
             type Result = RpcStateChangesInBlockResponse;
             type Error = RpcStateChangesError;
 
-            params(&self) { json!(self) }
-        }
+            fn params(&self) -> Result<serde_json::Value, io::Error> {
+                Ok(json!(self))
+            }
+        });
     }
 }
 
 impl_method! {
     EXPERIMENTAL_changes_in_block: {
-        exports: {
-            pub use near_jsonrpc_primitives::types::changes::{
-                RpcStateChangesError, RpcStateChangesInBlockRequest,
-                RpcStateChangesInBlockByTypeResponse,
-            };
-        }
+        pub use near_jsonrpc_primitives::types::changes::{
+            RpcStateChangesError, RpcStateChangesInBlockRequest,
+            RpcStateChangesInBlockByTypeResponse,
+        };
 
-        impl RpcMethod for RpcStateChangesInBlockRequest {
+        impl_!(RpcHandlerResult for RpcStateChangesInBlockByTypeResponse {});
+
+        impl_!(RpcMethod for RpcStateChangesInBlockRequest {
             type Result = RpcStateChangesInBlockByTypeResponse;
             type Error = RpcStateChangesError;
 
-            params(&self) { json!(self) }
-        }
+            fn params(&self) -> Result<serde_json::Value, io::Error> {
+                Ok(json!(self))
+            }
+        });
     }
 }
 
 impl_method! {
     EXPERIMENTAL_check_tx: {
-        exports: {
-            pub use near_jsonrpc_primitives::types::transactions::{
-                RpcBroadcastTxSyncResponse, RpcTransactionError,
-            };
-            pub use near_primitives::transaction::SignedTransaction;
+        pub use near_jsonrpc_primitives::types::transactions::{
+            RpcBroadcastTxSyncResponse, RpcTransactionError,
+        };
+        pub use near_primitives::transaction::SignedTransaction;
 
-            #[derive(Debug)]
-            pub struct RpcCheckTxRequest {
-                pub signed_transaction: SignedTransaction,
-            }
+        #[derive(Debug)]
+        pub struct RpcCheckTxRequest {
+            pub signed_transaction: SignedTransaction,
+        }
 
-            impl From<RpcCheckTxRequest>
-                for near_jsonrpc_primitives::types::transactions::RpcBroadcastTransactionRequest
-            {
-                fn from(this: RpcCheckTxRequest) -> Self {
-                    Self { signed_transaction: this.signed_transaction }
-                }
+        impl From<RpcCheckTxRequest>
+            for near_jsonrpc_primitives::types::transactions::RpcBroadcastTransactionRequest
+        {
+            fn from(this: RpcCheckTxRequest) -> Self {
+                Self { signed_transaction: this.signed_transaction }
             }
         }
 
-        impl RpcMethod for RpcCheckTxRequest {
+        impl_!(RpcMethod for RpcCheckTxRequest {
             type Result = RpcBroadcastTxSyncResponse;
             type Error = RpcTransactionError;
 
-            params(&self) {
-                json!([serialize_signed_transaction(&self.signed_transaction)?])
+            fn params(&self) -> Result<serde_json::Value, io::Error> {
+                Ok(json!([serialize_signed_transaction(&self.signed_transaction)?]))
             }
-        }
+        });
     }
 }
 
 impl_method! {
     EXPERIMENTAL_genesis_config: {
-        exports: {
-            pub use near_chain_configs::GenesisConfig;
+        pub use near_chain_configs::GenesisConfig;
 
-            #[derive(Debug)]
-            pub struct RpcGenesisConfigRequest;
+        #[derive(Debug)]
+        pub struct RpcGenesisConfigRequest;
 
-            pub type RpcGenesisConfigError = ();
-        }
+        #[derive(Debug, Deserialize)]
+        pub struct RpcGenesisConfigError;
 
-        impl RpcMethod for RpcGenesisConfigRequest {
+        impl_!(RpcHandlerResult for GenesisConfig {});
+
+        impl_!(RpcHandlerError for RpcGenesisConfigError {});
+
+        impl_!(RpcMethod for RpcGenesisConfigRequest {
             type Result = GenesisConfig;
             type Error = RpcGenesisConfigError;
-        }
+        });
     }
 }
 
 impl_method! {
     EXPERIMENTAL_protocol_config: {
-        exports: {
-            pub use near_chain_configs::ProtocolConfigView;
-            pub use near_jsonrpc_primitives::types::config::{
-                RpcProtocolConfigError, RpcProtocolConfigRequest,
-            };
-        }
+        pub use near_chain_configs::ProtocolConfigView;
+        pub use near_jsonrpc_primitives::types::config::{
+            RpcProtocolConfigError, RpcProtocolConfigRequest,
+        };
 
-        impl RpcMethod for RpcProtocolConfigRequest {
+        impl_!(RpcHandlerResult for ProtocolConfigView {});
+
+        impl_!(RpcHandlerError for RpcProtocolConfigError {});
+
+        impl_!(RpcMethod for RpcProtocolConfigRequest {
             type Result = ProtocolConfigView;
             type Error = RpcProtocolConfigError;
 
-            params(&self) { json!(self) }
-        }
+            fn params(&self) -> Result<serde_json::Value, io::Error> {
+                Ok(json!(self))
+            }
+        });
     }
 }
 
 impl_method! {
     EXPERIMENTAL_receipt: {
-        exports: {
-            pub use near_jsonrpc_primitives::types::receipts::{
-                RpcReceiptError, RpcReceiptRequest,
-            };
-            pub use near_primitives::views::ReceiptView;
-        }
+        pub use near_jsonrpc_primitives::types::receipts::{
+            RpcReceiptError, RpcReceiptRequest,
+        };
+        pub use near_primitives::views::ReceiptView;
 
-        impl RpcMethod for RpcReceiptRequest {
+        impl_!(RpcHandlerResult for ReceiptView {});
+
+        impl_!(RpcHandlerError for RpcReceiptError {});
+
+        impl_!(RpcMethod for RpcReceiptRequest {
             type Result = ReceiptView;
             type Error = RpcReceiptError;
 
-            params(&self) { json!(self) }
-        }
+            fn params(&self) -> Result<serde_json::Value, io::Error> {
+                Ok(json!(self))
+            }
+        });
     }
 }
 
 impl_method! {
     EXPERIMENTAL_tx_status: {
-        exports: {
-            pub use near_jsonrpc_primitives::types::transactions::RpcTransactionError;
-            pub use near_jsonrpc_primitives::types::transactions::TransactionInfo;
-            pub use near_primitives::views::FinalExecutionOutcomeWithReceiptView;
+        pub use near_jsonrpc_primitives::types::transactions::RpcTransactionError;
+        pub use near_jsonrpc_primitives::types::transactions::TransactionInfo;
+        pub use near_primitives::views::FinalExecutionOutcomeWithReceiptView;
 
-            #[derive(Debug)]
-            pub struct RpcTransactionStatusRequest {
-                pub transaction_info: TransactionInfo,
-            }
+        #[derive(Debug)]
+        pub struct RpcTransactionStatusRequest {
+            pub transaction_info: TransactionInfo,
+        }
 
-            impl From<RpcTransactionStatusRequest>
-                for near_jsonrpc_primitives::types::transactions::RpcTransactionStatusCommonRequest
-            {
-                fn from(this: RpcTransactionStatusRequest) -> Self {
-                    Self {
-                        transaction_info: this.transaction_info,
-                    }
+        impl From<RpcTransactionStatusRequest>
+            for near_jsonrpc_primitives::types::transactions::RpcTransactionStatusCommonRequest
+        {
+            fn from(this: RpcTransactionStatusRequest) -> Self {
+                Self {
+                    transaction_info: this.transaction_info,
                 }
             }
         }
 
-        impl RpcMethod for RpcTransactionStatusRequest {
+        impl_!(RpcHandlerResult for FinalExecutionOutcomeWithReceiptView {});
+
+        impl_!(RpcMethod for RpcTransactionStatusRequest {
             type Result = FinalExecutionOutcomeWithReceiptView;
             type Error = RpcTransactionError;
 
-            params(&self) {
-                match &self.transaction_info {
-                    TransactionInfo::Transaction(signed_transaction) => {
-                        json!([serialize_signed_transaction(&signed_transaction)?])
+            fn params(&self) -> Result<serde_json::Value, io::Error> {
+                Ok(
+                    match &self.transaction_info {
+                        TransactionInfo::Transaction(signed_transaction) => {
+                            json!([serialize_signed_transaction(&signed_transaction)?])
+                        }
+                        TransactionInfo::TransactionId { hash, account_id } => {
+                            json!([hash, account_id])
+                        }
                     }
-                    TransactionInfo::TransactionId { hash, account_id } => {
-                        json!([hash, account_id])
-                    }
-                }
+                )
             }
-        }
+        });
     }
 }
 
 impl_method! {
     EXPERIMENTAL_validators_ordered: {
-        exports: {
-            pub use near_jsonrpc_primitives::types::validator::{
-                RpcValidatorError, RpcValidatorsOrderedRequest, RpcValidatorsOrderedResponse,
-            };
-        }
+        pub use near_jsonrpc_primitives::types::validator::{
+            RpcValidatorError, RpcValidatorsOrderedRequest, RpcValidatorsOrderedResponse,
+        };
 
-        impl RpcMethod for RpcValidatorsOrderedRequest {
+        impl_!(RpcHandlerResult for RpcValidatorsOrderedResponse {});
+
+        impl_!(RpcMethod for RpcValidatorsOrderedRequest {
             type Result = RpcValidatorsOrderedResponse;
             type Error = RpcValidatorError;
 
-            params(&self) { json!(self) }
-        }
+            fn params(&self) -> Result<serde_json::Value, io::Error> {
+                Ok(json!(self))
+            }
+        });
     }
 }
 
 #[cfg(feature = "sandbox")]
 impl_method! {
     sandbox_patch_state: {
-        exports: {
-            pub use near_jsonrpc_primitives::types::sandbox::{
-                RpcSandboxPatchStateError, RpcSandboxPatchStateRequest,
-                RpcSandboxPatchStateResponse,
-            };
-        }
+        pub use near_jsonrpc_primitives::types::sandbox::{
+            RpcSandboxPatchStateError, RpcSandboxPatchStateRequest,
+            RpcSandboxPatchStateResponse,
+        };
 
-        impl RpcMethod for RpcSandboxPatchStateRequest {
+        impl_!(RpcHandlerResult for RpcSandboxPatchStateResponse {});
+
+        impl_!(RpcHandlerError for RpcSandboxPatchStateError {});
+
+        impl_!(RpcMethod for RpcSandboxPatchStateRequest {
             type Result = RpcSandboxPatchStateResponse;
             type Error = RpcSandboxPatchStateError;
 
-            params(&self) { json!(self) }
-        }
+            fn params(&self) -> Result<serde_json::Value, io::Error> {
+                Ok(json!(self))
+            }
+        });
     }
 }
 
 #[cfg(feature = "adversarial")]
 impl_method! {
     adv_set_weight: {
-        exports: {
-            #[derive(Debug)]
-            pub struct RpcAdversarialSetWeightRequest { pub height: u64 }
+        #[derive(Debug)]
+        pub struct RpcAdversarialSetWeightRequest { pub height: u64 }
 
-            pub type RpcAdversarialSetWeightResponse = ();
-            pub type RpcAdversarialSetWeightError = ();
-        }
+        #[derive(Debug, Deserialize)]
+        pub struct RpcAdversarialSetWeightResponse;
 
-        impl RpcMethod for RpcAdversarialSetWeightRequest {
+        #[derive(Debug, Deserialize)]
+        pub struct RpcAdversarialSetWeightError;
+
+        impl_!(RpcHandlerResult for RpcAdversarialSetWeightResponse {
+            fn parse_result(_value: serde_json::Value) -> Result<Self, serde_json::Error> {
+                Ok(RpcAdversarialSetWeightResponse)
+            }
+        });
+
+        impl_!(RpcHandlerError for RpcAdversarialSetWeightError {});
+
+        impl_!(RpcMethod for RpcAdversarialSetWeightRequest {
             type Result = RpcAdversarialSetWeightResponse;
             type Error = RpcAdversarialSetWeightError;
 
-            params(&self) { json!(self.height) }
-            parse_result(value) {
-                serde_json::from_value(value)?;
-                ()
+            fn params(&self) -> Result<serde_json::Value, io::Error> {
+                Ok(json!(self.height))
             }
-        }
+        });
     }
 }
 
 #[cfg(feature = "adversarial")]
 impl_method! {
     adv_disable_header_sync: {
-        exports: {
-            #[derive(Debug)]
-            pub struct RpcAdversarialDisableHeaderSyncRequest;
+        #[derive(Debug)]
+        pub struct RpcAdversarialDisableHeaderSyncRequest;
 
-            pub type RpcAdversarialDisableHeaderSyncResponse = ();
-            pub type RpcAdversarialDisableHeaderSyncError = ();
-        }
+        #[derive(Debug, Deserialize)]
+        pub struct RpcAdversarialDisableHeaderSyncResponse;
 
-        impl RpcMethod for RpcAdversarialDisableHeaderSyncRequest {
+        #[derive(Debug, Deserialize)]
+        pub struct RpcAdversarialDisableHeaderSyncError;
+
+        impl_!(RpcHandlerResult for RpcAdversarialDisableHeaderSyncResponse {
+            fn parse_result(_value: serde_json::Value) -> Result<Self, serde_json::Error> {
+                Ok(RpcAdversarialDisableHeaderSyncResponse)
+            }
+        });
+
+        impl_!(RpcHandlerError for RpcAdversarialDisableHeaderSyncError {});
+
+        impl_!(RpcMethod for RpcAdversarialDisableHeaderSyncRequest {
             type Result = RpcAdversarialDisableHeaderSyncResponse;
             type Error = RpcAdversarialDisableHeaderSyncError;
-
-            parse_result(value) {
-                serde_json::from_value(value)?;
-                ()
-            }
-        }
+        });
     }
 }
 
 #[cfg(feature = "adversarial")]
 impl_method! {
     adv_disable_doomslug: {
-        exports: {
             #[derive(Debug)]
-            pub struct RpcAdversarialDisableDoomslugRequest;
+        pub struct RpcAdversarialDisableDoomslugRequest;
 
-            pub type RpcAdversarialDisableDoomslugResponse = ();
-            pub type RpcAdversarialDisableDoomslugError = ();
-        }
+        #[derive(Debug, Deserialize)]
+        pub struct RpcAdversarialDisableDoomslugResponse;
 
-        impl RpcMethod for RpcAdversarialDisableDoomslugRequest {
+        #[derive(Debug, Deserialize)]
+        pub struct RpcAdversarialDisableDoomslugError;
+
+        impl_!(RpcHandlerResult for RpcAdversarialDisableDoomslugResponse {
+            fn parse_result(_value: serde_json::Value) -> Result<Self, serde_json::Error> {
+                Ok(RpcAdversarialDisableDoomslugResponse)
+            }
+        });
+
+        impl_!(RpcHandlerError for RpcAdversarialDisableDoomslugError {});
+
+        impl_!(RpcMethod for RpcAdversarialDisableDoomslugRequest {
             type Result = RpcAdversarialDisableDoomslugResponse;
             type Error = RpcAdversarialDisableDoomslugError;
-
-            parse_result(value) {
-                serde_json::from_value(value)?;
-                ()
-            }
-        }
+        });
     }
 }
 
 #[cfg(feature = "adversarial")]
 impl_method! {
     adv_produce_blocks: {
-        exports: {
-            #[derive(Debug)]
-            pub struct RpcAdversarialProduceBlocksRequest {
-                pub num_blocks: u64,
-                pub only_valid: bool,
-            }
-
-            pub type RpcAdversarialProduceBlocksResponse = ();
-            pub type RpcAdversarialProduceBlocksError = ();
+        #[derive(Debug)]
+        pub struct RpcAdversarialProduceBlocksRequest {
+            pub num_blocks: u64,
+            pub only_valid: bool,
         }
 
-        impl RpcMethod for RpcAdversarialProduceBlocksRequest {
+        #[derive(Debug, Deserialize)]
+        pub struct RpcAdversarialProduceBlocksResponse;
+
+        #[derive(Debug, Deserialize)]
+        pub struct RpcAdversarialProduceBlocksError;
+
+        impl_!(RpcHandlerResult for RpcAdversarialProduceBlocksResponse {
+            fn parse_result(_value: serde_json::Value) -> Result<Self, serde_json::Error> {
+                Ok(RpcAdversarialProduceBlocksResponse)
+            }
+        });
+
+        impl_!(RpcHandlerError for RpcAdversarialProduceBlocksError {});
+
+        impl_!(RpcMethod for RpcAdversarialProduceBlocksRequest {
             type Result = RpcAdversarialProduceBlocksResponse;
             type Error = RpcAdversarialProduceBlocksError;
 
-            params(&self) { json!([self.num_blocks, self.only_valid]) }
-            parse_result(value) {
-                serde_json::from_value(value)?;
-                ()
+            fn params(&self) -> Result<serde_json::Value, io::Error> {
+                Ok(json!([self.num_blocks, self.only_valid]))
             }
-        }
+        });
     }
 }
 
 #[cfg(feature = "adversarial")]
 impl_method! {
     adv_switch_to_height: {
-        exports: {
-            #[derive(Debug)]
-            pub struct RpcAdversarialSwitchToHeightRequest { pub height: u64 }
+        #[derive(Debug)]
+        pub struct RpcAdversarialSwitchToHeightRequest { pub height: u64 }
 
-            pub type RpcAdversarialSwitchToHeightResponse = ();
-            pub type RpcAdversarialSwitchToHeightError = ();
-        }
+        #[derive(Debug, Deserialize)]
+        pub struct RpcAdversarialSwitchToHeightResponse;
 
-        impl RpcMethod for RpcAdversarialSwitchToHeightRequest {
+        #[derive(Debug, Deserialize)]
+        pub struct RpcAdversarialSwitchToHeightError;
+
+        impl_!(RpcHandlerResult for RpcAdversarialSwitchToHeightResponse {
+            fn parse_result(_value: serde_json::Value) -> Result<Self, serde_json::Error> {
+                Ok(RpcAdversarialSwitchToHeightResponse)
+            }
+        });
+
+        impl_!(RpcHandlerError for RpcAdversarialSwitchToHeightError {});
+
+        impl_!(RpcMethod for RpcAdversarialSwitchToHeightRequest {
             type Result = RpcAdversarialSwitchToHeightResponse;
             type Error = RpcAdversarialSwitchToHeightError;
 
-            params(&self) { json!([self.height]) }
-            parse_result(value) {
-                serde_json::from_value(value)?;
-                ()
+            fn params(&self) -> Result<serde_json::Value, io::Error> {
+                Ok(json!([self.height]))
             }
-        }
+        });
     }
 }
 
 #[cfg(feature = "adversarial")]
 impl_method! {
     adv_get_saved_blocks: {
-        exports: {
-            #[derive(Debug)]
-            pub struct RpcAdversarialGetSavedBlocksRequest;
+        #[derive(Debug)]
+        pub struct RpcAdversarialGetSavedBlocksRequest;
 
-            pub type RpcAdversarialGetSavedBlocksResponse = u64;
-            pub type RpcAdversarialGetSavedBlocksError = ();
-        }
+        #[derive(Debug, Deserialize)]
+        pub struct RpcAdversarialGetSavedBlocksResponse(pub u64);
 
-        impl RpcMethod for RpcAdversarialGetSavedBlocksRequest {
+        #[derive(Debug, Deserialize)]
+        pub struct RpcAdversarialGetSavedBlocksError;
+
+        impl_!(RpcHandlerResult for RpcAdversarialGetSavedBlocksResponse {});
+
+        impl_!(RpcHandlerError for RpcAdversarialGetSavedBlocksError {});
+
+        impl_!(RpcMethod for RpcAdversarialGetSavedBlocksRequest {
             type Result = RpcAdversarialGetSavedBlocksResponse;
             type Error = RpcAdversarialGetSavedBlocksError;
-        }
+        });
     }
 }
 
 #[cfg(feature = "adversarial")]
 impl_method! {
     adv_check_store: {
-        exports: {
-            #[derive(Debug)]
-            pub struct RpcAdversarialCheckStoreRequest;
+        #[derive(Debug)]
+        pub struct RpcAdversarialCheckStoreRequest;
 
-            pub type RpcAdversarialCheckStoreResponse = u64;
-            pub type RpcAdversarialCheckStoreError = ();
-        }
+        #[derive(Debug, Deserialize)]
+        pub struct RpcAdversarialCheckStoreResponse(pub u64);
 
-        impl RpcMethod for RpcAdversarialCheckStoreRequest {
+        #[derive(Debug, Deserialize)]
+        pub struct RpcAdversarialCheckStoreError;
+
+        impl_!(RpcHandlerResult for RpcAdversarialCheckStoreResponse {});
+
+        impl_!(RpcHandlerError for RpcAdversarialCheckStoreError {});
+
+        impl_!(RpcMethod for RpcAdversarialCheckStoreRequest {
             type Result = RpcAdversarialCheckStoreResponse;
             type Error = RpcAdversarialCheckStoreError;
-        }
+        });
     }
 }
