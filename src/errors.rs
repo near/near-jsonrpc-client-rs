@@ -84,3 +84,12 @@ impl<E: fmt::Display> fmt::Display for JsonRpcError<E> {
         }
     }
 }
+
+impl<E> JsonRpcError<E> {
+    pub fn handler_error(&self) -> Result<&E, &Self> {
+        match self {
+            Self::ServerError(JsonRpcServerError::HandlerError(err)) => Ok(err),
+            err => Err(err),
+        }
+    }
+}
