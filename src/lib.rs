@@ -1,13 +1,10 @@
-//! Generic, low-level interfaces for interacting with the NEAR Protocol via JSON_RPC / HTTP.
-//!
-//! It's recommended to use the higher-level `near-api` library instead. Rust version coming soon.
+//! Lower-level API for interfacing with the NEAR Protocol via JSONRPC.
 //!
 //! ## Example
 //!
 //! Connect to the testnet RPC endpoint and request server status
 //!
 //! ```
-//! # #![allow(deprecated)]
 //! use near_jsonrpc_client::{methods, JsonRpcClient, NEAR_TESTNET_RPC_URL};
 //!
 //! # #[tokio::main]
@@ -80,7 +77,8 @@ impl fmt::Debug for JsonRpcClient {
     }
 }
 
-#[deprecated(note = "this crate is still under development")]
+pub type JsonRpcMethodCallResult<T, E> = Result<T, JsonRpcError<E>>;
+
 impl JsonRpcClient {
     /// Connect to a JSON RPC server using the default connector.
     ///
@@ -152,11 +150,7 @@ impl JsonRpcClient {
     pub fn with(client: reqwest::Client) -> JsonRpcClientConnector {
         JsonRpcClientConnector { client }
     }
-}
 
-pub type JsonRpcMethodCallResult<T, E> = Result<T, JsonRpcError<E>>;
-
-impl JsonRpcClient {
     /// Method executor for the client.
     pub async fn call<M: methods::RpcMethod>(
         self,
