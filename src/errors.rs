@@ -2,7 +2,7 @@ use std::{fmt, io};
 
 use thiserror::Error;
 
-use near_jsonrpc_primitives::errors::RpcRequestValidationErrorKind;
+use near_jsonrpc_primitives::errors::{RpcError, RpcErrorKind, RpcRequestValidationErrorKind};
 use near_jsonrpc_primitives::message::{self, Message};
 
 #[derive(Debug, Error)]
@@ -91,5 +91,61 @@ impl<E> JsonRpcError<E> {
             Self::ServerError(JsonRpcServerError::HandlerError(err)) => Ok(err),
             err => Err(err),
         }
+    }
+}
+
+impl<E: super::methods::RpcHandlerError> From<RpcError> for JsonRpcError<E> {
+    fn from(err: RpcError) -> Self {
+        let mut handler_parse_error = None;
+        match err.error_struct {
+            Some(RpcErrorKind::HandlerError(handler_error)) => {
+                match serde_json::from_value(handler_error) {
+                    Ok(handler_error) => {
+                        return JsonRpcError::ServerError(JsonRpcServerError::HandlerError(
+                            handler_error,
+                        ))
+                    }
+                    Err(err) => {
+                        handler_parse_error.replace(err);
+                    }
+                }
+            }
+            Some(RpcErrorKind::RequestValidationError(err)) => {
+                return JsonRpcError::ServerError(JsonRpcServerError::RequestValidationError(err));
+            }
+            Some(RpcErrorKind::InternalError(err)) => {
+                return JsonRpcError::ServerError(JsonRpcServerError::InternalError {
+                    info: err["info"]["error_message"]
+                        .as_str()
+                        .unwrap_or("<no data>")
+                        .to_string(),
+                })
+            }
+            None => {}
+        }
+        if let Some(raw_err_data) = err.data {
+            match E::parse_raw_error(raw_err_data) {
+                Some(Ok(handler_error)) => {
+                    return JsonRpcError::ServerError(JsonRpcServerError::HandlerError(
+                        handler_error,
+                    ))
+                }
+                Some(Err(err)) => {
+                    handler_parse_error.replace(err);
+                }
+                None => {}
+            }
+        }
+        if let Some(err) = handler_parse_error {
+            return JsonRpcError::TransportError(RpcTransportError::RecvError(
+                JsonRpcTransportRecvError::ResponseParseError(
+                    JsonRpcTransportHandlerResponseError::ErrorMessageParseError(err),
+                ),
+            ));
+        }
+        return JsonRpcError::ServerError(JsonRpcServerError::NonContextualError {
+            code: err.code,
+            message: err.message,
+        });
     }
 }

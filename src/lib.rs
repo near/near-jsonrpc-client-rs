@@ -24,7 +24,6 @@
 
 use std::{fmt, sync::Arc};
 
-use near_jsonrpc_primitives::errors::RpcErrorKind;
 use near_jsonrpc_primitives::message::{from_slice, Message};
 
 use lazy_static::lazy_static;
@@ -199,69 +198,7 @@ impl JsonRpcClient {
         })?;
 
         if let Message::Response(response) = response_message {
-            let response_result = match response.result {
-                Ok(response_result) => response_result,
-                Err(err) => {
-                    let mut handler_parse_error = None;
-                    match err.error_struct {
-                        Some(RpcErrorKind::HandlerError(handler_error)) => {
-                            match serde_json::from_value(handler_error) {
-                                Ok(handler_error) => {
-                                    return Err(JsonRpcError::ServerError(
-                                        JsonRpcServerError::HandlerError(handler_error),
-                                    ))
-                                }
-                                Err(err) => {
-                                    handler_parse_error.replace(err);
-                                }
-                            }
-                        }
-                        Some(RpcErrorKind::RequestValidationError(err)) => {
-                            return Err(JsonRpcError::ServerError(
-                                JsonRpcServerError::RequestValidationError(err),
-                            ));
-                        }
-                        Some(RpcErrorKind::InternalError(err)) => {
-                            return Err(JsonRpcError::ServerError(
-                                JsonRpcServerError::InternalError {
-                                    info: err["info"]["error_message"]
-                                        .as_str()
-                                        .unwrap_or("<no data>")
-                                        .to_string(),
-                                },
-                            ))
-                        }
-                        None => {}
-                    }
-                    if let Some(raw_err_data) = err.data {
-                        match methods::RpcHandlerError::parse_raw_error(raw_err_data) {
-                            Some(Ok(handler_error)) => {
-                                return Err(JsonRpcError::ServerError(
-                                    JsonRpcServerError::HandlerError(handler_error),
-                                ))
-                            }
-                            Some(Err(err)) => {
-                                handler_parse_error.replace(err);
-                            }
-                            None => {}
-                        }
-                    }
-                    if let Some(err) = handler_parse_error {
-                        return Err(JsonRpcError::TransportError(RpcTransportError::RecvError(
-                            JsonRpcTransportRecvError::ResponseParseError(
-                                JsonRpcTransportHandlerResponseError::ErrorMessageParseError(err),
-                            ),
-                        )));
-                    }
-                    return Err(JsonRpcError::ServerError(
-                        JsonRpcServerError::NonContextualError {
-                            code: err.code,
-                            message: err.message,
-                        },
-                    ));
-                }
-            };
-            return methods::RpcHandlerResult::parse_result(response_result).map_err(|err| {
+            return methods::RpcHandlerResult::parse_result(response.result?).map_err(|err| {
                 JsonRpcError::TransportError(RpcTransportError::RecvError(
                     JsonRpcTransportRecvError::ResponseParseError(
                         JsonRpcTransportHandlerResponseError::ResultParseError(err),
