@@ -74,16 +74,6 @@ macro_rules! impl_method {
     }
 }
 
-macro_rules! legacy {
-    ($($body:tt)+) => {
-        mod legacy {
-            use super::*;
-
-            $($body)+
-        }
-    }
-}
-
 macro_rules! impl_ {
     ($valid_trait:ident for $for_type:ty { $($body:tt)+ }) => {
         impl chk::ValidRpcMarkerTrait for $for_type {}
@@ -193,7 +183,6 @@ impl_method! {
         pub use near_jsonrpc_primitives::types::blocks::RpcBlockError;
         pub use near_jsonrpc_primitives::types::blocks::RpcBlockRequest;
         pub use near_primitives::views::BlockView;
-        use near_primitives::types::BlockId;
 
         impl RpcHandlerResult for BlockView {}
 
@@ -207,25 +196,6 @@ impl_method! {
                 Ok(json!(self))
             }
         });
-
-        #[cfg(feature = "legacy")]
-        pub fn by_id(block_id: BlockId) -> legacy::RpcBlockRequestById {
-            legacy::RpcBlockRequestById(block_id)
-        }
-
-        legacy! {
-            #[derive(Debug)]
-            pub struct RpcBlockRequestById(pub BlockId);
-
-            impl_!(RpcMethod for RpcBlockRequestById {
-                type Result = BlockView;
-                type Error = RpcBlockError;
-
-                fn params(&self) -> Result<serde_json::Value, io::Error> {
-                    Ok(json!([self.0]))
-                }
-            });
-        }
     }
 }
 
@@ -444,28 +414,6 @@ impl_method! {
                 Ok(json!(self))
             }
         });
-
-        #[cfg(feature = "legacy")]
-        pub fn by_path(path: String, data: String) -> legacy::RpcBlockRequestByPath {
-            legacy::RpcBlockRequestByPath { path, data }
-        }
-
-        legacy! {
-            #[derive(Debug)]
-            pub struct RpcBlockRequestByPath {
-                pub path: String,
-                pub data: String,
-            }
-
-            impl_!(RpcMethod for RpcBlockRequestByPath {
-                type Result = RpcQueryResponse;
-                type Error = RpcQueryError;
-
-                fn params(&self) -> Result<serde_json::Value, io::Error> {
-                    Ok(json!([self.path, self.data]))
-                }
-            });
-        }
     }
 }
 
