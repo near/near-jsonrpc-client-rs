@@ -1,10 +1,6 @@
 # near-jsonrpc-client
 
-Lower-level JSON RPC API for interfacing with the NEAR Protocol.
-
-It's recommended to use the higher-level `near-api` library instead. Rust version coming soon.
-
-> DO NOT USE: this crate is unfinalized and therefore, unfit for use.
+Lower-level API for interfacing with the NEAR Protocol via JSONRPC.
 
 ## Usage
 
