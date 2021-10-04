@@ -15,7 +15,7 @@ where
     type Result;
     type Error;
 
-    const METHOD_NAME: &'static str;
+    fn method_name(&self) -> &str;
 
     fn params(&self) -> Result<serde_json::Value, io::Error> {
         Ok(json!(null))
@@ -30,7 +30,9 @@ where
     type Result = T::Result;
     type Error = T::Error;
 
-    const METHOD_NAME: &'static str = T::METHOD_NAME;
+    fn method_name(&self) -> &str {
+        T::method_name(self)
+    }
 
     fn params(&self) -> Result<serde_json::Value, io::Error> {
         T::params(self)
@@ -85,8 +87,12 @@ macro_rules! impl_ {
     (RpcMethod for $for_type:ty { $($body:tt)+ }) => {
         impl chk::ValidRpcMarkerTrait for $for_type {}
         impl_!(@final RpcMethod for $for_type {
-            const METHOD_NAME: &'static str = METHOD_NAME;
             $($body)+
+
+            #[inline(always)]
+            fn method_name(&self) -> &str {
+                METHOD_NAME
+            }
         });
     };
     ($valid_trait:ident for $for_type:ty { $($body:tt)* }) => {
@@ -140,6 +146,54 @@ mod shared_structs {
 
     // validators, EXPERIMENTAL_validators_ordered
     impl_!(RpcHandlerError for near_jsonrpc_primitives::types::validator::RpcValidatorError {});
+}
+
+#[cfg(feature = "any")]
+pub use any::new as any;
+
+#[cfg(feature = "any")]
+mod any {
+    use super::*;
+    use std::marker::PhantomData;
+
+    pub fn new<T, E>(method_name: &str, params: serde_json::Value) -> RpcAnyRequest<T, E>
+    where
+        T: RpcHandlerResult,
+        E: RpcHandlerError,
+    {
+        RpcAnyRequest {
+            method: method_name.to_string(),
+            params,
+            _data: PhantomData,
+        }
+    }
+
+    #[derive(Debug)]
+    pub struct RpcAnyRequest<T, E> {
+        pub method: String,
+        pub params: serde_json::Value,
+        pub(crate) _data: PhantomData<(T, E)>,
+    }
+
+    impl<T, E> chk::ValidRpcMarkerTrait for RpcAnyRequest<T, E> {}
+
+    impl<T, E> RpcMethod for RpcAnyRequest<T, E>
+    where
+        T: RpcHandlerResult,
+        E: RpcHandlerError,
+    {
+        type Result = T;
+        type Error = E;
+
+        #[inline(always)]
+        fn method_name(&self) -> &str {
+            &self.method
+        }
+
+        fn params(&self) -> Result<serde_json::Value, io::Error> {
+            Ok(self.params.clone())
+        }
+    }
 }
 
 impl_method! {

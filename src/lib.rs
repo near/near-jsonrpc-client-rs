@@ -162,7 +162,7 @@ impl JsonRpcClient {
         method: M,
     ) -> JsonRpcMethodCallResult<M::Result, M::Error> {
         let (method_name, params) = (
-            M::METHOD_NAME,
+            method.method_name(),
             method.params().map_err(|err| {
                 JsonRpcError::TransportError(RpcTransportError::SendError(
                     JsonRpcTransportSendError::PayloadSerializeError(err),
