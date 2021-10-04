@@ -44,8 +44,9 @@ pub trait RpcHandlerResult: serde::de::DeserializeOwned + chk::ValidRpcMarkerTra
 }
 
 pub trait RpcHandlerError: serde::de::DeserializeOwned + chk::ValidRpcMarkerTrait {
-    /// parser for the `.data` field in RpcError, not `.error_struct`
-    /// this would only ever be used if `.error_struct` can't be deserialized
+    /// Parser for the `.data` field in RpcError, not `.error_struct`
+    ///
+    /// This would only ever be used if `.error_struct` can't be deserialized
     fn parse_raw_error(_value: serde_json::Value) -> Option<Result<Self, serde_json::Error>> {
         None
     }
@@ -98,7 +99,7 @@ macro_rules! impl_ {
     };
 }
 
-mod shared_structs {
+mod shared_impls {
     use super::{chk, RpcHandlerError, RpcHandlerResult};
 
     impl chk::ValidRpcMarkerTrait for () {}

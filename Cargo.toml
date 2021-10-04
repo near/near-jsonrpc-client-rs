@@ -6,7 +6,7 @@ edition = "2018"
 license = "Apache-2.0"
 repository = "https://github.com/near/near-jsonrpc-client-rs"
 homepage = "https://github.com/near/near-jsonrpc-client-rs"
-description = "Generic, low-level interfaces for interacting with the NEAR Protocol via JSON_RPC / HTTP"
+description = "Lower-level API for interfacing with the NEAR Protocol via JSONRPC"
 
 [dependencies]
 # todo! remove this once nearcore has upgraded to stable actix
@@ -22,10 +22,10 @@ borsh = "0.9"
 serde = "1.0.127"
 serde_json = "1.0.66"
 
-near-primitives = { git = "https://github.com/near/nearcore", rev="b4925abb521f34cebcb45c10f2e010b219acc0ae" }
-near-chain-configs = { git = "https://github.com/near/nearcore", rev="b4925abb521f34cebcb45c10f2e010b219acc0ae" }
-near-client-primitives = { git = "https://github.com/near/nearcore", rev="b4925abb521f34cebcb45c10f2e010b219acc0ae" }
-near-jsonrpc-primitives = { git = "https://github.com/near/nearcore", rev="b4925abb521f34cebcb45c10f2e010b219acc0ae" }
+near-primitives = { git = "https://github.com/near/nearcore", rev = "b4925abb521f34cebcb45c10f2e010b219acc0ae" }
+near-chain-configs = { git = "https://github.com/near/nearcore", rev = "b4925abb521f34cebcb45c10f2e010b219acc0ae" }
+near-client-primitives = { git = "https://github.com/near/nearcore", rev = "b4925abb521f34cebcb45c10f2e010b219acc0ae" }
+near-jsonrpc-primitives = { git = "https://github.com/near/nearcore", rev = "b4925abb521f34cebcb45c10f2e010b219acc0ae" }
 
 [dev-dependencies]
 tokio = { version = "1.1", features = ["rt", "macros"] }
