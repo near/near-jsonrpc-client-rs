@@ -186,14 +186,15 @@ impl_method! {
     pub mod block {
         pub use near_jsonrpc_primitives::types::blocks::RpcBlockError;
         pub use near_jsonrpc_primitives::types::blocks::RpcBlockRequest;
-        pub use near_primitives::views::BlockView;
 
-        impl RpcHandlerResponse for BlockView {}
+        pub type RpcBlockResponse = near_primitives::views::BlockView;
+
+        impl RpcHandlerResponse for RpcBlockResponse {}
 
         impl RpcHandlerError for RpcBlockError {}
 
         impl_!(RpcMethod for RpcBlockRequest {
-            type Response = BlockView;
+            type Response = RpcBlockResponse;
             type Error = RpcBlockError;
 
             fn params(&self) -> Result<serde_json::Value, io::Error> {
@@ -213,8 +214,9 @@ fn serialize_signed_transaction(
 
 impl_method! {
     pub mod broadcast_tx_async {
-        pub use near_primitives::hash::CryptoHash;
         pub use near_primitives::transaction::SignedTransaction;
+
+        pub type RpcBroadcastTxAsyncResponse = near_primitives::hash::CryptoHash;
 
         #[derive(Debug)]
         pub struct RpcBroadcastTxAsyncRequest {
@@ -231,10 +233,10 @@ impl_method! {
             }
         }
 
-        impl RpcHandlerResponse for CryptoHash {}
+        impl RpcHandlerResponse for RpcBroadcastTxAsyncResponse {}
 
         impl_!(RpcMethod for RpcBroadcastTxAsyncRequest {
-            type Response = CryptoHash;
+            type Response = RpcBroadcastTxAsyncResponse;
             type Error = ();
 
             fn params(&self) -> Result<serde_json::Value, io::Error> {
@@ -248,7 +250,8 @@ impl_method! {
     pub mod broadcast_tx_commit {
         pub use near_jsonrpc_primitives::types::transactions::RpcTransactionError;
         pub use near_primitives::transaction::SignedTransaction;
-        pub use near_primitives::views::FinalExecutionOutcomeView;
+
+        pub type RpcBroadcastTxCommitResponse = near_primitives::views::FinalExecutionOutcomeView;
 
         #[derive(Debug)]
         pub struct RpcBroadcastTxCommitRequest {
@@ -266,7 +269,7 @@ impl_method! {
         }
 
         impl_!(RpcMethod for RpcBroadcastTxCommitRequest {
-            type Response = FinalExecutionOutcomeView;
+            type Response = RpcBroadcastTxCommitResponse;
             type Error = RpcTransactionError;
 
             fn params(&self) -> Result<serde_json::Value, io::Error> {
@@ -279,14 +282,15 @@ impl_method! {
 impl_method! {
     pub mod chunk {
         pub use near_jsonrpc_primitives::types::chunks::{RpcChunkError, RpcChunkRequest};
-        pub use near_primitives::views::ChunkView;
 
-        impl RpcHandlerResponse for ChunkView {}
+        pub type RpcChunkResponse = near_primitives::views::ChunkView;
+
+        impl RpcHandlerResponse for RpcChunkResponse {}
 
         impl RpcHandlerError for RpcChunkError {}
 
         impl_!(RpcMethod for RpcChunkRequest {
-            type Response = ChunkView;
+            type Response = RpcChunkResponse;
             type Error = RpcChunkError;
 
             fn params(&self) -> Result<serde_json::Value, io::Error> {
@@ -301,14 +305,15 @@ impl_method! {
         pub use near_jsonrpc_primitives::types::gas_price::{
             RpcGasPriceError, RpcGasPriceRequest,
         };
-        pub use near_primitives::views::GasPriceView;
 
-        impl RpcHandlerResponse for GasPriceView {}
+        pub type RpcGasPriceResponse = near_primitives::views::GasPriceView;
+
+        impl RpcHandlerResponse for RpcGasPriceResponse {}
 
         impl RpcHandlerError for RpcGasPriceError {}
 
         impl_!(RpcMethod for RpcGasPriceRequest {
-            type Response = GasPriceView;
+            type Response = RpcGasPriceResponse;
             type Error = RpcGasPriceError;
 
             fn params(&self) -> Result<serde_json::Value, io::Error> {
@@ -442,7 +447,8 @@ impl_method! {
     pub mod tx {
         pub use near_jsonrpc_primitives::types::transactions::RpcTransactionError;
         pub use near_jsonrpc_primitives::types::transactions::TransactionInfo;
-        pub use near_primitives::views::FinalExecutionOutcomeView;
+
+        pub type RpcTransactionStatusResponse = near_primitives::views::FinalExecutionOutcomeView;
 
         #[derive(Debug)]
         pub struct RpcTransactionStatusRequest {
@@ -460,7 +466,7 @@ impl_method! {
         }
 
         impl_!(RpcMethod for RpcTransactionStatusRequest {
-            type Response = FinalExecutionOutcomeView;
+            type Response = RpcTransactionStatusResponse;
             type Error = RpcTransactionError;
 
             fn params(&self) -> Result<serde_json::Value, io::Error> {
@@ -484,12 +490,13 @@ impl_method! {
         pub use near_jsonrpc_primitives::types::validator::{
             RpcValidatorError, RpcValidatorRequest,
         };
-        pub use near_primitives::views::EpochValidatorInfo;
 
-        impl RpcHandlerResponse for EpochValidatorInfo {}
+        pub type RpcValidatorResponse = near_primitives::views::EpochValidatorInfo;
+
+        impl RpcHandlerResponse for RpcValidatorResponse {}
 
         impl_!(RpcMethod for RpcValidatorRequest {
-            type Response = EpochValidatorInfo;
+            type Response = RpcValidatorResponse;
             type Error = RpcValidatorError;
 
             fn params(&self) -> Result<serde_json::Value, io::Error> {
@@ -603,15 +610,15 @@ impl_method! {
 
 impl_method! {
     pub mod EXPERIMENTAL_genesis_config {
-        pub use near_chain_configs::GenesisConfig;
+        pub type RpcGenesisConfigResponse = near_chain_configs::GenesisConfig;
 
         #[derive(Debug)]
         pub struct RpcGenesisConfigRequest;
 
-        impl RpcHandlerResponse for GenesisConfig {}
+        impl RpcHandlerResponse for RpcGenesisConfigResponse {}
 
         impl_!(RpcMethod for RpcGenesisConfigRequest {
-            type Response = GenesisConfig;
+            type Response = RpcGenesisConfigResponse;
             type Error = ();
         });
     }
@@ -619,17 +626,18 @@ impl_method! {
 
 impl_method! {
     pub mod EXPERIMENTAL_protocol_config {
-        pub use near_chain_configs::ProtocolConfigView;
         pub use near_jsonrpc_primitives::types::config::{
             RpcProtocolConfigError, RpcProtocolConfigRequest,
         };
 
-        impl RpcHandlerResponse for ProtocolConfigView {}
+        pub type RpcProtocolConfigResponse = near_chain_configs::ProtocolConfigView;
+
+        impl RpcHandlerResponse for RpcProtocolConfigResponse {}
 
         impl RpcHandlerError for RpcProtocolConfigError {}
 
         impl_!(RpcMethod for RpcProtocolConfigRequest {
-            type Response = ProtocolConfigView;
+            type Response = RpcProtocolConfigResponse;
             type Error = RpcProtocolConfigError;
 
             fn params(&self) -> Result<serde_json::Value, io::Error> {
@@ -644,14 +652,15 @@ impl_method! {
         pub use near_jsonrpc_primitives::types::receipts::{
             RpcReceiptError, RpcReceiptRequest,
         };
-        pub use near_primitives::views::ReceiptView;
 
-        impl RpcHandlerResponse for ReceiptView {}
+        pub type RpcReceiptResponse = near_primitives::views::ReceiptView;
+
+        impl RpcHandlerResponse for RpcReceiptResponse {}
 
         impl RpcHandlerError for RpcReceiptError {}
 
         impl_!(RpcMethod for RpcReceiptRequest {
-            type Response = ReceiptView;
+            type Response = RpcReceiptResponse;
             type Error = RpcReceiptError;
 
             fn params(&self) -> Result<serde_json::Value, io::Error> {
@@ -665,7 +674,8 @@ impl_method! {
     pub mod EXPERIMENTAL_tx_status {
         pub use near_jsonrpc_primitives::types::transactions::RpcTransactionError;
         pub use near_jsonrpc_primitives::types::transactions::TransactionInfo;
-        pub use near_primitives::views::FinalExecutionOutcomeWithReceiptView;
+
+        pub type RpcTransactionStatusResponse = near_primitives::views::FinalExecutionOutcomeWithReceiptView;
 
         #[derive(Debug)]
         pub struct RpcTransactionStatusRequest {
@@ -682,10 +692,10 @@ impl_method! {
             }
         }
 
-        impl RpcHandlerResponse for FinalExecutionOutcomeWithReceiptView {}
+        impl RpcHandlerResponse for RpcTransactionStatusResponse {}
 
         impl_!(RpcMethod for RpcTransactionStatusRequest {
-            type Response = FinalExecutionOutcomeWithReceiptView;
+            type Response = RpcTransactionStatusResponse;
             type Error = RpcTransactionError;
 
             fn params(&self) -> Result<serde_json::Value, io::Error> {
