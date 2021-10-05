@@ -17,9 +17,7 @@ where
 
     fn method_name(&self) -> &str;
 
-    fn params(&self) -> Result<serde_json::Value, io::Error> {
-        Ok(json!(null))
-    }
+    fn params(&self) -> Result<serde_json::Value, io::Error>;
 }
 
 impl<T> chk::ValidRpcMarkerTrait for &T where T: chk::ValidRpcMarkerTrait {}
@@ -337,6 +335,10 @@ impl_method! {
         impl_!(RpcMethod for RpcHealthRequest {
             type Response = RpcHealthResponse;
             type Error = RpcStatusError;
+
+            fn params(&self) -> Result<serde_json::Value, io::Error> {
+                Ok(json!(null))
+            }
         });
     }
 }
@@ -401,6 +403,10 @@ impl_method! {
         impl_!(RpcMethod for RpcNetworkInfoRequest {
             type Response = NetworkInfoResponse;
             type Error = RpcNetworkInfoError;
+
+            fn params(&self) -> Result<serde_json::Value, io::Error> {
+                Ok(json!(null))
+            }
         });
     }
 }
@@ -439,6 +445,10 @@ impl_method! {
         impl_!(RpcMethod for RpcStatusRequest {
             type Response = StatusResponse;
             type Error = RpcStatusError;
+
+            fn params(&self) -> Result<serde_json::Value, io::Error> {
+                Ok(json!(null))
+            }
         });
     }
 }
@@ -620,6 +630,10 @@ impl_method! {
         impl_!(RpcMethod for RpcGenesisConfigRequest {
             type Response = RpcGenesisConfigResponse;
             type Error = ();
+
+            fn params(&self) -> Result<serde_json::Value, io::Error> {
+                Ok(json!(null))
+            }
         });
     }
 }
@@ -782,6 +796,10 @@ impl_method! {
         impl_!(RpcMethod for RpcAdversarialDisableHeaderSyncRequest {
             type Response = ();
             type Error = ();
+
+            fn params(&self) -> Result<serde_json::Value, io::Error> {
+                Ok(json!(null))
+            }
         });
     }
 }
@@ -795,6 +813,10 @@ impl_method! {
         impl_!(RpcMethod for RpcAdversarialDisableDoomslugRequest {
             type Response = ();
             type Error = ();
+
+            fn params(&self) -> Result<serde_json::Value, io::Error> {
+                Ok(json!(null))
+            }
         });
     }
 }
@@ -852,6 +874,10 @@ impl_method! {
         impl_!(RpcMethod for RpcAdversarialGetSavedBlocksRequest {
             type Response = RpcAdversarialGetSavedBlocksResponse;
             type Error = ();
+
+            fn params(&self) -> Result<serde_json::Value, io::Error> {
+                Ok(json!(null))
+            }
         });
     }
 }
@@ -872,6 +898,10 @@ impl_method! {
         impl_!(RpcMethod for RpcAdversarialCheckStoreRequest {
             type Response = RpcAdversarialCheckStoreResponse;
             type Error = ();
+
+            fn params(&self) -> Result<serde_json::Value, io::Error> {
+                Ok(json!(null))
+            }
         });
     }
 }
