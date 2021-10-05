@@ -95,6 +95,7 @@ mod shared_impls {
     impl RpcHandlerError for () {}
 
     // adv_*
+    #[cfg(feature = "adversarial")]
     impl RpcHandlerResponse for () {
         fn parse(_value: serde_json::Value) -> Result<Self, serde_json::Error> {
             Ok(())
