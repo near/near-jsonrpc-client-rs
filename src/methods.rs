@@ -189,7 +189,7 @@ mod any {
         type Error;
     }
 
-    impl<T, E> AnyRequestResult for (T, E) {
+    impl<T, E> AnyRequestResult for Result<T, E> {
         type Response = T;
         type Error = E;
     }
