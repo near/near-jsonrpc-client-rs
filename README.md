@@ -60,7 +60,7 @@ struct PartialGenesisConfig {
     validators: Vec<AccountInfo>,
 }
 
-impl methods::RpcHandlerResult for PartialGenesisConfig {}
+impl methods::RpcHandlerResponse for PartialGenesisConfig {}
 
 let mainnet_client = JsonRpcClient::connect("https://rpc.mainnet.near.org");
 

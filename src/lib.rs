@@ -91,7 +91,7 @@
 //!        validators: Vec<AccountInfo>,
 //!    }
 //!
-//!    impl methods::RpcHandlerResult for PartialGenesisConfig {}
+//!    impl methods::RpcHandlerResponse for PartialGenesisConfig {}
 //!
 //!    # #[tokio::main]
 //!    # async fn main() -> Result<(), JsonRpcError<()>> {
@@ -226,11 +226,11 @@ impl JsonRpcClient {
     ///
     /// # #[tokio::main]
     /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    /// let webClient = reqwest::Client::builder()
+    /// let web_client = reqwest::Client::builder()
     ///     .proxy(reqwest::Proxy::all("https://192.168.1.1:4825")?)
     ///     .build()?;
     ///
-    /// let testnet_client = JsonRpcClient::with(webClient).connect("https://rpc.testnet.near.org");
+    /// let testnet_client = JsonRpcClient::with(web_client).connect("https://rpc.testnet.near.org");
     /// # Ok(())
     /// # }
     /// ```
@@ -242,7 +242,7 @@ impl JsonRpcClient {
     pub async fn call<M: methods::RpcMethod>(
         self,
         method: M,
-    ) -> JsonRpcMethodCallResult<M::Result, M::Error> {
+    ) -> JsonRpcMethodCallResult<M::Response, M::Error> {
         let (method_name, params) = (
             method.method_name(),
             method.params().map_err(|err| {
@@ -280,7 +280,7 @@ impl JsonRpcClient {
         })?;
 
         if let Message::Response(response) = response_message {
-            return methods::RpcHandlerResult::parse_result(response.result?).map_err(|err| {
+            return methods::RpcHandlerResponse::parse(response.result?).map_err(|err| {
                 JsonRpcError::TransportError(RpcTransportError::RecvError(
                     JsonRpcTransportRecvError::ResponseParseError(
                         JsonRpcTransportHandlerResponseError::ResultParseError(err),
