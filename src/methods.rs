@@ -44,10 +44,17 @@ pub trait RpcHandlerResponse: serde::de::DeserializeOwned {
 }
 
 pub trait RpcHandlerError: serde::de::DeserializeOwned {
-    /// Parser for the `.data` field in RpcError, not `.error_struct`
+    /// Parser for the `.error_struct` field in RpcError.
+    fn parse(handler_error: serde_json::Value) -> Result<Self, serde_json::Error> {
+        serde_json::from_value(handler_error)
+    }
+
+    /// Parser for the `.data` field in RpcError, not `.error_struct`.
     ///
-    /// This would only ever be used if `.error_struct` can't be deserialized
-    fn parse_raw_error(_value: serde_json::Value) -> Option<Result<Self, serde_json::Error>> {
+    /// This would only ever be used as a fallback if [`RpcHandlerError::parse`] fails.
+    ///
+    /// Defaults to `None` meaning there's no alternative deserialization available.
+    fn parse_raw_error(_error: serde_json::Value) -> Option<Result<Self, serde_json::Error>> {
         None
     }
 }
@@ -91,6 +98,18 @@ mod shared_impls {
 
     // broadcast_tx_async, EXPERIMENTAL_genesis_config, adv_*
     impl RpcHandlerError for () {}
+
+    impl RpcHandlerResponse for serde_json::Value {
+        fn parse(value: serde_json::Value) -> Result<Self, serde_json::Error> {
+            Ok(value)
+        }
+    }
+
+    impl RpcHandlerError for serde_json::Value {
+        fn parse(handler_error: serde_json::Value) -> Result<Self, serde_json::Error> {
+            Ok(handler_error)
+        }
+    }
 
     // adv_*
     #[cfg(feature = "adversarial")]

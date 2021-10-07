@@ -98,18 +98,16 @@ impl<E: super::methods::RpcHandlerError> From<RpcError> for JsonRpcError<E> {
     fn from(err: RpcError) -> Self {
         let mut handler_parse_error = None;
         match err.error_struct {
-            Some(RpcErrorKind::HandlerError(handler_error)) => {
-                match serde_json::from_value(handler_error) {
-                    Ok(handler_error) => {
-                        return JsonRpcError::ServerError(JsonRpcServerError::HandlerError(
-                            handler_error,
-                        ))
-                    }
-                    Err(err) => {
-                        handler_parse_error.replace(err);
-                    }
+            Some(RpcErrorKind::HandlerError(handler_error)) => match E::parse(handler_error) {
+                Ok(handler_error) => {
+                    return JsonRpcError::ServerError(JsonRpcServerError::HandlerError(
+                        handler_error,
+                    ))
                 }
-            }
+                Err(err) => {
+                    handler_parse_error.replace(err);
+                }
+            },
             Some(RpcErrorKind::RequestValidationError(err)) => {
                 return JsonRpcError::ServerError(JsonRpcServerError::RequestValidationError(err));
             }
