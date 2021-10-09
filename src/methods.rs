@@ -99,23 +99,25 @@ mod shared_impls {
     // broadcast_tx_async, EXPERIMENTAL_genesis_config, adv_*
     impl RpcHandlerError for () {}
 
+    // adv_*
+    #[cfg(feature = "adversarial")]
+    impl RpcHandlerResponse for () {
+        fn parse(_value: serde_json::Value) -> Result<Self, serde_json::Error> {
+            Ok(())
+        }
+    }
+
+    #[cfg(feature = "any")]
     impl RpcHandlerResponse for serde_json::Value {
         fn parse(value: serde_json::Value) -> Result<Self, serde_json::Error> {
             Ok(value)
         }
     }
 
+    #[cfg(feature = "any")]
     impl RpcHandlerError for serde_json::Value {
         fn parse(handler_error: serde_json::Value) -> Result<Self, serde_json::Error> {
             Ok(handler_error)
-        }
-    }
-
-    // adv_*
-    #[cfg(feature = "adversarial")]
-    impl RpcHandlerResponse for () {
-        fn parse(_value: serde_json::Value) -> Result<Self, serde_json::Error> {
-            Ok(())
         }
     }
 
