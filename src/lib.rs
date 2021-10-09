@@ -300,14 +300,142 @@ impl JsonRpcClient {
 mod tests {
     use crate::{methods, JsonRpcClient};
 
-    const RPC_SERVER_ADDR: &'static str = "http://localhost:3030";
+    const RPC_SERVER_ADDR: &'static str = "https://archival-rpc.mainnet.near.org";
 
     #[tokio::test]
-    async fn check_jsonrpc_status() {
+    async fn chk_status_testnet() {
         let client = JsonRpcClient::connect(RPC_SERVER_ADDR);
-        let method = methods::status::RpcStatusRequest;
-        let status = client.call(method).await;
 
-        println!("status of [{}]: {:?}", RPC_SERVER_ADDR, status.unwrap());
+        let status = client.call(methods::status::RpcStatusRequest).await;
+
+        assert!(
+            matches!(status, Ok(methods::status::RpcStatusResponse { .. })),
+            "expected an Ok(RpcStatusResponse), found [{:?}]",
+            status
+        );
+    }
+
+    #[tokio::test]
+    #[cfg(feature = "any")]
+    async fn any_typed_ok() -> Result<(), Box<dyn std::error::Error>> {
+        let client = JsonRpcClient::connect(RPC_SERVER_ADDR);
+
+        let tx_status = client
+            .call(methods::any::<methods::tx::RpcTransactionStatusRequest>(
+                "tx",
+                serde_json::json!([
+                    "9FtHUFBQsZ2MG77K3x3MJ9wjX3UT8zE1TczCrhZEcG8U",
+                    "miraclx.near",
+                ]),
+            ))
+            .await;
+
+        assert!(
+            matches!(
+                tx_status,
+                Ok(methods::tx::RpcTransactionStatusResponse { ref transaction, .. })
+                if transaction.signer_id.as_ref() == "miraclx.near"
+                && transaction.hash == "9FtHUFBQsZ2MG77K3x3MJ9wjX3UT8zE1TczCrhZEcG8U".parse()?
+            ),
+            "expected an Ok(RpcTransactionStatusResponse) with matching signer_id + hash, found [{:?}]",
+            tx_status
+        );
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[cfg(feature = "any")]
+    async fn any_typed_err() -> Result<(), Box<dyn std::error::Error>> {
+        let client = JsonRpcClient::connect(RPC_SERVER_ADDR);
+
+        let tx_error = client
+            .call(methods::any::<methods::tx::RpcTransactionStatusRequest>(
+                "tx",
+                serde_json::json!([
+                    "9FtHUFBQsZ2MG77K3x3MJ9wjX3UT8zE1TczCrhZEcG8D",
+                    "youser.near",
+                ]),
+            ))
+            .await
+            .expect_err("request must not succeed")
+            .handler_error();
+
+        assert!(
+            matches!(
+                tx_error,
+                Ok(methods::tx::RpcTransactionError::UnknownTransaction {
+                    requested_transaction_hash
+                })
+                if requested_transaction_hash == "9FtHUFBQsZ2MG77K3x3MJ9wjX3UT8zE1TczCrhZEcG8D".parse()?
+            ),
+            "expected an Ok(RpcTransactionError::UnknownTransaction) with matching hash, found [{:?}]",
+            tx_error
+        );
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[cfg(feature = "any")]
+    async fn any_untyped_ok() {
+        let client = JsonRpcClient::connect(RPC_SERVER_ADDR);
+
+        let status = client
+            .call(
+                methods::any::<Result<serde_json::Value, serde_json::Value>>(
+                    "tx",
+                    serde_json::json!([
+                        "9FtHUFBQsZ2MG77K3x3MJ9wjX3UT8zE1TczCrhZEcG8U",
+                        "miraclx.near",
+                    ]),
+                ),
+            )
+            .await
+            .expect("request must not fail");
+
+        assert_eq!(
+            status["transaction"]["signer_id"], "miraclx.near",
+            "expected a tx_status with matching signer_id, [{:#}]",
+            status
+        );
+        assert_eq!(
+            status["transaction"]["hash"], "9FtHUFBQsZ2MG77K3x3MJ9wjX3UT8zE1TczCrhZEcG8U",
+            "expected a tx_status with matching hash, [{:#}]",
+            status
+        );
+    }
+
+    #[tokio::test]
+    #[cfg(feature = "any")]
+    async fn any_untyped_err() {
+        let client = JsonRpcClient::connect(RPC_SERVER_ADDR);
+
+        let tx_error = client
+            .call(
+                methods::any::<Result<serde_json::Value, serde_json::Value>>(
+                    "tx",
+                    serde_json::json!([
+                        "9FtHUFBQsZ2MG77K3x3MJ9wjX3UT8zE1TczCrhZEcG8D",
+                        "youser.near",
+                    ]),
+                ),
+            )
+            .await
+            .expect_err("request must not succeed")
+            .handler_error()
+            .expect("expected a handler error from query request");
+
+        assert_eq!(
+            tx_error["info"]["requested_transaction_hash"],
+            "9FtHUFBQsZ2MG77K3x3MJ9wjX3UT8zE1TczCrhZEcG8D",
+            "expected an error with matching hash, [{:#}]",
+            tx_error
+        );
+        assert_eq!(
+            tx_error["name"], "UNKNOWN_TRANSACTION",
+            "expected an UnknownTransaction, [{:#}]",
+            tx_error
+        );
     }
 }
