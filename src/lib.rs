@@ -240,6 +240,10 @@ impl JsonRpcClient {
         JsonRpcClientConnector { client }
     }
 
+    pub fn server_addr(&self) -> &str {
+        &self.inner.server_addr
+    }
+
     /// Method executor for the client.
     pub async fn call<M: methods::RpcMethod>(
         self,
