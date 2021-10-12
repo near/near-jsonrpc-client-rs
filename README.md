@@ -73,22 +73,3 @@ let partial_genesis = mainnet_client.call(genesis_config_request).await?;
 
 println!("{:#?}", partial_genesis);
 ```
-
-## Testing
-
-- Ensure you have the Rust compiler and package manager installed <https://rustup.rs/>
-- Get and initialize the NEAR sandbox <https://github.com/near/sandbox>
-- Thereafter;
-
-  ```console
-  near-sandbox --home /tmp/near-sandbox init # this happens once ;-)
-  near-sandbox --home /tmp/near-sandbox run
-  ```
-
-- Execute the test
-
-  ```console
-  git clone https://github.com/near/near-jsonrpc-client-rs
-  cd near-jsonrpc-client-rs
-  cargo test -- --nocapture
-  ```
