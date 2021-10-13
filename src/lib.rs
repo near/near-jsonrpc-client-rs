@@ -194,6 +194,10 @@ impl JsonRpcClient {
         DEFAULT_CONNECTOR.connect(server_addr)
     }
 
+    pub fn server_addr(&self) -> &str {
+        &self.inner.server_addr
+    }
+
     /// Manually create a new client connector.
     ///
     /// It's recommended to use the `connect` method instead as that method optimally
@@ -238,10 +242,6 @@ impl JsonRpcClient {
     /// ```
     pub fn with(client: reqwest::Client) -> JsonRpcClientConnector {
         JsonRpcClientConnector { client }
-    }
-
-    pub fn server_addr(&self) -> &str {
-        &self.inner.server_addr
     }
 
     /// Method executor for the client.
