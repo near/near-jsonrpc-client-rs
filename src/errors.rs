@@ -1,4 +1,4 @@
-use std::{fmt, io};
+use std::io;
 
 use thiserror::Error;
 
@@ -41,48 +41,24 @@ pub enum RpcTransportError {
     RecvError(JsonRpcTransportRecvError),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum JsonRpcServerError<E> {
+    #[error("request validation error: [{0:?}]")]
     RequestValidationError(RpcRequestValidationErrorKind),
+    #[error("handler error: [{0}]")]
     HandlerError(E),
+    #[error("internal error: [{info}]")]
     InternalError { info: String },
+    #[error("error response lacks context: {{code = {code}}} {{message = {message}}}")]
     NonContextualError { code: i64, message: String },
 }
 
-impl<E: fmt::Debug + fmt::Display> std::error::Error for JsonRpcServerError<E> {}
-
-impl<E: fmt::Display> fmt::Display for JsonRpcServerError<E> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::RequestValidationError(err) => {
-                write!(f, "request validation error: [{:?}]", err)
-            }
-            Self::HandlerError(err) => write!(f, "handler error: [{}]", err),
-            Self::InternalError { info } => write!(f, "internal error: [{}]", info),
-            Self::NonContextualError { code, message } => write!(
-                f,
-                "error response lacks context: {{code = {}}} {{message = {}}}",
-                code, message
-            ),
-        }
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum JsonRpcError<E> {
+    #[error(transparent)]
     TransportError(RpcTransportError),
+    #[error(transparent)]
     ServerError(JsonRpcServerError<E>),
-}
-
-impl<E: fmt::Debug + fmt::Display> std::error::Error for JsonRpcError<E> {}
-
-impl<E: fmt::Display> fmt::Display for JsonRpcError<E> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::TransportError(err) => fmt::Display::fmt(err, f),
-            Self::ServerError(err) => fmt::Display::fmt(err, f),
-        }
-    }
 }
 
 impl<E> JsonRpcError<E> {
