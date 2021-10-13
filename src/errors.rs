@@ -42,6 +42,14 @@ pub enum RpcTransportError {
 }
 
 #[derive(Debug, Error)]
+pub enum JsonRpcServerResponseStatusError {
+    #[error("this client is unauthorized")]
+    Unauthorized,
+    #[error("the server returned a non-OK (200) status code: [{0}]")]
+    Unexpected(reqwest::StatusCode),
+}
+
+#[derive(Debug, Error)]
 pub enum JsonRpcServerError<E> {
     #[error("request validation error: [{0:?}]")]
     RequestValidationError(RpcRequestValidationErrorKind),
@@ -51,6 +59,8 @@ pub enum JsonRpcServerError<E> {
     InternalError { info: String },
     #[error("error response lacks context: {{code = {code}}} {{message = {message}}}")]
     NonContextualError { code: i64, message: String },
+    #[error(transparent)]
+    ResponseStatusError(JsonRpcServerResponseStatusError),
 }
 
 #[derive(Debug, Error)]
