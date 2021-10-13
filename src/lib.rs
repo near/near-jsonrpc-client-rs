@@ -109,7 +109,7 @@
 //!    # }
 //!    ```
 
-use std::{fmt, sync::Arc};
+use std::{convert::TryFrom, fmt, sync::Arc};
 
 use near_jsonrpc_primitives::message::{from_slice, Message};
 use near_primitives::serialize::to_base64;
@@ -302,6 +302,17 @@ impl JsonRpcClient {
                     JsonRpcServerError::ResponseStatusError(match non_ok_status {
                         reqwest::StatusCode::UNAUTHORIZED => {
                             JsonRpcServerResponseStatusError::Unauthorized
+                        }
+                        reqwest::StatusCode::TOO_MANY_REQUESTS => {
+                            JsonRpcServerResponseStatusError::TooManyRequests {
+                                retry_after: response
+                                    .headers()
+                                    .get("retry-after")
+                                    .and_then(|directive| {
+                                        retry_after::RetryAfter::try_from(directive).ok()
+                                    })
+                                    .map(Into::into),
+                            }
                         }
                         unexpected => JsonRpcServerResponseStatusError::Unexpected(unexpected),
                     }),
