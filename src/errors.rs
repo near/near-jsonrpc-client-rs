@@ -6,21 +6,6 @@ use thiserror::Error;
 use near_jsonrpc_primitives::errors::{RpcError, RpcErrorKind, RpcRequestValidationErrorKind};
 use near_jsonrpc_primitives::message::{self, Message};
 
-#[derive(Debug)]
-pub enum RetryAfter {
-    Delay(std::time::Duration),
-    DateTime(DateTime<Utc>),
-}
-
-impl From<retry_after::RetryAfter> for RetryAfter {
-    fn from(r_a: retry_after::RetryAfter) -> Self {
-        match r_a {
-            retry_after::RetryAfter::Delay(delay) => RetryAfter::Delay(delay),
-            retry_after::RetryAfter::DateTime(when) => RetryAfter::DateTime(when.into()),
-        }
-    }
-}
-
 #[derive(Debug, Error)]
 pub enum JsonRpcTransportSendError {
     #[error("error while serializing payload: [{0}]")]
@@ -57,10 +42,9 @@ pub enum RpcTransportError {
     RecvError(JsonRpcTransportRecvError),
 }
 
-fn fmt_retry_after(retry_after: &Option<RetryAfter>) -> String {
+fn fmt_retry_after(retry_after: &Option<DateTime<Utc>>) -> String {
     match retry_after {
-        Some(RetryAfter::Delay(secs)) => format!(", retry after {} seconds", secs.as_secs()),
-        Some(RetryAfter::DateTime(when)) => format!(", retry on {}", when.format("%F %T")),
+        Some(when) => format!(", retry after {}", when.format("%F %T")),
         None => "".to_string(),
     }
 }
@@ -70,7 +54,7 @@ pub enum JsonRpcServerResponseStatusError {
     #[error("this client is unauthorized")]
     Unauthorized,
     #[error("this client has exceeded the rate limit{}", fmt_retry_after(.retry_after))]
-    TooManyRequests { retry_after: Option<RetryAfter> },
+    TooManyRequests { retry_after: Option<DateTime<Utc>> },
     #[error("the server returned a non-OK (200) status code: [{0}]")]
     Unexpected(reqwest::StatusCode),
 }

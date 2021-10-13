@@ -305,13 +305,19 @@ impl JsonRpcClient {
                         }
                         reqwest::StatusCode::TOO_MANY_REQUESTS => {
                             JsonRpcServerResponseStatusError::TooManyRequests {
-                                retry_after: response
-                                    .headers()
-                                    .get("retry-after")
-                                    .and_then(|directive| {
-                                        retry_after::RetryAfter::try_from(directive).ok()
-                                    })
-                                    .map(Into::into),
+                                retry_after: response.headers().get("retry-after").and_then(
+                                    |directive| match retry_after::RetryAfter::try_from(directive)
+                                        .ok()?
+                                    {
+                                        retry_after::RetryAfter::DateTime(when) => {
+                                            Some(when.into())
+                                        }
+                                        retry_after::RetryAfter::Delay(until) => Some(
+                                            chrono::Utc::now()
+                                                + chrono::Duration::from_std(until).ok()?,
+                                        ),
+                                    },
+                                ),
                             }
                         }
                         unexpected => JsonRpcServerResponseStatusError::Unexpected(unexpected),
