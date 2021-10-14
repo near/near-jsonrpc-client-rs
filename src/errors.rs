@@ -65,8 +65,8 @@ pub enum JsonRpcServerError<E> {
     RequestValidationError(RpcRequestValidationErrorKind),
     #[error("handler error: [{0}]")]
     HandlerError(E),
-    #[error("internal error: [{info}]")]
-    InternalError { info: String },
+    #[error("internal error: [{info:?}]")]
+    InternalError { info: Option<String> },
     #[error("error response lacks context: {{code = {code}}} {{message = {message}}}")]
     NonContextualError { code: i64, message: String },
     #[error(transparent)]
@@ -111,8 +111,7 @@ impl<E: super::methods::RpcHandlerError> From<RpcError> for JsonRpcError<E> {
                 return JsonRpcError::ServerError(JsonRpcServerError::InternalError {
                     info: err["info"]["error_message"]
                         .as_str()
-                        .unwrap_or("<no data>")
-                        .to_string(),
+                        .map(|info| info.to_string()),
                 })
             }
             None => {}
