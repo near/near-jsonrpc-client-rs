@@ -59,8 +59,8 @@ pub enum JsonRpcServerError<E> {
     HandlerError(E),
     #[error("internal error: [{info:?}]")]
     InternalError { info: Option<String> },
-    #[error("error response lacks context: {{code = {code}}} {{message = {message}}}")]
-    NonContextualError { code: i64, message: String },
+    #[error("error response lacks context: {0}")]
+    NonContextualError(RpcError),
     #[error(transparent)]
     ResponseStatusError(JsonRpcServerResponseStatusError),
 }
@@ -86,16 +86,18 @@ impl<E: super::methods::RpcHandlerError> From<RpcError> for JsonRpcError<E> {
     fn from(err: RpcError) -> Self {
         let mut handler_parse_error = None;
         match err.error_struct {
-            Some(RpcErrorKind::HandlerError(handler_error)) => match E::parse(handler_error) {
-                Ok(handler_error) => {
-                    return JsonRpcError::ServerError(JsonRpcServerError::HandlerError(
-                        handler_error,
-                    ))
+            Some(RpcErrorKind::HandlerError(ref handler_error)) => {
+                match E::parse(handler_error.clone()) {
+                    Ok(handler_error) => {
+                        return JsonRpcError::ServerError(JsonRpcServerError::HandlerError(
+                            handler_error,
+                        ))
+                    }
+                    Err(err) => {
+                        handler_parse_error.replace(err);
+                    }
                 }
-                Err(err) => {
-                    handler_parse_error.replace(err);
-                }
-            },
+            }
             Some(RpcErrorKind::RequestValidationError(err)) => {
                 return JsonRpcError::ServerError(JsonRpcServerError::RequestValidationError(err));
             }
@@ -108,8 +110,8 @@ impl<E: super::methods::RpcHandlerError> From<RpcError> for JsonRpcError<E> {
             }
             None => {}
         }
-        if let Some(raw_err_data) = err.data {
-            match E::parse_raw_error(raw_err_data) {
+        if let Some(ref raw_err_data) = err.data {
+            match E::parse_raw_error(raw_err_data.clone()) {
                 Some(Ok(handler_error)) => {
                     return JsonRpcError::ServerError(JsonRpcServerError::HandlerError(
                         handler_error,
@@ -128,9 +130,6 @@ impl<E: super::methods::RpcHandlerError> From<RpcError> for JsonRpcError<E> {
                 ),
             ));
         }
-        return JsonRpcError::ServerError(JsonRpcServerError::NonContextualError {
-            code: err.code,
-            message: err.message,
-        });
+        return JsonRpcError::ServerError(JsonRpcServerError::NonContextualError(err));
     }
 }
