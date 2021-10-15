@@ -97,6 +97,7 @@
 //!    # async fn main() -> Result<(), JsonRpcError<()>> {
 //!    let mainnet_client = JsonRpcClient::connect("https://rpc.mainnet.near.org");
 //!
+//!    # #[cfg(feature = "any")] {
 //!    let genesis_config_request = methods::any::<Result<PartialGenesisConfig, ()>>(
 //!        "EXPERIMENTAL_genesis_config",
 //!        json!(null),
@@ -105,6 +106,7 @@
 //!    let partial_genesis = mainnet_client.call(genesis_config_request).await?;
 //!
 //!    println!("{:#?}", partial_genesis);
+//!    # }
 //!    # Ok(())
 //!    # }
 //!    ```
