@@ -42,15 +42,27 @@ pub enum RpcTransportError {
 }
 
 #[derive(Debug, Error)]
+pub enum JsonRpcServerResponseStatusError {
+    #[error("this client is unauthorized")]
+    Unauthorized,
+    #[error("this client has exceeded the rate limit")]
+    TooManyRequests,
+    #[error("the server returned a non-OK (200) status code: [{status}]")]
+    Unexpected { status: reqwest::StatusCode },
+}
+
+#[derive(Debug, Error)]
 pub enum JsonRpcServerError<E> {
     #[error("request validation error: [{0:?}]")]
     RequestValidationError(RpcRequestValidationErrorKind),
     #[error("handler error: [{0}]")]
     HandlerError(E),
-    #[error("internal error: [{info}]")]
-    InternalError { info: String },
+    #[error("internal error: [{info:?}]")]
+    InternalError { info: Option<String> },
     #[error("error response lacks context: {{code = {code}}} {{message = {message}}}")]
     NonContextualError { code: i64, message: String },
+    #[error(transparent)]
+    ResponseStatusError(JsonRpcServerResponseStatusError),
 }
 
 #[derive(Debug, Error)]
@@ -91,8 +103,7 @@ impl<E: super::methods::RpcHandlerError> From<RpcError> for JsonRpcError<E> {
                 return JsonRpcError::ServerError(JsonRpcServerError::InternalError {
                     info: err["info"]["error_message"]
                         .as_str()
-                        .unwrap_or("<no data>")
-                        .to_string(),
+                        .map(|info| info.to_string()),
                 })
             }
             None => {}

@@ -112,6 +112,7 @@
 use std::{fmt, sync::Arc};
 
 use near_jsonrpc_primitives::message::{from_slice, Message};
+use near_primitives::serialize::to_base64;
 
 use lazy_static::lazy_static;
 
@@ -129,6 +130,12 @@ lazy_static! {
     static ref DEFAULT_CONNECTOR: JsonRpcClientConnector = JsonRpcClient::new();
 }
 
+#[derive(Eq, Clone, Debug, PartialEq)]
+pub enum ClientCredentials {
+    NoAuth,
+    Basic(String),
+}
+
 /// NEAR JSON RPC client connector.
 #[derive(Clone)]
 pub struct JsonRpcClientConnector {
@@ -142,6 +149,7 @@ impl JsonRpcClientConnector {
                 server_addr: server_addr.to_string(),
                 client: self.client.clone(),
             }),
+            creds: ClientCredentials::NoAuth,
         }
     }
 }
@@ -155,6 +163,7 @@ struct JsonRpcInnerClient {
 #[derive(Clone)]
 pub struct JsonRpcClient {
     inner: Arc<JsonRpcInnerClient>,
+    creds: ClientCredentials,
 }
 
 impl fmt::Debug for JsonRpcClient {
@@ -192,6 +201,11 @@ impl JsonRpcClient {
     /// ```
     pub fn connect(server_addr: &str) -> JsonRpcClient {
         DEFAULT_CONNECTOR.connect(server_addr)
+    }
+
+    pub fn auth(mut self, creds: ClientCredentials) -> JsonRpcClient {
+        self.creds = creds;
+        self
     }
 
     pub fn server_addr(&self) -> &str {
@@ -263,17 +277,42 @@ impl JsonRpcClient {
                 JsonRpcTransportSendError::PayloadSerializeError(err.into()),
             ))
         })?;
-        let request = self
+        let mut request = self
             .inner
             .client
             .post(&self.inner.server_addr)
             .header("Content-Type", "application/json")
             .body(request_payload);
+        match self.creds {
+            ClientCredentials::NoAuth => {}
+            ClientCredentials::Basic(basic_token) => {
+                request =
+                    request.header("Authorization", format!("Basic {}", to_base64(basic_token)))
+            }
+        }
         let response = request.send().await.map_err(|err| {
             JsonRpcError::TransportError(RpcTransportError::SendError(
                 JsonRpcTransportSendError::PayloadSendError(err),
             ))
         })?;
+        match response.status() {
+            reqwest::StatusCode::OK => {}
+            non_ok_status => {
+                return Err(JsonRpcError::ServerError(
+                    JsonRpcServerError::ResponseStatusError(match non_ok_status {
+                        reqwest::StatusCode::UNAUTHORIZED => {
+                            JsonRpcServerResponseStatusError::Unauthorized
+                        }
+                        reqwest::StatusCode::TOO_MANY_REQUESTS => {
+                            JsonRpcServerResponseStatusError::TooManyRequests
+                        }
+                        unexpected => {
+                            JsonRpcServerResponseStatusError::Unexpected { status: unexpected }
+                        }
+                    }),
+                ));
+            }
+        }
         let response_payload = response.bytes().await.map_err(|err| {
             JsonRpcError::TransportError(RpcTransportError::RecvError(
                 JsonRpcTransportRecvError::PayloadRecvError(err),
