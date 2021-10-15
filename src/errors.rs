@@ -1,6 +1,5 @@
 use std::io;
 
-use chrono::{DateTime, Utc};
 use thiserror::Error;
 
 use near_jsonrpc_primitives::errors::{RpcError, RpcErrorKind, RpcRequestValidationErrorKind};
@@ -42,19 +41,12 @@ pub enum RpcTransportError {
     RecvError(JsonRpcTransportRecvError),
 }
 
-fn fmt_retry_after(retry_after: &Option<DateTime<Utc>>) -> String {
-    match retry_after {
-        Some(when) => format!(", retry after {}", when.format("%F %T")),
-        None => "".to_string(),
-    }
-}
-
 #[derive(Debug, Error)]
 pub enum JsonRpcServerResponseStatusError {
     #[error("this client is unauthorized")]
     Unauthorized,
-    #[error("this client has exceeded the rate limit{}", fmt_retry_after(.retry_after))]
-    TooManyRequests { retry_after: Option<DateTime<Utc>> },
+    #[error("this client has exceeded the rate limit")]
+    TooManyRequests,
     #[error("the server returned a non-OK (200) status code: [{0}]")]
     Unexpected(reqwest::StatusCode),
 }

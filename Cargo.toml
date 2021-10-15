@@ -15,10 +15,8 @@ actix_derive = { version = "=0.6.0-beta.1" }
 
 thiserror = "1.0.28"
 
-chrono = "0.4.19"
 reqwest = { version = "0.11.4", features = ["json"] }
 lazy_static = "1.4.0"
-retry-after = "0.3.1"
 
 borsh = "0.9"
 serde = "1.0.127"

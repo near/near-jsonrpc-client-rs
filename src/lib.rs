@@ -109,7 +109,7 @@
 //!    # }
 //!    ```
 
-use std::{convert::TryFrom, fmt, sync::Arc};
+use std::{fmt, sync::Arc};
 
 use near_jsonrpc_primitives::message::{from_slice, Message};
 use near_primitives::serialize::to_base64;
@@ -304,21 +304,7 @@ impl JsonRpcClient {
                             JsonRpcServerResponseStatusError::Unauthorized
                         }
                         reqwest::StatusCode::TOO_MANY_REQUESTS => {
-                            JsonRpcServerResponseStatusError::TooManyRequests {
-                                retry_after: response.headers().get("retry-after").and_then(
-                                    |directive| match retry_after::RetryAfter::try_from(directive)
-                                        .ok()?
-                                    {
-                                        retry_after::RetryAfter::DateTime(when) => {
-                                            Some(when.into())
-                                        }
-                                        retry_after::RetryAfter::Delay(until) => Some(
-                                            chrono::Utc::now()
-                                                + chrono::Duration::from_std(until).ok()?,
-                                        ),
-                                    },
-                                ),
-                            }
+                            JsonRpcServerResponseStatusError::TooManyRequests
                         }
                         unexpected => JsonRpcServerResponseStatusError::Unexpected(unexpected),
                     }),
