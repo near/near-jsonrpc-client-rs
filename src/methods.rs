@@ -154,7 +154,7 @@ mod shared_impls {
 }
 
 #[cfg(feature = "any")]
-pub use any::request as any;
+pub use any::{request as any, RpcAnyRequest};
 
 #[cfg(feature = "any")]
 mod any {
