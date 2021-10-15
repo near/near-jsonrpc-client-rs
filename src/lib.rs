@@ -306,7 +306,9 @@ impl JsonRpcClient {
                         reqwest::StatusCode::TOO_MANY_REQUESTS => {
                             JsonRpcServerResponseStatusError::TooManyRequests
                         }
-                        unexpected => JsonRpcServerResponseStatusError::Unexpected(unexpected),
+                        unexpected => {
+                            JsonRpcServerResponseStatusError::Unexpected { status: unexpected }
+                        }
                     }),
                 ));
             }

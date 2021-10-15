@@ -47,8 +47,8 @@ pub enum JsonRpcServerResponseStatusError {
     Unauthorized,
     #[error("this client has exceeded the rate limit")]
     TooManyRequests,
-    #[error("the server returned a non-OK (200) status code: [{0}]")]
-    Unexpected(reqwest::StatusCode),
+    #[error("the server returned a non-OK (200) status code: [{status}]")]
+    Unexpected { status: reqwest::StatusCode },
 }
 
 #[derive(Debug, Error)]
