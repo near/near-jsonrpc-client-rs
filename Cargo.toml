@@ -9,6 +9,7 @@ homepage = "https://github.com/near/near-jsonrpc-client-rs"
 description = "Lower-level API for interfacing with the NEAR Protocol via JSONRPC"
 categories = ["asynchronous", "api-bindings", "network-programming"]
 keywords = ["near", "api", "jsonrpc", "rpc", "async"]
+rust-version = "1.56.0"
 
 [dependencies]
 thiserror = "1.0.28"
