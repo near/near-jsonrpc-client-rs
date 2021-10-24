@@ -2,11 +2,13 @@
 name = "near-jsonrpc-client"
 version = "0.1.0"
 authors = ["Near Inc <hello@nearprotocol.com>"]
-edition = "2018"
+edition = "2021"
 license = "Apache-2.0"
 repository = "https://github.com/near/near-jsonrpc-client-rs"
 homepage = "https://github.com/near/near-jsonrpc-client-rs"
 description = "Lower-level API for interfacing with the NEAR Protocol via JSONRPC"
+categories = ["asynchronous", "api-bindings", "network-programming"]
+keywords = ["near", "api", "jsonrpc", "rpc", "async"]
 
 [dependencies]
 thiserror = "1.0.28"
