@@ -3,41 +3,40 @@ pub enum ClientCredentials<'a> {
     Basic(&'a str),
 }
 
-mod r#priv {
-    pub trait Private {}
+mod private {
+    pub trait AuthState {
+        fn maybe_credentials(&self) -> Option<super::ClientCredentials>;
+    }
 }
 
-pub trait AuthState: r#priv::Private {
-    fn as_credentials(&self) -> Option<ClientCredentials>;
-}
-
-pub trait AuthType: r#priv::Private {
-    fn as_credentials(&self) -> ClientCredentials;
-}
+pub trait AuthState: private::AuthState {}
 
 #[derive(Debug, Clone)]
 pub struct Unauthenticated;
-impl r#priv::Private for Unauthenticated {}
-impl AuthState for Unauthenticated {
-    fn as_credentials(&self) -> Option<ClientCredentials> {
+impl AuthState for Unauthenticated {}
+impl private::AuthState for Unauthenticated {
+    fn maybe_credentials(&self) -> Option<ClientCredentials> {
         None
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct BasicAuth(pub(crate) String);
-impl r#priv::Private for BasicAuth {}
-impl AuthType for BasicAuth {
-    fn as_credentials(&self) -> ClientCredentials {
-        ClientCredentials::Basic(&self.0)
-    }
+pub trait AuthScheme {
+    fn credentials(&self) -> ClientCredentials;
 }
 
 #[derive(Debug, Clone)]
 pub struct Authenticated<T>(pub(crate) T);
-impl<T> r#priv::Private for Authenticated<T> {}
-impl<T: AuthType> AuthState for Authenticated<T> {
-    fn as_credentials(&self) -> Option<ClientCredentials> {
-        Some(self.0.as_credentials())
+impl<T: AuthScheme> AuthState for Authenticated<T> {}
+impl<T: AuthScheme> private::AuthState for Authenticated<T> {
+    fn maybe_credentials(&self) -> Option<ClientCredentials> {
+        Some(self.0.credentials())
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct BasicAuth(pub String);
+impl AuthScheme for BasicAuth {
+    fn credentials(&self) -> ClientCredentials {
+        ClientCredentials::Basic(&self.0)
     }
 }

@@ -201,11 +201,11 @@ impl JsonRpcClient<Unauthenticated> {
         DEFAULT_CONNECTOR.connect(server_addr)
     }
 
-    /// Authenticate the client interface via basic tokens.
-    pub fn basic_auth(self, token: String) -> JsonRpcClient<Authenticated<BasicAuth>> {
+    /// Authenticate the client interface generically
+    pub fn auth<T: AuthScheme>(self, auth_scheme: T) -> JsonRpcClient<Authenticated<T>> {
         JsonRpcClient {
             inner: self.inner,
-            auth_state: Authenticated(BasicAuth(token)),
+            auth_state: Authenticated(auth_scheme),
         }
     }
 }
@@ -220,7 +220,7 @@ impl<A: AuthState> JsonRpcClient<A> {
 
     /// Get the current authentication state of the client.
     pub fn credentials(&self) -> Option<ClientCredentials> {
-        self.auth_state.as_credentials()
+        self.auth_state.maybe_credentials()
     }
 
     /// RPC method executor for the client.
@@ -301,7 +301,7 @@ impl<A: AuthState> JsonRpcClient<A> {
 }
 
 /// Methods defined exclusively for authenticated JsonRpcClient instances.
-impl<T: AuthType> JsonRpcClient<Authenticated<T>> {
+impl<T: AuthScheme> JsonRpcClient<Authenticated<T>> {
     /// Downgrade an authenticated client interface back to an unauthenticated one.
     ///
     /// *This exists purely for convenience*
