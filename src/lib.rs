@@ -113,14 +113,16 @@
 
 use std::{fmt, sync::Arc};
 
+use lazy_static::lazy_static;
+
 use near_jsonrpc_primitives::message::{from_slice, Message};
 use near_primitives::serialize::to_base64;
 
-use lazy_static::lazy_static;
-
+pub mod auth;
 pub mod errors;
 pub mod methods;
 
+use auth::*;
 use errors::*;
 
 pub const NEAR_MAINNET_RPC_URL: &str = "https://rpc.mainnet.near.org";
@@ -129,13 +131,12 @@ pub const NEAR_MAINNET_ARCHIVAL_RPC_URL: &str = "https://archival-rpc.mainnet.ne
 pub const NEAR_TESTNET_ARCHIVAL_RPC_URL: &str = "https://archival-rpc.testnet.near.org";
 
 lazy_static! {
-    static ref DEFAULT_CONNECTOR: JsonRpcClientConnector = JsonRpcClient::new();
+    static ref DEFAULT_CONNECTOR: JsonRpcClientConnector = JsonRpcClient::new_client();
 }
 
-#[derive(Eq, Clone, Debug, PartialEq)]
-pub enum ClientCredentials {
-    NoAuth,
-    Basic(String),
+struct JsonRpcInnerClient {
+    server_addr: String,
+    client: reqwest::Client,
 }
 
 /// NEAR JSON RPC client connector.
@@ -145,44 +146,39 @@ pub struct JsonRpcClientConnector {
 }
 
 impl JsonRpcClientConnector {
-    pub fn connect(&self, server_addr: &str) -> JsonRpcClient {
+    /// Return an unauthenticated JsonRpcClient that connects to the specified server.
+    pub fn connect(&self, server_addr: &str) -> JsonRpcClient<Unauthenticated> {
         JsonRpcClient {
             inner: Arc::new(JsonRpcInnerClient {
                 server_addr: server_addr.to_string(),
                 client: self.client.clone(),
             }),
-            creds: ClientCredentials::NoAuth,
+            auth_state: Unauthenticated,
         }
     }
 }
 
-struct JsonRpcInnerClient {
-    server_addr: String,
-    client: reqwest::Client,
-}
-
 /// A NEAR JSON RPC Client.
 #[derive(Clone)]
-pub struct JsonRpcClient {
+pub struct JsonRpcClient<A> {
     inner: Arc<JsonRpcInnerClient>,
-    creds: ClientCredentials,
+    auth_state: A,
 }
 
-impl fmt::Debug for JsonRpcClient {
+impl<A: fmt::Debug> fmt::Debug for JsonRpcClient<A> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut builder = f.debug_struct("JsonRpcClient");
         builder.field("server_addr", &self.inner.server_addr);
+        builder.field("auth_state", &self.auth_state);
         builder.field("client", &self.inner.client);
         builder.finish()
     }
 }
 
-pub type JsonRpcMethodCallResult<T, E> = Result<T, JsonRpcError<E>>;
-
-impl JsonRpcClient {
+impl JsonRpcClient<Unauthenticated> {
     /// Connect to a JSON RPC server using the default connector.
     ///
-    /// It's virtually the same as calling `new()` and then `connect(server_addr)`.
+    /// It's virtually the same as calling `new_client().connect(server_addr)`.
     /// Only, this method optimally reuses the same connector across invocations.
     ///
     /// ## Example
@@ -201,70 +197,37 @@ impl JsonRpcClient {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn connect(server_addr: &str) -> JsonRpcClient {
+    pub fn connect(server_addr: &str) -> JsonRpcClient<Unauthenticated> {
         DEFAULT_CONNECTOR.connect(server_addr)
     }
 
-    pub fn auth(mut self, creds: ClientCredentials) -> JsonRpcClient {
-        self.creds = creds;
-        self
+    /// Authenticate the client interface generically
+    pub fn auth<T: AuthScheme>(self, auth_scheme: T) -> JsonRpcClient<Authenticated<T>> {
+        JsonRpcClient {
+            inner: self.inner,
+            auth_state: Authenticated { auth_scheme },
+        }
     }
+}
 
+pub type MethodCallResult<T, E> = Result<T, JsonRpcError<E>>;
+
+impl<A: AuthState> JsonRpcClient<A> {
+    /// Get the server address the client connects to.
     pub fn server_addr(&self) -> &str {
         &self.inner.server_addr
     }
 
-    /// Manually create a new client connector.
-    ///
-    /// It's recommended to use the `connect` method instead as that method optimally
-    /// reuses the default connector across invocations.
-    ///
-    /// However, if for some reason you still need to manually create a new connector, you can do so.
-    /// Just remember to properly **reuse** it as much as possible.
-    ///
-    /// ## Example
-    ///
-    /// ```
-    /// # use near_jsonrpc_client::JsonRpcClient;
-    /// let client_connector = JsonRpcClient::new();
-    ///
-    /// let mainnet_client = client_connector.connect("https://rpc.mainnet.near.org");
-    /// let testnet_client = client_connector.connect("https://rpc.testnet.near.org");
-    /// ```
-    pub fn new() -> JsonRpcClientConnector {
-        JsonRpcClientConnector {
-            client: reqwest::Client::new(),
-        }
+    /// Get the current authentication state of the client.
+    pub fn credentials(&self) -> Option<ClientCredentials> {
+        self.auth_state.maybe_credentials()
     }
 
-    /// Create a new client constructor using a custom web client.
-    ///
-    /// This is useful if you want to customize the `reqwest::Client` instance used by the JsonRpcClient.
-    ///
-    /// ## Example
-    ///
-    /// ```
-    /// use near_jsonrpc_client::JsonRpcClient;
-    ///
-    /// # #[tokio::main]
-    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    /// let web_client = reqwest::Client::builder()
-    ///     .proxy(reqwest::Proxy::all("https://192.168.1.1:4825")?)
-    ///     .build()?;
-    ///
-    /// let testnet_client = JsonRpcClient::with(web_client).connect("https://rpc.testnet.near.org");
-    /// # Ok(())
-    /// # }
-    /// ```
-    pub fn with(client: reqwest::Client) -> JsonRpcClientConnector {
-        JsonRpcClientConnector { client }
-    }
-
-    /// Method executor for the client.
-    pub async fn call<M: methods::RpcMethod>(
-        self,
-        method: M,
-    ) -> JsonRpcMethodCallResult<M::Response, M::Error> {
+    /// RPC method executor for the client.
+    pub async fn call<M>(self, method: M) -> MethodCallResult<M::Response, M::Error>
+    where
+        M: methods::RpcMethod,
+    {
         let (method_name, params) = (
             method.method_name(),
             method.params().map_err(|err| {
@@ -285,12 +248,8 @@ impl JsonRpcClient {
             .post(&self.inner.server_addr)
             .header("Content-Type", "application/json")
             .body(request_payload);
-        match self.creds {
-            ClientCredentials::NoAuth => {}
-            ClientCredentials::Basic(basic_token) => {
-                request =
-                    request.header("Authorization", format!("Basic {}", to_base64(basic_token)))
-            }
+        if let Some(ClientCredentials::Basic(basic_token)) = self.credentials() {
+            request = request.header("Authorization", format!("Basic {}", to_base64(basic_token)))
         }
         let response = request.send().await.map_err(|err| {
             JsonRpcError::TransportError(RpcTransportError::SendError(
@@ -338,6 +297,68 @@ impl JsonRpcClient {
         Err(JsonRpcError::TransportError(RpcTransportError::RecvError(
             JsonRpcTransportRecvError::UnexpectedServerResponse(response_message),
         )))
+    }
+}
+
+/// Methods defined exclusively for authenticated JsonRpcClient instances.
+impl<T: AuthScheme> JsonRpcClient<Authenticated<T>> {
+    /// Downgrade an authenticated client interface back to an unauthenticated one.
+    ///
+    /// *This exists purely for convenience*
+    pub fn deauth(self) -> JsonRpcClient<Unauthenticated> {
+        JsonRpcClient {
+            inner: self.inner,
+            auth_state: Unauthenticated,
+        }
+    }
+}
+
+/// Methods for constructing JsonRpcClient connectors.
+impl JsonRpcClient<()> {
+    /// Manually create a new client connector.
+    ///
+    /// It's recommended to use the `connect` method instead as that method optimally
+    /// reuses the default connector across invocations.
+    ///
+    /// However, if for some reason you still need to manually create a new connector, you can do so.
+    /// Just remember to properly **reuse** it as much as possible.
+    ///
+    /// ## Example
+    ///
+    /// ```
+    /// # use near_jsonrpc_client::JsonRpcClient;
+    /// let client_connector = JsonRpcClient::new_client();
+    ///
+    /// let mainnet_client = client_connector.connect("https://rpc.mainnet.near.org");
+    /// let testnet_client = client_connector.connect("https://rpc.testnet.near.org");
+    /// ```
+    pub fn new_client() -> JsonRpcClientConnector {
+        JsonRpcClientConnector {
+            client: reqwest::Client::new(),
+        }
+    }
+
+    /// Create a new client constructor using a custom web client.
+    ///
+    /// This is useful if you want to customize the `reqwest::Client` instance used by the JsonRpcClient.
+    ///
+    /// ## Example
+    ///
+    /// ```
+    /// use near_jsonrpc_client::JsonRpcClient;
+    ///
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let web_client = reqwest::Client::builder()
+    ///     .proxy(reqwest::Proxy::all("https://192.168.1.1:4825")?)
+    ///     .build()?;
+    ///
+    /// let testnet_client = JsonRpcClient::with(web_client).connect("https://rpc.testnet.near.org");
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn with(client: reqwest::Client) -> JsonRpcClientConnector {
+        JsonRpcClientConnector { client }
     }
 }
 
