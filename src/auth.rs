@@ -25,18 +25,24 @@ pub trait AuthScheme {
 }
 
 #[derive(Debug, Clone)]
-pub struct Authenticated<T>(pub(crate) T);
+pub struct Authenticated<T> {
+    pub(crate) auth_scheme: T,
+}
+
 impl<T: AuthScheme> AuthState for Authenticated<T> {}
 impl<T: AuthScheme> private::AuthState for Authenticated<T> {
     fn maybe_credentials(&self) -> Option<ClientCredentials> {
-        Some(self.0.credentials())
+        Some(self.auth_scheme.credentials())
     }
 }
 
 #[derive(Debug, Clone)]
-pub struct BasicAuth(pub String);
+pub struct BasicAuth {
+    pub credentials: String,
+}
+
 impl AuthScheme for BasicAuth {
     fn credentials(&self) -> ClientCredentials {
-        ClientCredentials::Basic(&self.0)
+        ClientCredentials::Basic(&self.credentials)
     }
 }

@@ -205,7 +205,7 @@ impl JsonRpcClient<Unauthenticated> {
     pub fn auth<T: AuthScheme>(self, auth_scheme: T) -> JsonRpcClient<Authenticated<T>> {
         JsonRpcClient {
             inner: self.inner,
-            auth_state: Authenticated(auth_scheme),
+            auth_state: Authenticated { auth_scheme },
         }
     }
 }
