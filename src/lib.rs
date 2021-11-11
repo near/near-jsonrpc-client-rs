@@ -224,7 +224,7 @@ impl<A: AuthState> JsonRpcClient<A> {
     }
 
     /// RPC method executor for the client.
-    pub async fn call<M>(self, method: M) -> MethodCallResult<M::Response, M::Error>
+    pub async fn call<M>(&self, method: M) -> MethodCallResult<M::Response, M::Error>
     where
         M: methods::RpcMethod,
     {
