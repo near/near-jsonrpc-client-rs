@@ -116,7 +116,6 @@ use std::{fmt, sync::Arc};
 use lazy_static::lazy_static;
 
 use near_jsonrpc_primitives::message::{from_slice, Message};
-use near_primitives::serialize::to_base64;
 
 pub mod auth;
 pub mod errors;
@@ -218,11 +217,6 @@ impl<A: AuthState> JsonRpcClient<A> {
         &self.inner.server_addr
     }
 
-    /// Get the current authentication state of the client.
-    pub fn credentials(&self) -> Option<ClientCredentials> {
-        self.auth_state.maybe_credentials()
-    }
-
     /// RPC method executor for the client.
     pub async fn call<M>(&self, method: M) -> MethodCallResult<M::Response, M::Error>
     where
@@ -248,8 +242,8 @@ impl<A: AuthState> JsonRpcClient<A> {
             .post(&self.inner.server_addr)
             .header("Content-Type", "application/json")
             .body(request_payload);
-        if let Some(ClientCredentials::Basic(basic_token)) = self.credentials() {
-            request = request.header("Authorization", format!("Basic {}", to_base64(basic_token)))
+        if let Some(AuthHeaderEntry { ref header, value }) = self.auth_state.maybe_auth_header() {
+            request = request.header(header, value);
         }
         let response = request.send().await.map_err(|err| {
             JsonRpcError::TransportError(RpcTransportError::SendError(
@@ -301,7 +295,12 @@ impl<A: AuthState> JsonRpcClient<A> {
 }
 
 /// Methods defined exclusively for authenticated JsonRpcClient instances.
-impl<T: AuthScheme> JsonRpcClient<Authenticated<T>> {
+impl<T> JsonRpcClient<Authenticated<T>> {
+    /// Get the current authentication scheme of the client.
+    pub fn auth_scheme(&self) -> &T {
+        &self.auth_state.auth_scheme
+    }
+
     /// Downgrade an authenticated client interface back to an unauthenticated one.
     ///
     /// *This exists purely for convenience*
