@@ -1,3 +1,5 @@
+use std::fmt;
+
 use near_primitives::serialize::to_base64;
 
 pub struct AuthHeaderEntry {
@@ -38,10 +40,19 @@ impl<T: AuthScheme> private::AuthState for Authenticated<T> {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub enum ApiKey {
     Plain(String),
     Base64(String),
+}
+
+impl fmt::Debug for ApiKey {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ApiKey::Plain(s) => f.debug_tuple("ApiKey::Plain").field(s).finish(),
+            ApiKey::Base64(s) => f.debug_tuple("ApiKey::Base64").field(s).finish(),
+        }
+    }
 }
 
 impl AuthScheme for ApiKey {
