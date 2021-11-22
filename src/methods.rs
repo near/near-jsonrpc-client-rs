@@ -141,7 +141,18 @@ mod shared_impls {
     impl RpcHandlerError for near_jsonrpc_primitives::types::status::RpcStatusError {}
 
     // EXPERIMENTAL_changes, EXPERIMENTAL_changes_in_block
-    impl RpcHandlerError for near_jsonrpc_primitives::types::changes::RpcStateChangesError {}
+    impl RpcHandlerError for near_jsonrpc_primitives::types::changes::RpcStateChangesError {
+        fn parse_raw_error(value: serde_json::Value) -> Option<Result<Self, serde_json::Error>> {
+            if value["name"] == "UNKNOWN_BLOCK" {
+                return Some(Ok(
+                    near_jsonrpc_primitives::types::changes::RpcStateChangesError::UnknownBlock {
+                        error_message: "".to_string(),
+                    },
+                ));
+            }
+            None
+        }
+    }
 
     // EXPERIMENTAL_broadcast_tx_sync, EXPERIMENTAL_check_tx
     impl RpcHandlerResponse
