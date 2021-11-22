@@ -93,6 +93,21 @@ macro_rules! impl_ {
     };
 }
 
+// workaround for deserializing partially serialized
+// error types missing the `error_message` field in
+// their UnknownBlock variants.
+macro_rules! parse_unknown_block {
+    ($json:expr => $err_ty:ident) => {
+        if $json["name"] == "UNKNOWN_BLOCK" {
+            Some(Ok($err_ty::UnknownBlock {
+                error_message: "".to_string(),
+            }))
+        } else {
+            None
+        }
+    };
+}
+
 mod shared_impls {
     use super::{RpcHandlerError, RpcHandlerResponse};
 
@@ -143,14 +158,7 @@ mod shared_impls {
     // EXPERIMENTAL_changes, EXPERIMENTAL_changes_in_block
     impl RpcHandlerError for near_jsonrpc_primitives::types::changes::RpcStateChangesError {
         fn parse_raw_error(value: serde_json::Value) -> Option<Result<Self, serde_json::Error>> {
-            if value["name"] == "UNKNOWN_BLOCK" {
-                return Some(Ok(
-                    near_jsonrpc_primitives::types::changes::RpcStateChangesError::UnknownBlock {
-                        error_message: "".to_string(),
-                    },
-                ));
-            }
-            None
+            parse_unknown_block!(value => Self)
         }
     }
 
@@ -239,7 +247,11 @@ impl_method! {
 
         impl RpcHandlerResponse for RpcBlockResponse {}
 
-        impl RpcHandlerError for RpcBlockError {}
+        impl RpcHandlerError for RpcBlockError {
+            fn parse_raw_error(value: serde_json::Value) -> Option<Result<Self, serde_json::Error>> {
+                parse_unknown_block!(value => Self)
+            }
+        }
 
         impl_!(RpcMethod for RpcBlockRequest {
             type Response = RpcBlockResponse;
@@ -335,7 +347,11 @@ impl_method! {
 
         impl RpcHandlerResponse for RpcChunkResponse {}
 
-        impl RpcHandlerError for RpcChunkError {}
+        impl RpcHandlerError for RpcChunkError {
+            fn parse_raw_error(value: serde_json::Value) -> Option<Result<Self, serde_json::Error>> {
+                parse_unknown_block!(value => Self)
+            }
+        }
 
         impl_!(RpcMethod for RpcChunkRequest {
             type Response = RpcChunkResponse;
@@ -358,7 +374,11 @@ impl_method! {
 
         impl RpcHandlerResponse for RpcGasPriceResponse {}
 
-        impl RpcHandlerError for RpcGasPriceError {}
+        impl RpcHandlerError for RpcGasPriceError {
+            fn parse_raw_error(value: serde_json::Value) -> Option<Result<Self, serde_json::Error>> {
+                parse_unknown_block!(value => Self)
+            }
+        }
 
         impl_!(RpcMethod for RpcGasPriceRequest {
             type Response = RpcGasPriceResponse;
@@ -402,7 +422,11 @@ impl_method! {
 
         impl RpcHandlerResponse for RpcLightClientExecutionProofResponse {}
 
-        impl RpcHandlerError for RpcLightClientProofError {}
+        impl RpcHandlerError for RpcLightClientProofError {
+            fn parse_raw_error(value: serde_json::Value) -> Option<Result<Self, serde_json::Error>> {
+                parse_unknown_block!(value => Self)
+            }
+        }
 
         impl_!(RpcMethod for RpcLightClientExecutionProofRequest {
             type Response = RpcLightClientExecutionProofResponse;
@@ -425,7 +449,11 @@ impl_method! {
 
         impl RpcHandlerResponse for RpcLightClientNextBlockResponse {}
 
-        impl RpcHandlerError for RpcLightClientNextBlockError {}
+        impl RpcHandlerError for RpcLightClientNextBlockError {
+            fn parse_raw_error(value: serde_json::Value) -> Option<Result<Self, serde_json::Error>> {
+                parse_unknown_block!(value => Self)
+            }
+        }
 
         impl_!(RpcMethod for RpcLightClientNextBlockRequest {
             type Response = RpcLightClientNextBlockResponse;
@@ -700,7 +728,11 @@ impl_method! {
 
         impl RpcHandlerResponse for RpcProtocolConfigResponse {}
 
-        impl RpcHandlerError for RpcProtocolConfigError {}
+        impl RpcHandlerError for RpcProtocolConfigError {
+            fn parse_raw_error(value: serde_json::Value) -> Option<Result<Self, serde_json::Error>> {
+                parse_unknown_block!(value => Self)
+            }
+        }
 
         impl_!(RpcMethod for RpcProtocolConfigRequest {
             type Response = RpcProtocolConfigResponse;
