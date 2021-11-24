@@ -1,10 +1,6 @@
-use std::fmt;
-
-use near_primitives::serialize::to_base64;
-
-pub struct AuthHeaderEntry {
-    pub header: String,
-    pub value: String,
+pub struct AuthHeaderEntry<'a> {
+    pub header: &'a str,
+    pub value: &'a str,
 }
 
 mod private {
@@ -40,29 +36,24 @@ impl<T: AuthScheme> private::AuthState for Authenticated<T> {
     }
 }
 
-#[derive(Clone)]
-pub enum ApiKey {
-    Plain(String),
-    Base64(String),
-}
+#[derive(Clone, Debug)]
+pub struct ApiKey(String);
 
-impl fmt::Debug for ApiKey {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            ApiKey::Plain(s) => f.debug_tuple("ApiKey::Plain").field(s).finish(),
-            ApiKey::Base64(s) => f.debug_tuple("ApiKey::Base64").field(s).finish(),
-        }
+impl ApiKey {
+    pub fn new(api_key: impl Into<String>) -> Self {
+        Self(api_key.into())
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
     }
 }
 
 impl AuthScheme for ApiKey {
     fn get_auth_header(&self) -> AuthHeaderEntry {
         AuthHeaderEntry {
-            header: "x-api-key".to_string(),
-            value: match self {
-                ApiKey::Plain(ref token) => to_base64(token),
-                ApiKey::Base64(ref token) => token.clone(),
-            },
+            header: "x-api-key",
+            value: self.0.as_str(),
         }
     }
 }

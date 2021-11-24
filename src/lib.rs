@@ -242,7 +242,7 @@ impl<A: AuthState> JsonRpcClient<A> {
             .post(&self.inner.server_addr)
             .header("Content-Type", "application/json")
             .body(request_payload);
-        if let Some(AuthHeaderEntry { ref header, value }) = self.auth_state.maybe_auth_header() {
+        if let Some(AuthHeaderEntry { header, value }) = self.auth_state.maybe_auth_header() {
             request = request.header(header, value);
         }
         let response = request.send().await.map_err(|err| {
