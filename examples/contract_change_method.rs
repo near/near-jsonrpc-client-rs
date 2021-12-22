@@ -1,5 +1,3 @@
-use std::{io, io::Write};
-
 use near_jsonrpc_client::{methods, JsonRpcClient};
 use near_jsonrpc_primitives::types::query::QueryResponseKind;
 use near_jsonrpc_primitives::types::transactions::TransactionInfo;
@@ -10,20 +8,14 @@ use serde_json::json;
 
 use tokio::time;
 
-fn input(query: &str) -> io::Result<String> {
-    print!("{}", query);
-    io::stdout().flush()?;
-    let mut input = String::new();
-    io::stdin().read_line(&mut input)?;
-    Ok(input.trim().to_owned())
-}
+mod utils;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = JsonRpcClient::connect("https://rpc.testnet.near.org");
 
-    let signer_account_id = input("Enter the signer Account ID: ")?.try_into()?;
-    let signer_secret_key = input("Enter the signer's private key: ")?.parse()?;
+    let signer_account_id = utils::input("Enter the signer Account ID: ")?.try_into()?;
+    let signer_secret_key = utils::input("Enter the signer's private key: ")?.parse()?;
 
     let signer = near_crypto::InMemorySigner::from_secret_key(signer_account_id, signer_secret_key);
 
@@ -42,8 +34,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         _ => Err("failed to extract current nonce")?,
     };
 
-    let other_account = input("Enter the account to be rated: ")?;
-    let rating = input("Enter a rating: ")?.parse::<f32>()?;
+    let other_account = utils::input("Enter the account to be rated: ")?;
+    let rating = utils::input("Enter a rating: ")?.parse::<f32>()?;
 
     let transaction = Transaction {
         signer_id: signer.account_id.clone(),
