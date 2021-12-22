@@ -1,3 +1,5 @@
+use std::{io, io::Write};
+
 use near_jsonrpc_client::{methods, JsonRpcClient};
 use near_jsonrpc_primitives::types::query::QueryResponseKind;
 use near_primitives::types::{BlockReference, Finality, FunctionArgs};
@@ -5,6 +7,14 @@ use near_primitives::views::QueryRequest;
 
 use serde::Deserialize;
 use serde_json::{from_slice, json};
+
+fn input(query: &str) -> io::Result<String> {
+    print!("{}", query);
+    io::stdout().flush()?;
+    let mut input = String::new();
+    io::stdin().read_line(&mut input)?;
+    Ok(input.trim().to_owned())
+}
 
 #[derive(Debug, Deserialize)]
 pub struct AccountStatus {
@@ -17,6 +27,8 @@ pub struct AccountStatus {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = JsonRpcClient::connect("https://rpc.testnet.near.org");
 
+    let account_id = input("Enter the account to view: ")?;
+
     let request = methods::query::RpcQueryRequest {
         block_reference: BlockReference::Finality(Finality::Final),
         request: QueryRequest::CallFunction {
@@ -24,7 +36,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             method_name: "status".to_string(),
             args: FunctionArgs::from(
                 json!({
-                    "account_id": "miraclx.testnet",
+                    "account_id": account_id,
                 })
                 .to_string()
                 .into_bytes(),
