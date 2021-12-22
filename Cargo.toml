@@ -21,10 +21,10 @@ borsh = "0.9"
 serde = "1.0.127"
 serde_json = "1.0.66"
 
-near-primitives = "0.10.0"
-near-chain-configs = "0.10.0"
-near-client-primitives = "0.10.0"
-near-jsonrpc-primitives = "0.10.0"
+near-primitives = "0.11.0"
+near-chain-configs = "0.11.0"
+near-client-primitives = "0.11.0"
+near-jsonrpc-primitives = "0.11.0"
 
 [dev-dependencies]
 tokio = { version = "1.1", features = ["rt", "macros"] }
