@@ -8,13 +8,7 @@ use near_primitives::views::QueryRequest;
 use serde::Deserialize;
 use serde_json::{from_slice, json};
 
-fn input(query: &str) -> io::Result<String> {
-    print!("{}", query);
-    io::stdout().flush()?;
-    let mut input = String::new();
-    io::stdin().read_line(&mut input)?;
-    Ok(input.trim().to_owned())
-}
+mod utils;
 
 #[derive(Debug, Deserialize)]
 pub struct AccountStatus {
@@ -27,7 +21,7 @@ pub struct AccountStatus {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = JsonRpcClient::connect("https://rpc.testnet.near.org");
 
-    let account_id = input("Enter the account to view: ")?;
+    let account_id = utils::input("Enter the account to view: ")?;
 
     let request = methods::query::RpcQueryRequest {
         block_reference: BlockReference::Finality(Finality::Final),
