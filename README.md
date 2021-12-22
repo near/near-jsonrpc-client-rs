@@ -5,7 +5,7 @@ Lower-level API for interfacing with the NEAR Protocol via JSONRPC.
 [![crates.io](https://img.shields.io/crates/v/near-jsonrpc-client?label=latest)](https://crates.io/crates/near-jsonrpc-client)
 [![Documentation](https://docs.rs/near-jsonrpc-client/badge.svg)](https://docs.rs/near-jsonrpc-client)
 ![MIT or Apache 2.0 licensed](https://img.shields.io/crates/l/near-jsonrpc-client.svg)
-[![Dependency Status](https://deps.rs/crate/near-jsonrpc-client/0.1.0/status.svg)](https://deps.rs/crate/near-jsonrpc-client/0.2.0)
+[![Dependency Status](https://deps.rs/crate/near-jsonrpc-client/0.2.0/status.svg)](https://deps.rs/crate/near-jsonrpc-client/0.2.0)
 
 ## Usage
 
@@ -32,7 +32,7 @@ let tx_status = mainnet_client.call(tx_status_request).await?;
 println!("{:?}", tx_status);
 ```
 
-Check out [`the examples folder`](https://github.com/near/near-jsonrpc-client-rs/tree/examples) for a comprehensive list of helpful demos. You can run the examples with `cargo`. For example: `cargo run --example view_account`.
+Check out [`the examples folder`](https://github.com/near/near-jsonrpc-client-rs/tree/master/examples) for a comprehensive list of helpful demos. You can run the examples with `cargo`. For example: `cargo run --example view_account`.
 
 For all intents and purposes, the predefined structures in `methods` should suffice, if you find that they
 don't or you crave extra flexibility, well, you can opt in to use the generic constructor `methods::any()` with the `any` feature flag.
