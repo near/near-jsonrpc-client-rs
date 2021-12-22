@@ -1,5 +1,3 @@
-use std::{io, io::Write};
-
 use near_jsonrpc_client::{methods, JsonRpcClient};
 use near_jsonrpc_primitives::types::query::QueryResponseKind;
 use near_primitives::types::{BlockReference, Finality, FunctionArgs};
@@ -41,7 +39,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let response = client.call(request).await?;
 
     if let QueryResponseKind::CallResult(result) = response.kind {
-        println!("{:?}", from_slice::<AccountStatus>(&result.result)?);
+        println!("{:#?}", from_slice::<AccountStatus>(&result.result)?);
     }
 
     Ok(())

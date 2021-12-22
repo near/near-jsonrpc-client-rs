@@ -5,7 +5,6 @@ use near_primitives::transaction::{Action, FunctionCallAction, Transaction};
 use near_primitives::types::BlockReference;
 
 use serde_json::json;
-
 use tokio::time;
 
 mod utils;
