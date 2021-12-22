@@ -1,6 +1,8 @@
 use std::io;
 
+use serde::Deserialize;
 use serde_json::json;
+use thiserror::Error;
 
 mod chk {
     // this lets us make the RpcMethod trait public but non-implementable by users outside this crate
@@ -111,7 +113,8 @@ macro_rules! parse_unknown_block {
 mod shared_impls {
     use super::{RpcHandlerError, RpcHandlerResponse};
 
-    // broadcast_tx_async, EXPERIMENTAL_genesis_config, adv_*
+    // adv_*
+    #[cfg(feature = "adversarial")]
     impl RpcHandlerError for () {}
 
     // adv_*
@@ -293,11 +296,17 @@ impl_method! {
             }
         }
 
+        #[derive(Debug, Deserialize, Error)]
+        #[error("{}", unreachable!("fatal: this error should never constructed"))]
+        pub enum RpcBroadcastTxAsyncError {}
+
         impl RpcHandlerResponse for RpcBroadcastTxAsyncResponse {}
+
+        impl RpcHandlerError for RpcBroadcastTxAsyncError {}
 
         impl_!(RpcMethod for RpcBroadcastTxAsyncRequest {
             type Response = RpcBroadcastTxAsyncResponse;
-            type Error = ();
+            type Error = RpcBroadcastTxAsyncError;
 
             fn params(&self) -> Result<serde_json::Value, io::Error> {
                 Ok(json!([serialize_signed_transaction(&self.signed_transaction)?]))
@@ -705,11 +714,17 @@ impl_method! {
         #[derive(Debug)]
         pub struct RpcGenesisConfigRequest;
 
+        #[derive(Debug, Deserialize, Error)]
+        #[error("{}", unreachable!("fatal: this error should never constructed"))]
+        pub enum RpcGenesisConfigError {}
+
         impl RpcHandlerResponse for RpcGenesisConfigResponse {}
+
+        impl RpcHandlerError for RpcGenesisConfigError {}
 
         impl_!(RpcMethod for RpcGenesisConfigRequest {
             type Response = RpcGenesisConfigResponse;
-            type Error = ();
+            type Error = RpcGenesisConfigError;
 
             fn params(&self) -> Result<serde_json::Value, io::Error> {
                 Ok(json!(null))
