@@ -13,7 +13,7 @@ mod utils;
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = JsonRpcClient::connect("https://rpc.testnet.near.org");
 
-    let signer_account_id = utils::input("Enter the signer Account ID: ")?.try_into()?;
+    let signer_account_id = utils::input("Enter the signer Account ID: ")?.parse()?;
     let signer_secret_key = utils::input("Enter the signer's private key: ")?.parse()?;
 
     let signer = near_crypto::InMemorySigner::from_secret_key(signer_account_id, signer_secret_key);
