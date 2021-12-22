@@ -25,7 +25,7 @@ near-chain-configs = "0.11.0"
 near-jsonrpc-primitives = "0.11.0"
 
 [dev-dependencies]
-near-crypto = "0.10.0"
+near-crypto = "0.11.0"
 tokio = { version = "1.1", features = ["rt", "macros"] }
 
 [features]
