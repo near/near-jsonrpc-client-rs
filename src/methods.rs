@@ -477,9 +477,7 @@ impl_method! {
 
 impl_method! {
     pub mod network_info {
-        pub use near_jsonrpc_primitives::types::network_info::RpcNetworkInfoError;
-
-        pub type RpcNetworkInfoResponse = near_client_primitives::types::NetworkInfoResponse;
+        pub use near_jsonrpc_primitives::types::network_info::{RpcNetworkInfoError, RpcNetworkInfoResponse};
 
         #[derive(Debug)]
         pub struct RpcNetworkInfoRequest;
