@@ -33,6 +33,8 @@ let tx_status = mainnet_client.call(tx_status_request).await?;
 println!("{:?}", tx_status);
 ```
 
+Check out [`the examples folder`](https://github.com/near/near-jsonrpc-client-rs/tree/examples) for a comprehensive list of helpful demos. You can run the examples with `cargo`. For example: `cargo run --example view_account`.
+
 For all intents and purposes, the predefined structures in `methods` should suffice, if you find that they
 don't or you crave extra flexibility, well, you can opt in to use the generic constructor `methods::any()` with the `any` feature flag.
 
