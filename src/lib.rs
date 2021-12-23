@@ -146,7 +146,7 @@ pub struct JsonRpcClientConnector {
 
 impl JsonRpcClientConnector {
     /// Return an unauthenticated JsonRpcClient that connects to the specified server.
-    pub fn connect(&self, server_addr: &str) -> JsonRpcClient<Unauthenticated> {
+    pub fn connect<U: AsUrl>(&self, server_addr: U) -> JsonRpcClient<Unauthenticated> {
         JsonRpcClient {
             inner: Arc::new(JsonRpcInnerClient {
                 server_addr: server_addr.to_string(),
@@ -196,7 +196,7 @@ impl JsonRpcClient<Unauthenticated> {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn connect(server_addr: &str) -> JsonRpcClient<Unauthenticated> {
+    pub fn connect<U: AsUrl>(server_addr: U) -> JsonRpcClient<Unauthenticated> {
         DEFAULT_CONNECTOR.connect(server_addr)
     }
 
@@ -360,6 +360,24 @@ impl JsonRpcClient<()> {
         JsonRpcClientConnector { client }
     }
 }
+
+mod private {
+    pub trait AsUrlSealed: ToString {}
+}
+
+pub trait AsUrl: private::AsUrlSealed {}
+
+impl private::AsUrlSealed for String {}
+
+impl AsUrl for String {}
+
+impl private::AsUrlSealed for &String {}
+
+impl AsUrl for &String {}
+
+impl private::AsUrlSealed for &str {}
+
+impl AsUrl for &str {}
 
 #[cfg(test)]
 mod tests {

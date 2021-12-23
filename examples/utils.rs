@@ -76,7 +76,7 @@ pub fn select_network() -> io::Result<JsonRpcClient<auth::Unauthenticated>> {
     };
     println!("===================================");
 
-    Ok(JsonRpcClient::connect(&network_url))
+    Ok(JsonRpcClient::connect(network_url))
 }
 
 fn main() {
