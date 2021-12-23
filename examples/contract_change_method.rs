@@ -60,7 +60,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     let sent_at = time::Instant::now();
-    let tx_hash = client.call(request).await.unwrap();
+    let tx_hash = client.call(request).await?;
 
     loop {
         let response = client

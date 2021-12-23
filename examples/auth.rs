@@ -32,7 +32,7 @@ async fn authorized() -> Result<(), Box<dyn std::error::Error>> {
 
     let response = client.call(request).await?;
 
-    println!("{:?}", response);
+    println!("{:#?}", response);
 
     Ok(())
 }

@@ -1,9 +1,11 @@
-use near_jsonrpc_client::{methods, JsonRpcClient};
+use near_jsonrpc_client::methods;
 use near_primitives::types::{BlockReference, Finality};
+
+mod utils;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = JsonRpcClient::connect("https://rpc.testnet.near.org");
+    let client = utils::select_network()?;
 
     let request = methods::block::RpcBlockRequest {
         block_reference: BlockReference::Finality(Finality::Final),
@@ -11,7 +13,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let response = client.call(request).await?;
 
-    println!("{:?}", response);
+    println!("{:#?}", response);
 
     Ok(())
 }
