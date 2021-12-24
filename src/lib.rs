@@ -159,7 +159,7 @@ impl JsonRpcClientConnector {
 
 /// A NEAR JSON RPC Client.
 #[derive(Clone)]
-pub struct JsonRpcClient<A> {
+pub struct JsonRpcClient<A = Unauthenticated> {
     inner: Arc<JsonRpcInnerClient>,
     auth_state: A,
 }
