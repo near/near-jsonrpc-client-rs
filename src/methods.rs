@@ -297,7 +297,7 @@ impl_method! {
         }
 
         #[derive(Debug, Deserialize, Error)]
-        #[error("{}", unreachable!("fatal: this error should never constructed"))]
+        #[error("{}", unreachable!("fatal: this error should never be constructed"))]
         pub enum RpcBroadcastTxAsyncError {}
 
         impl RpcHandlerResponse for RpcBroadcastTxAsyncResponse {}
@@ -713,7 +713,7 @@ impl_method! {
         pub struct RpcGenesisConfigRequest;
 
         #[derive(Debug, Deserialize, Error)]
-        #[error("{}", unreachable!("fatal: this error should never constructed"))]
+        #[error("{}", unreachable!("fatal: this error should never be constructed"))]
         pub enum RpcGenesisConfigError {}
 
         impl RpcHandlerResponse for RpcGenesisConfigResponse {}
