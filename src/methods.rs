@@ -867,6 +867,29 @@ impl_method! {
     }
 }
 
+#[cfg(feature = "sandbox")]
+impl_method! {
+    pub mod sandbox_fast_forward {
+        pub use near_jsonrpc_primitives::types::sandbox::{
+            RpcSandboxFastForwardError, RpcSandboxFastForwardRequest,
+            RpcSandboxFastForwardResponse,
+        };
+
+        impl RpcHandlerResponse for RpcSandboxFastForwardResponse {}
+
+        impl RpcHandlerError for RpcSandboxFastForwardError {}
+
+        impl_!(RpcMethod for RpcSandboxFastForwardRequest {
+            type Response = RpcSandboxFastForwardResponse;
+            type Error = RpcSandboxFastForwardError;
+
+            fn params(&self) -> Result<serde_json::Value, io::Error> {
+                Ok(json!(self))
+            }
+        });
+    }
+}
+
 #[cfg(feature = "adversarial")]
 impl_method! {
     pub mod adv_set_weight {
