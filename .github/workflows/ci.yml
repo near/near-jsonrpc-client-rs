@@ -111,6 +111,10 @@ jobs:
         tag_name: ${{ env.GIT_LATEST_TAG }}
         release_name: ${{ env.GIT_LATEST_TAG }}
         body: |
+          ## What's changed?
+        
           ${{ steps.extract-release-notes.outputs.release_notes }}
 
           **Crate Link**: ${{ steps.tag-and-publish.outputs.git_tag_message }}
+
+          **Full Changelog**: https://github.com/${{ github.repository }}/compare/${{ env.GIT_PREVIOUS_TAG }}...${{ env.GIT_LATEST_TAG }}
