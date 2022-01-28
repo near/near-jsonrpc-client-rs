@@ -2,29 +2,21 @@ name: rustdoc
 
 on:
   push:
-    branches:
-    - master
+    branches: [ master ]
 
 env:
-  CARGO_INCREMENTAL: 0
-  CARGO_NET_RETRY: 10
   RUSTFLAGS: -D warnings
-  RUSTUP_MAX_RETRIES: 10
+  CARGO_NET_RETRY: 10
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
 
 jobs:
   rustdoc:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v2
-
-    - name: Install Rust Toolchain
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-        profile: minimal
-        default: true
 
     - name: Build Documentation
       run: |
