@@ -570,7 +570,7 @@ impl_method! {
                 Ok(
                     match &self.transaction_info {
                         TransactionInfo::Transaction(signed_transaction) => {
-                            json!([serialize_signed_transaction(&signed_transaction)?])
+                            json!([serialize_signed_transaction(signed_transaction)?])
                         }
                         TransactionInfo::TransactionId { hash, account_id } => {
                             json!([hash, account_id])
@@ -813,7 +813,7 @@ impl_method! {
                 Ok(
                     match &self.transaction_info {
                         TransactionInfo::Transaction(signed_transaction) => {
-                            json!([serialize_signed_transaction(&signed_transaction)?])
+                            json!([serialize_signed_transaction(signed_transaction)?])
                         }
                         TransactionInfo::TransactionId { hash, account_id } => {
                             json!([hash, account_id])
