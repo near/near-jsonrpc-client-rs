@@ -1,6 +1,6 @@
 [package]
 name = "near-jsonrpc-client"
-version = "0.2.0"
+version = "0.0.0" # managed by cargo-workspaces, see below
 authors = ["Near Inc <hello@nearprotocol.com>"]
 edition = "2021"
 license = "MIT OR Apache-2.0"
@@ -9,6 +9,10 @@ description = "Lower-level API for interfacing with the NEAR Protocol via JSONRP
 categories = ["asynchronous", "api-bindings", "network-programming"]
 keywords = ["near", "api", "jsonrpc", "rpc", "async"]
 rust-version = "1.56.0"
+
+# cargo-workspaces
+[workspace.metadata.workspaces]
+version = "0.2.0"
 
 [dependencies]
 thiserror = "1.0.28"
