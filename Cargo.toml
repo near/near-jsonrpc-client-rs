@@ -12,7 +12,7 @@ rust-version = "1.56.0"
 
 # cargo-workspaces
 [workspace.metadata.workspaces]
-version = "0.2.0"
+version = "0.3.0"
 
 [dependencies]
 thiserror = "1.0.28"
