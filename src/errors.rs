@@ -130,6 +130,6 @@ impl<E: super::methods::RpcHandlerError> From<RpcError> for JsonRpcError<E> {
                 ),
             ));
         }
-        return JsonRpcError::ServerError(JsonRpcServerError::NonContextualError(err));
+        JsonRpcError::ServerError(JsonRpcServerError::NonContextualError(err))
     }
 }
