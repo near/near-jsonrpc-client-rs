@@ -1,59 +1,70 @@
-pub struct AuthHeaderEntry<'a> {
-    pub header: &'a str,
-    pub value: &'a str,
-}
+use std::fmt;
 
-mod private {
-    pub trait AuthState {
-        fn maybe_auth_header(&self) -> Option<super::AuthHeaderEntry>;
-    }
-}
-
-pub trait AuthState: private::AuthState {}
-
-#[derive(Debug, Clone)]
-pub struct Unauthenticated;
-impl AuthState for Unauthenticated {}
-impl private::AuthState for Unauthenticated {
-    fn maybe_auth_header(&self) -> Option<AuthHeaderEntry> {
-        None
-    }
-}
-
-pub trait AuthScheme {
-    fn get_auth_header(&self) -> AuthHeaderEntry;
-}
-
-#[derive(Debug, Clone)]
-pub struct Authenticated<T> {
-    pub(crate) auth_scheme: T,
-}
-
-impl<T: AuthScheme> AuthState for Authenticated<T> {}
-impl<T: AuthScheme> private::AuthState for Authenticated<T> {
-    fn maybe_auth_header(&self) -> Option<AuthHeaderEntry> {
-        Some(self.auth_scheme.get_auth_header())
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct ApiKey(String);
+#[derive(Eq, Hash, Clone, Debug, PartialEq)]
+pub struct ApiKey(reqwest::header::HeaderValue);
 
 impl ApiKey {
-    pub fn new(api_key: impl Into<String>) -> Self {
-        Self(api_key.into())
+    /// Creates a new API key from a string.
+    pub fn new<K: IntoHeaderValue>(api_key: K) -> Result<Self, InvalidApiKey> {
+        if !api_key
+            .as_ref()
+            .iter()
+            .all(|&b| b == b'-' || b.is_ascii_hexdigit())
+        {
+            return Err(InvalidApiKey { _priv: () });
+        }
+        if let Ok(api_key) = api_key.try_into() {
+            return Ok(ApiKey(api_key));
+        }
+        unreachable!()
     }
 
     pub fn as_str(&self) -> &str {
-        &self.0
+        if let Ok(s) = self.0.to_str() {
+            return s;
+        }
+        unreachable!()
     }
 }
 
-impl AuthScheme for ApiKey {
-    fn get_auth_header(&self) -> AuthHeaderEntry {
-        AuthHeaderEntry {
-            header: "x-api-key",
-            value: self.0.as_str(),
-        }
+impl crate::headers::HeaderEntry for ApiKey {
+    type HeaderName = &'static str;
+
+    fn header_name(&self) -> &Self::HeaderName {
+        &"x-api-key"
+    }
+
+    fn header_pair(self) -> (Self::HeaderName, reqwest::header::HeaderValue) {
+        ("x-api-key", self.0)
     }
 }
+
+#[derive(Eq, Clone, Debug, PartialEq)]
+pub struct InvalidApiKey {
+    _priv: (),
+}
+
+impl std::error::Error for InvalidApiKey {}
+impl fmt::Display for InvalidApiKey {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Invalid API key")
+    }
+}
+
+mod private {
+    pub trait IntoHeaderValueSealed: AsRef<[u8]> + TryInto<reqwest::header::HeaderValue> {}
+}
+
+pub trait IntoHeaderValue: private::IntoHeaderValueSealed {}
+
+impl private::IntoHeaderValueSealed for String {}
+
+impl IntoHeaderValue for String {}
+
+impl private::IntoHeaderValueSealed for &String {}
+
+impl IntoHeaderValue for &String {}
+
+impl private::IntoHeaderValueSealed for &str {}
+
+impl IntoHeaderValue for &str {}

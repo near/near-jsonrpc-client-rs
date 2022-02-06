@@ -119,9 +119,9 @@ use near_jsonrpc_primitives::message::{from_slice, Message};
 
 pub mod auth;
 pub mod errors;
+pub mod headers;
 pub mod methods;
 
-use auth::*;
 use errors::*;
 
 pub const NEAR_MAINNET_RPC_URL: &str = "https://rpc.mainnet.near.org";
@@ -133,11 +133,6 @@ lazy_static! {
     static ref DEFAULT_CONNECTOR: JsonRpcClientConnector = JsonRpcClient::new_client();
 }
 
-struct JsonRpcInnerClient {
-    server_addr: String,
-    client: reqwest::Client,
-}
-
 /// NEAR JSON RPC client connector.
 #[derive(Clone)]
 pub struct JsonRpcClientConnector {
@@ -145,36 +140,33 @@ pub struct JsonRpcClientConnector {
 }
 
 impl JsonRpcClientConnector {
-    /// Return an unauthenticated JsonRpcClient that connects to the specified server.
-    pub fn connect<U: AsUrl>(&self, server_addr: U) -> JsonRpcClient<Unauthenticated> {
+    /// Return a JsonRpcClient that connects to the specified server.
+    pub fn connect<U: AsUrl>(&self, server_addr: U) -> JsonRpcClient {
         JsonRpcClient {
             inner: Arc::new(JsonRpcInnerClient {
                 server_addr: server_addr.to_string(),
                 client: self.client.clone(),
             }),
-            auth_state: Unauthenticated,
+            headers: reqwest::header::HeaderMap::new(),
         }
     }
 }
 
-/// A NEAR JSON RPC Client.
+struct JsonRpcInnerClient {
+    server_addr: String,
+    client: reqwest::Client,
+}
+
 #[derive(Clone)]
-pub struct JsonRpcClient<A = Unauthenticated> {
+/// A NEAR JSON RPC Client.
+pub struct JsonRpcClient {
     inner: Arc<JsonRpcInnerClient>,
-    auth_state: A,
+    headers: reqwest::header::HeaderMap,
 }
 
-impl<A: fmt::Debug> fmt::Debug for JsonRpcClient<A> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut builder = f.debug_struct("JsonRpcClient");
-        builder.field("server_addr", &self.inner.server_addr);
-        builder.field("auth_state", &self.auth_state);
-        builder.field("client", &self.inner.client);
-        builder.finish()
-    }
-}
+pub type MethodCallResult<T, E> = Result<T, JsonRpcError<E>>;
 
-impl JsonRpcClient<Unauthenticated> {
+impl JsonRpcClient {
     /// Connect to a JSON RPC server using the default connector.
     ///
     /// It's virtually the same as calling `new_client().connect(server_addr)`.
@@ -196,22 +188,10 @@ impl JsonRpcClient<Unauthenticated> {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn connect<U: AsUrl>(server_addr: U) -> JsonRpcClient<Unauthenticated> {
+    pub fn connect<U: AsUrl>(server_addr: U) -> JsonRpcClient {
         DEFAULT_CONNECTOR.connect(server_addr)
     }
 
-    /// Authenticate the client interface generically
-    pub fn auth<T: AuthScheme>(self, auth_scheme: T) -> JsonRpcClient<Authenticated<T>> {
-        JsonRpcClient {
-            inner: self.inner,
-            auth_state: Authenticated { auth_scheme },
-        }
-    }
-}
-
-pub type MethodCallResult<T, E> = Result<T, JsonRpcError<E>>;
-
-impl<A: AuthState> JsonRpcClient<A> {
     /// Get the server address the client connects to.
     pub fn server_addr(&self) -> &str {
         &self.inner.server_addr
@@ -236,15 +216,14 @@ impl<A: AuthState> JsonRpcClient<A> {
                 JsonRpcTransportSendError::PayloadSerializeError(err.into()),
             ))
         })?;
-        let mut request = self
+
+        let request = self
             .inner
             .client
             .post(&self.inner.server_addr)
-            .header("Content-Type", "application/json")
+            .headers(self.headers.clone())
             .body(request_payload);
-        if let Some(AuthHeaderEntry { header, value }) = self.auth_state.maybe_auth_header() {
-            request = request.header(header, value);
-        }
+
         let response = request.send().await.map_err(|err| {
             JsonRpcError::TransportError(RpcTransportError::SendError(
                 JsonRpcTransportSendError::PayloadSendError(err),
@@ -292,31 +271,24 @@ impl<A: AuthState> JsonRpcClient<A> {
             JsonRpcTransportRecvError::UnexpectedServerResponse(response_message),
         )))
     }
-}
 
-/// Methods defined exclusively for authenticated JsonRpcClient instances.
-impl<T> JsonRpcClient<Authenticated<T>> {
-    /// Get the current authentication scheme of the client.
-    pub fn auth_scheme(&self) -> &T {
-        &self.auth_state.auth_scheme
+    pub fn header<H: headers::HeaderEntry>(mut self, entry: H) -> Self {
+        let (k, v) = entry.header_pair();
+        self.headers.append(k, v);
+        self
     }
 
-    /// Downgrade an authenticated client interface back to an unauthenticated one.
-    ///
-    /// *This exists purely for convenience*
-    pub fn deauth(self) -> JsonRpcClient<Unauthenticated> {
-        JsonRpcClient {
-            inner: self.inner,
-            auth_state: Unauthenticated,
-        }
+    pub fn headers(&self) -> &reqwest::header::HeaderMap {
+        &self.headers
     }
-}
 
-/// Methods for constructing JsonRpcClient connectors.
-impl JsonRpcClient<()> {
+    pub fn headers_mut(&mut self) -> &mut reqwest::header::HeaderMap {
+        &mut self.headers
+    }
+
     /// Manually create a new client connector.
     ///
-    /// It's recommended to use the `connect` method instead as that method optimally
+    /// It's recommended to use the [`connect`](JsonRpcClient::connect) method instead as that method optimally
     /// reuses the default connector across invocations.
     ///
     /// However, if for some reason you still need to manually create a new connector, you can do so.
@@ -332,8 +304,17 @@ impl JsonRpcClient<()> {
     /// let testnet_client = client_connector.connect("https://rpc.testnet.near.org");
     /// ```
     pub fn new_client() -> JsonRpcClientConnector {
+        let mut headers = reqwest::header::HeaderMap::with_capacity(2);
+        headers.insert(
+            reqwest::header::CONTENT_TYPE,
+            reqwest::header::HeaderValue::from_static("application/json"),
+        );
+
         JsonRpcClientConnector {
-            client: reqwest::Client::new(),
+            client: reqwest::Client::builder()
+                .default_headers(headers)
+                .build()
+                .unwrap(),
         }
     }
 
@@ -361,8 +342,18 @@ impl JsonRpcClient<()> {
     }
 }
 
+impl fmt::Debug for JsonRpcClient {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut builder = f.debug_struct("JsonRpcClient");
+        builder.field("server_addr", &self.inner.server_addr);
+        builder.field("headers", &self.headers);
+        builder.field("client", &self.inner.client);
+        builder.finish()
+    }
+}
+
 mod private {
-    pub trait AsUrlSealed: ToString {}
+    pub trait AsUrlSealed: reqwest::IntoUrl + ToString {}
 }
 
 pub trait AsUrl: private::AsUrlSealed {}
@@ -378,6 +369,10 @@ impl AsUrl for &String {}
 impl private::AsUrlSealed for &str {}
 
 impl AsUrl for &str {}
+
+impl private::AsUrlSealed for reqwest::Url {}
+
+impl AsUrl for reqwest::Url {}
 
 #[cfg(test)]
 mod tests {
