@@ -67,19 +67,19 @@ impl fmt::Display for InvalidApiKey {
 }
 
 mod private {
-    pub trait IntoHeaderValueSealed: AsRef<[u8]> + TryInto<reqwest::header::HeaderValue> {}
+    pub trait Sealed: AsRef<[u8]> + TryInto<reqwest::header::HeaderValue> {}
 }
 
-pub trait IntoHeaderValue: private::IntoHeaderValueSealed {}
+pub trait IntoHeaderValue: private::Sealed {}
 
-impl private::IntoHeaderValueSealed for String {}
+impl private::Sealed for String {}
 
 impl IntoHeaderValue for String {}
 
-impl private::IntoHeaderValueSealed for &String {}
+impl private::Sealed for &String {}
 
 impl IntoHeaderValue for &String {}
 
-impl private::IntoHeaderValueSealed for &str {}
+impl private::Sealed for &str {}
 
 impl IntoHeaderValue for &str {}
