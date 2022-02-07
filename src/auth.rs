@@ -42,14 +42,21 @@ impl crate::header::HeaderEntry for ApiKey {
     }
 }
 
-    fn header_pair(self) -> (Self::HeaderName, HeaderValue) {
-        ("x-api-key", self.0)
+impl fmt::Display for ApiKey {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "x-api-key: {}", self.as_str())
     }
 }
 
-#[derive(Eq, Clone, Debug, PartialEq)]
+#[derive(Eq, Clone, PartialEq)]
 pub struct InvalidApiKey {
     _priv: (),
+}
+
+impl fmt::Debug for InvalidApiKey {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("InvalidApiKey")
+    }
 }
 
 impl std::error::Error for InvalidApiKey {}
