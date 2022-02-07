@@ -1,40 +1,41 @@
 use std::fmt;
 
+use reqwest::header::HeaderValue;
+
 #[derive(Eq, Hash, Clone, Debug, PartialEq)]
-pub struct ApiKey(reqwest::header::HeaderValue);
+pub struct ApiKey(HeaderValue);
 
 impl ApiKey {
     /// Creates a new API key from a string.
     pub fn new<K: IntoHeaderValue>(api_key: K) -> Result<Self, InvalidApiKey> {
-        if !api_key
+        if api_key
             .as_ref()
             .iter()
             .all(|&b| b == b'-' || b.is_ascii_hexdigit())
         {
-            return Err(InvalidApiKey { _priv: () });
+            if let Ok(api_key) = api_key.try_into() {
+                return Ok(ApiKey(api_key));
+            }
         }
-        if let Ok(api_key) = api_key.try_into() {
-            return Ok(ApiKey(api_key));
-        }
-        unreachable!()
+        Err(InvalidApiKey { _priv: () })
     }
 
     pub fn as_str(&self) -> &str {
-        if let Ok(s) = self.0.to_str() {
-            return s;
-        }
-        unreachable!()
+        self.0
+            .to_str()
+            .expect("fatal: api key should contain only ascii characters")
     }
 }
 
-impl crate::headers::HeaderEntry for ApiKey {
+impl crate::header::HeaderEntry for ApiKey {
     type HeaderName = &'static str;
+    type HeaderValue = HeaderValue;
 
     fn header_name(&self) -> &Self::HeaderName {
         &"x-api-key"
     }
 
-    fn header_pair(self) -> (Self::HeaderName, reqwest::header::HeaderValue) {
+    fn header_pair(self) -> (Self::HeaderName, HeaderValue) {
         ("x-api-key", self.0)
     }
 }

@@ -119,7 +119,7 @@ use near_jsonrpc_primitives::message::{from_slice, Message};
 
 pub mod auth;
 pub mod errors;
-pub mod headers;
+pub mod header;
 pub mod methods;
 
 use errors::*;
@@ -272,10 +272,12 @@ impl JsonRpcClient {
         )))
     }
 
-    pub fn header<H: headers::HeaderEntry>(mut self, entry: H) -> Self {
-        let (k, v) = entry.header_pair();
-        self.headers.append(k, v);
-        self
+    pub fn header<H, D>(self, entry: H) -> D::Output
+    where
+        H: header::HeaderEntry<D>,
+        D: header::HeaderEntryDiscriminant<H>,
+    {
+        D::apply(self, entry)
     }
 
     pub fn headers(&self) -> &reqwest::header::HeaderMap {
