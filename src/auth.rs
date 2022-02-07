@@ -10,15 +10,9 @@ impl ApiKey {
     pub const HEADER_NAME: &'static str = "x-api-key";
 
     /// Creates a new API key from a string.
-    ///
-    /// Returns an [InvalidApiKey] error if the API key is not a hexadecimal string.
     pub fn new<K: IntoApiKey>(api_key: K) -> Result<Self, InvalidApiKey> {
-        if api_key
-            .as_ref()
-            .iter()
-            .all(|&b| b == b'-' || b.is_ascii_hexdigit())
-        {
-            if let Ok(api_key) = api_key.try_into() {
+        if let Ok(api_key) = uuid::Uuid::parse_str(api_key.as_ref()) {
+            if let Ok(api_key) = api_key.to_string().try_into() {
                 return Ok(ApiKey(api_key));
             }
         }
@@ -72,7 +66,7 @@ impl fmt::Display for InvalidApiKey {
 }
 
 mod private {
-    pub trait Sealed: AsRef<[u8]> + TryInto<reqwest::header::HeaderValue> {}
+    pub trait Sealed: AsRef<str> {}
 }
 
 /// A marker trait used to identify values that can be made into API keys.
