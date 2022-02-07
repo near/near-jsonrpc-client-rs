@@ -2,6 +2,7 @@ use std::fmt;
 
 use reqwest::header::HeaderValue;
 
+/// NEAR JSON RPC API key.
 #[derive(Eq, Hash, Clone, Debug, PartialEq)]
 pub struct ApiKey(HeaderValue);
 
@@ -9,7 +10,9 @@ impl ApiKey {
     pub const HEADER_NAME: &'static str = "x-api-key";
 
     /// Creates a new API key from a string.
-    pub fn new<K: IntoHeaderValue>(api_key: K) -> Result<Self, InvalidApiKey> {
+    ///
+    /// Returns an [InvalidApiKey] error if the API key is not a hexadecimal string.
+    pub fn new<K: IntoApiKey>(api_key: K) -> Result<Self, InvalidApiKey> {
         if api_key
             .as_ref()
             .iter()
@@ -22,6 +25,7 @@ impl ApiKey {
         Err(InvalidApiKey { _priv: () })
     }
 
+    /// Returns the API key as a string slice.
     pub fn as_str(&self) -> &str {
         self.0
             .to_str()
@@ -48,6 +52,7 @@ impl fmt::Display for ApiKey {
     }
 }
 
+/// An error returned when an API key contains invalid characters.
 #[derive(Eq, Clone, PartialEq)]
 pub struct InvalidApiKey {
     _priv: (),
@@ -70,16 +75,17 @@ mod private {
     pub trait Sealed: AsRef<[u8]> + TryInto<reqwest::header::HeaderValue> {}
 }
 
-pub trait IntoHeaderValue: private::Sealed {}
+/// A marker trait used to identify values that can be made into API keys.
+pub trait IntoApiKey: private::Sealed {}
 
 impl private::Sealed for String {}
 
-impl IntoHeaderValue for String {}
+impl IntoApiKey for String {}
 
 impl private::Sealed for &String {}
 
-impl IntoHeaderValue for &String {}
+impl IntoApiKey for &String {}
 
 impl private::Sealed for &str {}
 
-impl IntoHeaderValue for &str {}
+impl IntoApiKey for &str {}
