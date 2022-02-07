@@ -272,6 +272,29 @@ impl JsonRpcClient {
         )))
     }
 
+    /// Add a header to this request.
+    ///
+    /// Depending on the header specified, this method either returns back
+    /// the client, or a result containing the client.
+    ///
+    /// ### Example
+    ///
+    /// ```
+    /// use near_jsonrpc_client::{auth, JsonRpcClient};
+    ///
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let client = JsonRpcClient::connect("https://rpc.testnet.near.org")
+    ///     .header(
+    ///         auth::ApiKey::new("cadc4c83-5566-4c94-aa36-773605150f44")? // <- error handling here
+    ///     ) // <- returns the client
+    ///     .header(
+    ///         ("user-agent", "someclient/0.1.0")
+    ///     )? // <- error handling here, returned a result
+    /// # ;
+    /// # Ok(())
+    /// # }
+    /// ```
     pub fn header<H, D>(self, entry: H) -> D::Output
     where
         H: header::HeaderEntry<D>,
@@ -280,10 +303,12 @@ impl JsonRpcClient {
         D::apply(self, entry)
     }
 
+    /// Get a shared reference to the headers.
     pub fn headers(&self) -> &reqwest::header::HeaderMap {
         &self.headers
     }
 
+    /// Get an exclusive reference to the headers.
     pub fn headers_mut(&mut self) -> &mut reqwest::header::HeaderMap {
         &mut self.headers
     }
