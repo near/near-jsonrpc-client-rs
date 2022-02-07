@@ -6,6 +6,8 @@ use reqwest::header::HeaderValue;
 pub struct ApiKey(HeaderValue);
 
 impl ApiKey {
+    pub const HEADER_NAME: &'static str = "x-api-key";
+
     /// Creates a new API key from a string.
     pub fn new<K: IntoHeaderValue>(api_key: K) -> Result<Self, InvalidApiKey> {
         if api_key
@@ -32,8 +34,13 @@ impl crate::header::HeaderEntry for ApiKey {
     type HeaderValue = HeaderValue;
 
     fn header_name(&self) -> &Self::HeaderName {
-        &"x-api-key"
+        &Self::HEADER_NAME
     }
+
+    fn header_pair(self) -> (Self::HeaderName, Self::HeaderValue) {
+        (Self::HEADER_NAME, self.0)
+    }
+}
 
     fn header_pair(self) -> (Self::HeaderName, HeaderValue) {
         ("x-api-key", self.0)
