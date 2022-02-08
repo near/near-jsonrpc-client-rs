@@ -143,7 +143,7 @@ where
 
     fn apply(mut client: JsonRpcClient, entry: T) -> Self::Output {
         let (k, v) = entry.header_pair();
-        client.headers.append(k, v);
+        client.headers.insert(k, v);
         client
     }
 }
@@ -159,8 +159,7 @@ where
 
     fn apply(mut client: JsonRpcClient, entry: T) -> Self::Output {
         let (k, v) = entry.header_pair();
-        let v = v.try_into()?;
-        client.headers.append(k, v);
+        client.headers.insert(k, v.try_into()?);
         Ok(client)
     }
 }
