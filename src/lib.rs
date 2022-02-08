@@ -380,24 +380,24 @@ impl fmt::Debug for JsonRpcClient {
 }
 
 mod private {
-    pub trait AsUrlSealed: reqwest::IntoUrl + ToString {}
+    pub trait Sealed: ToString {}
 }
 
-pub trait AsUrl: private::AsUrlSealed {}
+pub trait AsUrl: private::Sealed {}
 
-impl private::AsUrlSealed for String {}
+impl private::Sealed for String {}
 
 impl AsUrl for String {}
 
-impl private::AsUrlSealed for &String {}
+impl private::Sealed for &String {}
 
 impl AsUrl for &String {}
 
-impl private::AsUrlSealed for &str {}
+impl private::Sealed for &str {}
 
 impl AsUrl for &str {}
 
-impl private::AsUrlSealed for reqwest::Url {}
+impl private::Sealed for reqwest::Url {}
 
 impl AsUrl for reqwest::Url {}
 
