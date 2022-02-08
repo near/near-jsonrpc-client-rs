@@ -81,6 +81,20 @@ let partial_genesis = mainnet_client.call(genesis_config_request).await?;
 println!("{:#?}", partial_genesis);
 ```
 
+## Releasing
+
+Versioning and releasing of this crate is automated and managed by [custom fork](https://github.com/miraclx/cargo-workspaces/tree/grouping-versioning-and-exclusion) of [`cargo-workspaces`](https://github.com/pksunkara/cargo-workspaces). To publish a new version of this crate, you can do so by bumping the `version` under the `[workspace.metadata.workspaces]` section in the [package manifest](https://github.com/near/near-jsonrpc-client-rs/blob/master/Cargo.toml) and submit a PR.
+
+We have CI Infrastructure put in place to automate the process of publishing all crates once a version change has merged into master.
+
+However, before you release, make sure the [CHANGELOG](https://github.com/near/near-jsonrpc-client-rs/blob/master/CHANGELOG.md) is up to date and that the `[Unreleased]` section is present but empty.
+
+## Contribution
+
+Unless you explicitly state otherwise, any contribution intentionally submitted
+for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
+dual licensed as below, without any additional terms or conditions.
+
 ## License
 
 Licensed under either of
@@ -91,9 +105,3 @@ Licensed under either of
    ([LICENSE-MIT](LICENSE-MIT) or <http://opensource.org/licenses/MIT>)
 
 at your option.
-
-## Contribution
-
-Unless you explicitly state otherwise, any contribution intentionally submitted
-for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
-dual licensed as above, without any additional terms or conditions.
