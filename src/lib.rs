@@ -362,22 +362,26 @@ impl JsonRpcClient<()> {
 }
 
 mod private {
-    pub trait AsUrlSealed: ToString {}
+    pub trait Sealed: ToString {}
 }
 
-pub trait AsUrl: private::AsUrlSealed {}
+pub trait AsUrl: private::Sealed {}
 
-impl private::AsUrlSealed for String {}
+impl private::Sealed for String {}
 
 impl AsUrl for String {}
 
-impl private::AsUrlSealed for &String {}
+impl private::Sealed for &String {}
 
 impl AsUrl for &String {}
 
-impl private::AsUrlSealed for &str {}
+impl private::Sealed for &str {}
 
 impl AsUrl for &str {}
+
+impl private::Sealed for reqwest::Url {}
+
+impl AsUrl for reqwest::Url {}
 
 #[cfg(test)]
 mod tests {
