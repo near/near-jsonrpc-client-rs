@@ -83,3 +83,40 @@ impl IntoApiKey for &String {}
 impl private::Sealed for &str {}
 
 impl IntoApiKey for &str {}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn api_key() {
+        ApiKey::new("some-value").expect_err("should not have been a valid API key");
+
+        ApiKey::new("0ee1872b-355f-4254-8e2b-1c0b8199ee92")
+            .expect("should have been a valid API key");
+
+        ApiKey::new("0ee1872b355f42548e2b1c0b8199ee92").expect("should have been a valid API key");
+
+        ApiKey::new("0ee--1872b355f4254-8e2b1c0b8-199ee92")
+            .expect_err("should not have been a valid API key");
+    }
+
+    #[test]
+    fn display() {
+        let api_key = ApiKey::new("0ee1872b-355f-4254-8e2b-1c0b8199ee92")
+            .expect("should have been a valid API key");
+
+        assert_eq!(
+            api_key.to_string(),
+            "x-api-key: 0ee1872b-355f-4254-8e2b-1c0b8199ee92"
+        );
+
+        let api_key = ApiKey::new("0ee1872b355f42548e2b1c0b8199ee92")
+            .expect("should have been a valid API key");
+
+        assert_eq!(
+            api_key.to_string(),
+            "x-api-key: 0ee1872b-355f-4254-8e2b-1c0b8199ee92"
+        );
+    }
+}
