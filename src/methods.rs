@@ -4,12 +4,11 @@ use serde::Deserialize;
 use serde_json::json;
 use thiserror::Error;
 
-mod chk {
-    // this lets us make the RpcMethod trait public but non-implementable by users outside this crate
-    pub trait ValidRpcMarkerTrait {}
+mod private {
+    pub trait Sealed {}
 }
 
-pub trait RpcMethod: chk::ValidRpcMarkerTrait
+pub trait RpcMethod: private::Sealed
 where
     Self::Response: RpcHandlerResponse,
     Self::Error: RpcHandlerError,
@@ -22,7 +21,7 @@ where
     fn params(&self) -> Result<serde_json::Value, io::Error>;
 }
 
-impl<T> chk::ValidRpcMarkerTrait for &T where T: chk::ValidRpcMarkerTrait {}
+impl<T> private::Sealed for &T where T: private::Sealed {}
 impl<T> RpcMethod for &T
 where
     T: RpcMethod,
@@ -83,7 +82,7 @@ macro_rules! impl_method {
 
 macro_rules! impl_ {
     ($valid_trait:ident for $for_type:ty { $($body:tt)+ }) => {
-        impl chk::ValidRpcMarkerTrait for $for_type {}
+        impl private::Sealed for $for_type {}
         impl $valid_trait for $for_type {
             $($body)+
 
@@ -205,7 +204,7 @@ mod any {
         pub(crate) _data: PhantomData<(T, E)>,
     }
 
-    impl<T, E> chk::ValidRpcMarkerTrait for RpcAnyRequest<T, E> {}
+    impl<T, E> private::Sealed for RpcAnyRequest<T, E> {}
 
     impl<T, E> RpcMethod for RpcAnyRequest<T, E>
     where
@@ -859,6 +858,29 @@ impl_method! {
         impl_!(RpcMethod for RpcSandboxPatchStateRequest {
             type Response = RpcSandboxPatchStateResponse;
             type Error = RpcSandboxPatchStateError;
+
+            fn params(&self) -> Result<serde_json::Value, io::Error> {
+                Ok(json!(self))
+            }
+        });
+    }
+}
+
+#[cfg(feature = "sandbox")]
+impl_method! {
+    pub mod sandbox_fast_forward {
+        pub use near_jsonrpc_primitives::types::sandbox::{
+            RpcSandboxFastForwardError, RpcSandboxFastForwardRequest,
+            RpcSandboxFastForwardResponse,
+        };
+
+        impl RpcHandlerResponse for RpcSandboxFastForwardResponse {}
+
+        impl RpcHandlerError for RpcSandboxFastForwardError {}
+
+        impl_!(RpcMethod for RpcSandboxFastForwardRequest {
+            type Response = RpcSandboxFastForwardResponse;
+            type Error = RpcSandboxFastForwardError;
 
             fn params(&self) -> Result<serde_json::Value, io::Error> {
                 Ok(json!(self))

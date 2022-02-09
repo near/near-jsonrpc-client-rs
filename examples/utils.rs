@@ -24,7 +24,7 @@ fn select<S>(print_msg: fn(), query: &str, chk: fn(&str) -> Option<S>) -> io::Re
     }
 }
 
-pub fn select_network() -> io::Result<JsonRpcClient<auth::Unauthenticated>> {
+pub fn select_network() -> io::Result<JsonRpcClient> {
     println!("========[Network Selection]========");
     let network = select(
         || {
