@@ -1,4 +1,6 @@
+use std::future::Future;
 use std::io;
+use std::pin::Pin;
 
 use serde::Deserialize;
 use serde_json::json;
@@ -57,6 +59,35 @@ pub trait RpcHandlerError: serde::de::DeserializeOwned {
     /// Defaults to `None` meaning there's no alternative deserialization available.
     fn parse_raw_error(_error: serde_json::Value) -> Option<Result<Self, serde_json::Error>> {
         None
+    }
+}
+
+type BoxFuture<'a, T> = Pin<Box<dyn Future<Output = T> + 'a>>;
+
+pub trait RpcMethodExt: RpcMethod {
+    fn to_json(&self) -> Result<serde_json::Value, io::Error>;
+
+    fn call_on<'a>(
+        &'a self,
+        client: &'a super::JsonRpcClient,
+    ) -> BoxFuture<'a, super::MethodCallResult<Self::Response, Self::Error>>;
+}
+
+impl<M: RpcMethod> RpcMethodExt for M {
+    fn to_json(&self) -> Result<serde_json::Value, io::Error> {
+        let request_payload = near_jsonrpc_primitives::message::Message::request(
+            self.method_name().to_string(),
+            Some(self.params()?),
+        );
+
+        Ok(json!(request_payload))
+    }
+
+    fn call_on<'a>(
+        &'a self,
+        client: &'a super::JsonRpcClient,
+    ) -> BoxFuture<'a, super::MethodCallResult<Self::Response, Self::Error>> {
+        Box::pin(client.call(self))
     }
 }
 
