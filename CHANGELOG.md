@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Extracted all the RPC methods into their own modules instead of all being defined in the same `methods.rs` file. <https://github.com/near/near-jsonrpc-client-rs/pull/50>
+
 ## [0.3.0] - 2022-02-09
 
 - Dropped generic authentication and added support for custom headers. <https://github.com/near/near-jsonrpc-client-rs/pull/47>
