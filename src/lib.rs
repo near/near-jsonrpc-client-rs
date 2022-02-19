@@ -202,7 +202,7 @@ impl JsonRpcClient {
     where
         M: methods::RpcMethod,
     {
-        let request_payload = methods::RpcMethodExt::to_json(&method).map_err(|err| {
+        let request_payload = methods::to_json(&method).map_err(|err| {
             JsonRpcError::TransportError(RpcTransportError::SendError(
                 JsonRpcTransportSendError::PayloadSerializeError(err),
             ))
