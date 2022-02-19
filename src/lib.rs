@@ -202,15 +202,12 @@ impl JsonRpcClient {
     where
         M: methods::RpcMethod,
     {
-        let (method_name, params) = (
-            method.method_name(),
-            method.params().map_err(|err| {
-                JsonRpcError::TransportError(RpcTransportError::SendError(
-                    JsonRpcTransportSendError::PayloadSerializeError(err),
-                ))
-            })?,
-        );
-        let request_payload = Message::request(method_name.to_string(), Some(params));
+        let request_payload = methods::to_json(&method).map_err(|err| {
+            JsonRpcError::TransportError(RpcTransportError::SendError(
+                JsonRpcTransportSendError::PayloadSerializeError(err),
+            ))
+        })?;
+
         let request_payload = serde_json::to_vec(&request_payload).map_err(|err| {
             JsonRpcError::TransportError(RpcTransportError::SendError(
                 JsonRpcTransportSendError::PayloadSerializeError(err.into()),

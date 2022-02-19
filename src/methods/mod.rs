@@ -130,6 +130,15 @@ pub use adversarial::adv_get_saved_blocks;
 pub use adversarial::adv_check_store;
 // ======== adversarial ========
 
+pub fn to_json<M: RpcMethod>(method: &M) -> Result<serde_json::Value, io::Error> {
+    let request_payload = near_jsonrpc_primitives::message::Message::request(
+        method.method_name().to_string(),
+        Some(method.params()?),
+    );
+
+    Ok(json!(request_payload))
+}
+
 mod common {
     use super::*;
 
