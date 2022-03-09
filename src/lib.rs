@@ -278,13 +278,15 @@ impl JsonRpcClient {
     /// ### Example
     ///
     /// ```
-    /// # #[cfg(feature = "auth")]
-    /// use near_jsonrpc_client::{auth, JsonRpcClient};
+    /// use near_jsonrpc_client::JsonRpcClient;
     ///
     /// # #[tokio::main]
     /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
     /// let client = JsonRpcClient::connect("https://rpc.testnet.near.org");
     /// let client = client.header(("user-agent", "someclient/0.1.0"))?; // <- returns a result
+    ///
+    /// # #[cfg(feature = "auth")]
+    /// use near_jsonrpc_client::auth;
     ///
     /// # #[cfg(feature = "auth")]
     /// let client = client.header(
