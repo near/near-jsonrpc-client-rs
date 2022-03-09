@@ -1,6 +1,8 @@
 //! This module allows you to query the status of a transaction signed by an account_id
 //!
 //! ## Example
+//! Returns the final transaction result for
+//! <https://explorer.near.org/transactions/B9aypWiMuiWR5kqzewL9eC96uZWA3qCMhLe67eBMWacq>
 //!
 //! ```
 //! use near_jsonrpc_client::{methods, JsonRpcClient};
