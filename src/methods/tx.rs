@@ -1,4 +1,4 @@
-//! This module allows you to query the status of a transaction signed by an account_id
+//! Queries the status of a transaction.
 //!
 //! ## Example
 //!
