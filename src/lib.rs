@@ -117,6 +117,7 @@ use lazy_static::lazy_static;
 
 use near_jsonrpc_primitives::message::{from_slice, Message};
 
+#[cfg(feature = "auth")]
 pub mod auth;
 pub mod errors;
 pub mod header;
@@ -277,18 +278,18 @@ impl JsonRpcClient {
     /// ### Example
     ///
     /// ```
+    /// # #[cfg(feature = "auth")]
     /// use near_jsonrpc_client::{auth, JsonRpcClient};
     ///
     /// # #[tokio::main]
     /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    /// let client = JsonRpcClient::connect("https://rpc.testnet.near.org")
-    ///     .header(
-    ///         auth::ApiKey::new("cadc4c83-5566-4c94-aa36-773605150f44")? // <- error handling here
-    ///     ) // <- returns the client
-    ///     .header(
-    ///         ("user-agent", "someclient/0.1.0")
-    ///     )? // <- error handling here, returned a result
-    /// # ;
+    /// let client = JsonRpcClient::connect("https://rpc.testnet.near.org");
+    /// let client = client.header(("user-agent", "someclient/0.1.0"))?; // <- returns a result
+    ///
+    /// # #[cfg(feature = "auth")]
+    /// let client = client.header(
+    ///     auth::ApiKey::new("cadc4c83-5566-4c94-aa36-773605150f44")?, // <- error handling here
+    /// ); // <- returns the client
     /// # Ok(())
     /// # }
     /// ```
