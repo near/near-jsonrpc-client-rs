@@ -4,7 +4,6 @@
 //!
 //! ```
 //! use near_jsonrpc_client::{methods, JsonRpcClient};
-//! use near_jsonrpc_primitives::types::transactions::TransactionInfo;
 //!
 //! # #[tokio::main]
 //! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -12,7 +11,7 @@
 //! let tx_hash = "B9aypWiMuiWR5kqzewL9eC96uZWA3qCMhLe67eBMWacq".parse()?;
 //!
 //! let request = methods::tx::RpcTransactionStatusRequest {
-//!     transaction_info: TransactionInfo::TransactionId {
+//!     transaction_info: methods::tx::TransactionInfo::TransactionId {
 //!         hash: tx_hash,
 //!         account_id: "itranscend.near".parse()?,
 //!    }
