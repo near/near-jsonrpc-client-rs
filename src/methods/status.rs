@@ -1,8 +1,9 @@
-//! Queries the status of a given node
+//! Requests the status of the connected RPC node.
 //!
-//! Returns the general status of a given node (sync status, nearcore node version, protocol version, etc), and the current set of validators.
+//! Returns the status of the connected RPC node (sync status, nearcore node version, protocol version, etc), and the current set of validators.
 //!
 //! ## Example
+//!
 //! ```
 //! use near_jsonrpc_client::{methods, JsonRpcClient};
 //!
@@ -15,11 +16,10 @@
 //! let response = client.call(request).await;
 //!
 //! assert!(
-//!     matches!(response, Ok(methods::status::RpcStatusResponse { .. })),
-//!     "expected an Ok(RpcStatusResponse) but got [{:?}]",
-//!     response
-//! );
-//!
+//!     matches!(
+//!         response,
+//!         Ok(methods::status::RpcStatusResponse { .. })
+//! ));
 //! # Ok(())
 //! # }
 //! ```
