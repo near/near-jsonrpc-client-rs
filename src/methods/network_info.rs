@@ -19,7 +19,6 @@
 //!     response,
 //!     Ok(methods::network_info::RpcNetworkInfoResponse { .. })
 //! ));
-//!
 //! # Ok(())
 //! # }
 //! ```
