@@ -15,10 +15,9 @@
 //!
 //! let response = client.call(request).await;
 //!
-//! assert!(
-//!     matches!(
-//!         response,
-//!         Ok(methods::status::RpcStatusResponse { .. })
+//! assert!(matches!(
+//!     response,
+//!     Ok(methods::status::RpcStatusResponse { .. })
 //! ));
 //! # Ok(())
 //! # }
