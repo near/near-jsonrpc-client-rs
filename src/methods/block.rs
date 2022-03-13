@@ -80,7 +80,7 @@
 //!     # }
 //!     ```
 //!
-//!     b) Final finality: (Finality::Final) : Returns the latest finalised block (ie. a block that has been validated on at least 66% of the nodes in the network (usually takes 2 blocks / approx. 2 second delay)).
+//!     b) Final finality: (Finality::Final) : Returns the latest finalised block (ie. a block that has been validated on at least 66% of the nodes in the network [usually takes 2 blocks / approx. 2 second delay]).
 //!
 //!     ```
 //!     use near_jsonrpc_client::{methods, JsonRpcClient};
