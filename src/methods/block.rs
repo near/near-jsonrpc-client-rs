@@ -96,7 +96,7 @@
 //!
 //!     let response = client.call(request).await?;
 //!     
-//!      assert!(matches!(
+//!     assert!(matches!(
 //!         response,
 //!         methods::block::RpcBlockResponse { .. }
 //!     ));
@@ -122,7 +122,7 @@
 //!
 //!     let response = client.call(request).await?;
 //!     
-//!      assert!(matches!(
+//!     assert!(matches!(
 //!         response,
 //!         methods::block::RpcBlockResponse { .. }
 //!     ));
@@ -146,7 +146,7 @@
 //!
 //!     let response = client.call(request).await?;
 //!     
-//!      assert!(matches!(
+//!     assert!(matches!(
 //!         response,
 //!         methods::block::RpcBlockResponse { .. }
 //!     ));
