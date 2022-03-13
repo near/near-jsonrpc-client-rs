@@ -106,7 +106,7 @@
 //!
 //! 3. SyncCheckpoint: Queries blocks by their SyncCheckpoint. The checkpoint could either be the first checkpoint after the network's genesis block or the earliest availabe checkpoint.
 //!
-//!     a) SyncCheckpoint::Genesis : Returns the block at the first checkpoint after the network's genesis block.
+//!     a) SyncCheckpoint::Genesis : Returns the block at the first Sync Checkpoint after the network's genesis block.
 //!
 //!     ```
 //!     use near_jsonrpc_client::{methods, JsonRpcClient};
@@ -130,7 +130,7 @@
 //!     # }
 //!     ```
 //!
-//!     b) SyncCheckpoint::EarliestAvailable : Returns the block at the network's most recent Sync checkpoint.
+//!     b) SyncCheckpoint::EarliestAvailable : Returns the block at the network's most recent Sync Checkpoint.
 //!
 //!     ```
 //!     use near_jsonrpc_client::{methods, JsonRpcClient};
