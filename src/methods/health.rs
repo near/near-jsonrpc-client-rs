@@ -1,4 +1,4 @@
-//! Requests health status of the rpc node.
+//! Requests the health status of the rpc node.
 //!
 //! ## Example
 //!
