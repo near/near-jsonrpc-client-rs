@@ -1,6 +1,7 @@
 //! Queries the status of a transaction.
 //!
 //! ## Example
+//!
 //! Returns the final transaction result for
 //! <https://explorer.near.org/transactions/B9aypWiMuiWR5kqzewL9eC96uZWA3qCMhLe67eBMWacq>
 //!
