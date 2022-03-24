@@ -1,158 +1,64 @@
 //! Queries data from a specific block on the network.
 //!
+//! Blocks can be referenced using either;
+//! - a [block ID](https://docs.near.org/docs/api/rpc#using-block_id-param) (block height or block hash) for querying historical blocks
+//! - or a [finality specifier](https://docs.near.org/docs/api/rpc#using-finality-param) (“final” or “optimistic”) for latest blocks.
+//!
 //! ## Examples
 //!
-//! Blocks can be queried using either one of three variants: BlockID, Finality and SyncCheckpoint.
+//! - Query historical blocks by using a specific reference (block height or block hash).
 //!
-//! 1. BlockId: The BlockId enum accepts a BlockHeight or a BlockHash as a variant.
+//!     - `BlockId::Height`
 //!
-//!     a) BlockId::Height : Allows you to specify the height of the block you want to query.
+//!       ```
+//!       # use near_jsonrpc_client::methods;
+//!       use near_primitives::types::{BlockReference, BlockId};
 //!
-//!     ```
-//!     use near_jsonrpc_client::{methods, JsonRpcClient};
-//!     use near_primitives::types::{BlockReference, BlockId};
+//!       let request = methods::block::RpcBlockRequest {
+//!           block_reference: BlockReference::BlockId(BlockId::Height(83975193))
+//!       };
+//!       ```
 //!
-//!     # #[tokio::main]
-//!     # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!     let client = JsonRpcClient::connect("https://archival-rpc.testnet.near.org");
+//!     - `BlockId::Hash`
 //!
-//!     let request = methods::block::RpcBlockRequest {
-//!         block_reference: BlockReference::BlockId(BlockId::Height(83975193))
-//!     };
+//!       ```
+//!       # use near_jsonrpc_client::methods;
+//!       use near_primitives::types::{BlockReference, BlockId};
 //!
-//!     let response = client.call(request).await?;
+//!       let request = methods::block::RpcBlockRequest {
+//!           block_reference: BlockReference::BlockId(BlockId::Hash(
+//!               "G1SHrwLp55oV3kz94x3ekrR6r4ihNRWdAVZpckgBx4U4".parse()?,
+//!           )),
+//!       };
+//!       ```
 //!
-//!     assert!(matches!(
-//!         response,
-//!         methods::block::RpcBlockResponse { .. }
-//!     ));
-//!     # Ok(())
-//!     # }
-//!     ```
+//! - Query latest blocks.
 //!
-//!     b) BlockId::Hash : Allows you to specify the hash of the block you want to query.
+//!     - `Finality::Final`: Get the most recent, completely finalized block.
 //!
-//!     ```
-//!     use near_jsonrpc_client::{methods, JsonRpcClient};
-//!     use near_primitives::{types::{BlockReference, BlockId}, hash::CryptoHash};
+//!       References a block that has been validated on at least 66% of the nodes in the network.
 //!
-//!     # #[tokio::main]
-//!     # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!     let client = JsonRpcClient::connect("https://archival-rpc.testnet.near.org");
+//!       ```
+//!       # use near_jsonrpc_client::methods;
+//!       use near_primitives::types::{BlockReference, Finality};
 //!
-//!     let request = methods::block::RpcBlockRequest {
-//!         block_reference: BlockReference::BlockId(BlockId::Hash("G1SHrwLp55oV3kz94x3ekrR6r4ihNRWdAVZpckgBx4U4".parse()?))
-//!     };
+//!       let request = methods::block::RpcBlockRequest {
+//!           block_reference: BlockReference::Finality(Finality::Final)
+//!       };
+//!       ```
 //!
-//!     let response = client.call(request).await?;
+//!     - `Finality::None`: Get the most recently submitted block.
 //!
-//!     assert!(matches!(
-//!         response,
-//!         methods::block::RpcBlockResponse { .. }
-//!     ));
-//!     # Ok(())
-//!     # }
-//!     ```
+//!       Returns the latest block recorded on the node that responded to your query.
 //!
-//! 2. Finality: The Finality enum accepts a Finality::None (for optimistic finality) or a Finality::Final (final finality) as a variant.
+//!       ```
+//!       # use near_jsonrpc_client::methods;
+//!       use near_primitives::types::{BlockReference, Finality};
 //!
-//!     a) Optimistic finality (Finality::None) : Returns the latest block recorded on the node that responded to your query (<1 second delay after the transaction is submitted).
-//!
-//!     ```
-//!     use near_jsonrpc_client::{methods, JsonRpcClient};
-//!     use near_primitives::types::{BlockReference, Finality};
-//!
-//!     # #[tokio::main]
-//!     # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!     let client = JsonRpcClient::connect("https://rpc.testnet.near.org");
-//!
-//!     let request = methods::block::RpcBlockRequest {
-//!         block_reference: BlockReference::Finality(Finality::None)
-//!     };
-//!
-//!     let response = client.call(request).await?;
-//!     
-//!     assert!(matches!(
-//!         response,
-//!         methods::block::RpcBlockResponse { .. }
-//!     ));   
-//!     # Ok(())
-//!     # }
-//!     ```
-//!
-//!     b) Final finality: (Finality::Final) : Returns the latest finalised block (ie. a block that has been validated on at least 66% of the nodes in the network [usually takes 2 blocks / approx. 2 second delay]).
-//!
-//!     ```
-//!     use near_jsonrpc_client::{methods, JsonRpcClient};
-//!     use near_primitives::types::{BlockReference, Finality};
-//!
-//!     # #[tokio::main]
-//!     # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!     let client = JsonRpcClient::connect("https://rpc.testnet.near.org");
-//!
-//!     let request = methods::block::RpcBlockRequest {
-//!         block_reference: BlockReference::Finality(Finality::Final)
-//!     };
-//!
-//!     let response = client.call(request).await?;
-//!     
-//!     assert!(matches!(
-//!         response,
-//!         methods::block::RpcBlockResponse { .. }
-//!     ));
-//!     # Ok(())
-//!     # }
-//!     ```
-//!
-//! 3. SyncCheckpoint: Queries blocks by their SyncCheckpoint. The checkpoint could either be the first checkpoint after the network's genesis block or the earliest availabe checkpoint.
-//!
-//!     a) SyncCheckpoint::Genesis : Returns the block at the first Sync Checkpoint after the network's genesis block.
-//!
-//!     ```
-//!     use near_jsonrpc_client::{methods, JsonRpcClient};
-//!     use near_primitives::types::{BlockReference, SyncCheckpoint};
-//!
-//!     # #[tokio::main]
-//!     # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!     let client = JsonRpcClient::connect("https://rpc.mainnet.near.org");
-//!
-//!     let request = methods::block::RpcBlockRequest {
-//!         block_reference: BlockReference::SyncCheckpoint(SyncCheckpoint::Genesis)
-//!     };
-//!
-//!     let response = client.call(request).await?;
-//!     
-//!     assert!(matches!(
-//!         response,
-//!         methods::block::RpcBlockResponse { .. }
-//!     ));
-//!     # Ok(())
-//!     # }
-//!     ```
-//!
-//!     b) SyncCheckpoint::EarliestAvailable : Returns the block at the network's most recent Sync Checkpoint.
-//!
-//!     ```
-//!     use near_jsonrpc_client::{methods, JsonRpcClient};
-//!     use near_primitives::types::{BlockReference, SyncCheckpoint};
-//!
-//!     # #[tokio::main]
-//!     # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!     let client = JsonRpcClient::connect("https://rpc.testnet.near.org");
-//!
-//!     let request = methods::block::RpcBlockRequest {
-//!         block_reference: BlockReference::SyncCheckpoint(SyncCheckpoint::EarliestAvailable)
-//!     };
-//!
-//!     let response = client.call(request).await?;
-//!     
-//!     assert!(matches!(
-//!         response,
-//!         methods::block::RpcBlockResponse { .. }
-//!     ));
-//!     # Ok(())
-//!     # }
-//!     ```
+//!       let request = methods::block::RpcBlockRequest {
+//!           block_reference: BlockReference::Finality(Finality::None)
+//!       };
+//!       ```
 use super::*;
 
 pub use near_jsonrpc_primitives::types::blocks::RpcBlockError;
