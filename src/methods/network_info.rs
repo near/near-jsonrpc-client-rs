@@ -1,6 +1,6 @@
-//! Requests information about nodes on the network.
+//! Queries the current state of node network connections.
 //!
-//! Returns the current state of node network connections (active peers, transmitted data, received data, known producers, etc.).
+//! This includes information about active peers, transmitted data, known producers, etc.
 //!
 //! ## Example
 //!
