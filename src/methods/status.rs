@@ -1,6 +1,6 @@
 //! Requests the status of the connected RPC node.
 //!
-//! Returns the status of the connected RPC node (sync status, nearcore node version, protocol version, etc), and the current set of validators.
+//! This includes information about sync status, nearcore node version, protocol version, the current set of validators, etc.
 //!
 //! ## Example
 //!
