@@ -1,3 +1,57 @@
+//! Returns the gas price for a specific block_height or block_hash.
+//!
+//! ## Examples
+//!
+//! Returns the gas fees for this block:
+//! <https://explorer.near.org/blocks/6atGq4TUTZerVHU9qWoYfzXNBg3K4C4cca15TE6KfuBr>
+//!
+//! - `BlockId::Height`
+//!
+//!     ```
+//!     # use near_jsonrpc_client::{methods, JsonRpcClient};
+//!     use near_primitives::types::BlockId;
+//!
+//!     # #[tokio::main]
+//!     # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
+//!
+//!     let request = methods::gas_price::RpcGasPriceRequest {
+//!         block_id: Some(BlockId::Height(48309771)),
+//!     };
+//!
+//!     let response = client.call(request).await?;
+//!
+//!     assert!(matches!(
+//!         response,
+//!         methods::gas_price::RpcGasPriceResponse { .. }
+//!     ));
+//!     # Ok(())
+//!     # }
+//!     ```
+//!
+//! - `BlockId::Hash`
+//!
+//!     ```
+//!     # use near_jsonrpc_client::{methods, JsonRpcClient};
+//!     use near_primitives::types::BlockId;
+//!
+//!     # #[tokio::main]
+//!     # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
+//!
+//!     let request = methods::gas_price::RpcGasPriceRequest {
+//!         block_id: Some(BlockId::Hash("6atGq4TUTZerVHU9qWoYfzXNBg3K4C4cca15TE6KfuBr".parse()?)),
+//!     };
+//!
+//!     let response = client.call(request).await?;
+//!
+//!     assert!(matches!(
+//!         response,
+//!         methods::gas_price::RpcGasPriceResponse { .. }
+//!     ));
+//!     # Ok(())
+//!     # }
+//!     ```
 use super::*;
 
 pub use near_jsonrpc_primitives::types::gas_price::{RpcGasPriceError, RpcGasPriceRequest};
