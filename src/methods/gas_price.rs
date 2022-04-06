@@ -75,7 +75,7 @@ impl RpcMethod for RpcGasPriceRequest {
     }
 
     fn params(&self) -> Result<serde_json::Value, io::Error> {
-        Ok(json!([self]))
+        Ok(json!([self.block_id]))
     }
 }
 
