@@ -23,6 +23,7 @@
 //!
 //!       ```
 //!       # use near_jsonrpc_client::methods;
+//!       # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!       use near_primitives::types::{BlockReference, BlockId};
 //!
 //!       let request = methods::block::RpcBlockRequest {
@@ -30,6 +31,8 @@
 //!               "G1SHrwLp55oV3kz94x3ekrR6r4ihNRWdAVZpckgBx4U4".parse()?,
 //!           )),
 //!       };
+//!       # Ok(())
+//!       # }
 //!       ```
 //!
 //! - Query latest blocks.
