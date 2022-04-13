@@ -1,5 +1,5 @@
 //! Sends asynchronous transactions.
-//! 
+//!
 //! Sends a signed transaction to the RPC and returns the transaction hash.
 //!
 //! ## Example
