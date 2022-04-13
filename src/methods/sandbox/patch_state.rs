@@ -1,7 +1,7 @@
 //! Patch account, access keys, contract code, or contract state.
 //!
-//! Only additions and mutations are supported. No deletions. 
-//! 
+//! Only additions and mutations are supported. No deletions.
+//!
 //! Account, access keys, contract code, and contract states have different formats. See the example and docs for details about their format.
 //!
 //! ## Examples
