@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added the `methods::to_json()` helper method for visualizing the serialization of the RPC methods. <https://github.com/near/near-jsonrpc-client-rs/pull/49>
 - Extracted all the RPC methods into their own modules instead of all being defined in the same `methods.rs` file. <https://github.com/near/near-jsonrpc-client-rs/pull/50>
+- Fixed `query` method error deserialization. <https://github.com/near/near-jsonrpc-client-rs/pull/82>
 
 ## [0.3.0] - 2022-02-09
 
