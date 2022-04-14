@@ -257,13 +257,15 @@ impl JsonRpcClient {
         })?;
 
         if let Message::Response(response) = response_message {
-            return methods::RpcHandlerResponse::parse(response.result?).map_err(|err| {
-                JsonRpcError::TransportError(RpcTransportError::RecvError(
-                    JsonRpcTransportRecvError::ResponseParseError(
-                        JsonRpcTransportHandlerResponseError::ResultParseError(err),
-                    ),
-                ))
-            });
+            return M::parse_handler_response(response.result)
+                .map_err(|err| {
+                    JsonRpcError::TransportError(RpcTransportError::RecvError(
+                        JsonRpcTransportRecvError::ResponseParseError(
+                            JsonRpcTransportHandlerResponseError::ResultParseError(err),
+                        ),
+                    ))
+                })?
+                .map_err(Into::into);
         }
         Err(JsonRpcError::TransportError(RpcTransportError::RecvError(
             JsonRpcTransportRecvError::UnexpectedServerResponse(response_message),

@@ -19,7 +19,18 @@ where
     fn method_name(&self) -> &str;
 
     fn params(&self) -> Result<serde_json::Value, io::Error>;
+
+    fn parse_handler_response(
+        response: Result<serde_json::Value, near_jsonrpc_primitives::errors::RpcError>,
+    ) -> Result<MaybeHandlerResponse<Self::Response>, serde_json::Error> {
+        match response {
+            Ok(value) => Self::Response::parse(value).map(Ok),
+            Err(rpc_error) => Ok(Err(rpc_error)),
+        }
+    }
 }
+
+pub type MaybeHandlerResponse<T> = Result<T, near_jsonrpc_primitives::errors::RpcError>;
 
 impl<T> private::Sealed for &T where T: private::Sealed {}
 impl<T> RpcMethod for &T
