@@ -31,7 +31,7 @@ impl RpcMethod for RpcQueryRequest {
                     block_height,
                     block_hash,
                 }) => {
-                    let mut err_parts = error.split(" ");
+                    let mut err_parts = error.split(' ');
                     let query_response = if let (
                         Some("access"),
                         Some("key"),
