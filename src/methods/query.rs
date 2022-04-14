@@ -136,7 +136,7 @@ mod tests {
                 #[allow(deprecated)]
                 account_id: "miraclx.testnet".parse()?,
                 method_name: "".to_string(),
-                args: (b"{}".to_vec()).into(),
+                args: vec![].into(),
             },
         };
 
