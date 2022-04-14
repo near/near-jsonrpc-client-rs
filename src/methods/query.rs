@@ -21,58 +21,55 @@ impl RpcMethod for RpcQueryRequest {
     }
 
     fn parse_handler_response(
-        response: Result<serde_json::Value, near_jsonrpc_primitives::errors::RpcError>,
-    ) -> Result<MaybeHandlerResponse<Self::Response>, serde_json::Error> {
-        match response {
-            Ok(value) => match serde_json::from_value::<QueryResponse>(value)? {
-                QueryResponse::HandlerResponse(r) => Ok(Ok(r)),
-                QueryResponse::HandlerError(LegacyQueryError {
-                    error,
-                    block_height,
-                    block_hash,
-                }) => {
-                    let mut err_parts = error.split(' ');
-                    let query_response = if let (
-                        Some("access"),
-                        Some("key"),
-                        Some(pk),
-                        Some("does"),
-                        Some("not"),
-                        Some("exist"),
-                        Some("while"),
-                        Some("viewing"),
-                        None,
-                    ) = (
-                        err_parts.next(),
-                        err_parts.next(),
-                        err_parts.next(),
-                        err_parts.next(),
-                        err_parts.next(),
-                        err_parts.next(),
-                        err_parts.next(),
-                        err_parts.next(),
-                        err_parts.next(),
-                    ) {
-                        let public_key = pk
-                            .parse::<near_crypto::PublicKey>()
-                            .map_err(serde::de::Error::custom)?;
-                        RpcQueryError::UnknownAccessKey {
-                            public_key,
-                            block_height,
-                            block_hash,
-                        }
-                    } else {
-                        RpcQueryError::ContractExecutionError {
-                            vm_error: error,
-                            block_height,
-                            block_hash,
-                        }
-                    };
+        response: serde_json::Value,
+    ) -> Result<Result<Self::Response, Self::Error>, serde_json::Error> {
+        match serde_json::from_value::<QueryResponse>(response)? {
+            QueryResponse::HandlerResponse(r) => Ok(Ok(r)),
+            QueryResponse::HandlerError(LegacyQueryError {
+                error,
+                block_height,
+                block_hash,
+            }) => {
+                let mut err_parts = error.split(' ');
+                let query_response = if let (
+                    Some("access"),
+                    Some("key"),
+                    Some(pk),
+                    Some("does"),
+                    Some("not"),
+                    Some("exist"),
+                    Some("while"),
+                    Some("viewing"),
+                    None,
+                ) = (
+                    err_parts.next(),
+                    err_parts.next(),
+                    err_parts.next(),
+                    err_parts.next(),
+                    err_parts.next(),
+                    err_parts.next(),
+                    err_parts.next(),
+                    err_parts.next(),
+                    err_parts.next(),
+                ) {
+                    let public_key = pk
+                        .parse::<near_crypto::PublicKey>()
+                        .map_err(serde::de::Error::custom)?;
+                    RpcQueryError::UnknownAccessKey {
+                        public_key,
+                        block_height,
+                        block_hash,
+                    }
+                } else {
+                    RpcQueryError::ContractExecutionError {
+                        vm_error: error,
+                        block_height,
+                        block_hash,
+                    }
+                };
 
-                    Ok(Err(query_response.into()))
-                }
-            },
-            Err(rpc_error) => Ok(Err(rpc_error)),
+                Ok(Err(query_response))
+            }
         }
     }
 }

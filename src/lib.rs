@@ -257,7 +257,7 @@ impl JsonRpcClient {
         })?;
 
         if let Message::Response(response) = response_message {
-            return M::parse_handler_response(response.result)
+            return M::parse_handler_response(response.result?)
                 .map_err(|err| {
                     JsonRpcError::TransportError(RpcTransportError::RecvError(
                         JsonRpcTransportRecvError::ResponseParseError(
@@ -265,7 +265,7 @@ impl JsonRpcClient {
                         ),
                     ))
                 })?
-                .map_err(Into::into);
+                .map_err(|err| JsonRpcError::ServerError(JsonRpcServerError::HandlerError(err)));
         }
         Err(JsonRpcError::TransportError(RpcTransportError::RecvError(
             JsonRpcTransportRecvError::UnexpectedServerResponse(response_message),
