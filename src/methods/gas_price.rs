@@ -1,4 +1,4 @@
-//! Returns the gas price for a specific block_height or block_hash.
+//! Returns the gas price for a specific block height or block hash.
 //!
 //! ## Examples
 //!
