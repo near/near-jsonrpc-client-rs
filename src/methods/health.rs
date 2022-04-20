@@ -1,8 +1,8 @@
-//! Requests the health status of the rpc node.
+//! Requests the health status of the RPC node.
 //!
 //! ## Example
 //!
-//! Returns the current health stauts of the rpc node it connects to.
+//! Returns the current health stauts of the RPC node the client connects to.
 //!
 //! ```
 //! use near_jsonrpc_client::{methods, JsonRpcClient};
@@ -17,7 +17,7 @@
 //!
 //! assert!(matches!(
 //!     response,
-//!     methods::health::RpcHealthResponse { .. }
+//!     methods::health::RpcHealthResponse
 //! ));
 //! # Ok(())
 //! # }
