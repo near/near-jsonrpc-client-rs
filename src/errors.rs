@@ -65,7 +65,7 @@ pub enum JsonRpcServerResponseStatusError {
     /// The RPC client exceeds the rate limit by sending too many requests.
     #[error("this client has exceeded the rate limit")]
     TooManyRequests,
-    /// The RPC server returns a non-200 status code.
+    /// The RPC server returned a non-200 status code.
     #[error("the server returned a non-OK (200) status code: [{status}]")]
     Unexpected { status: reqwest::StatusCode },
 }
@@ -73,16 +73,16 @@ pub enum JsonRpcServerResponseStatusError {
 /// Potential errors returned by the RPC server.
 #[derive(Debug, Error)]
 pub enum JsonRpcServerError<E> {
-    /// An invalid RPC method is called.
+    /// An invalid RPC method is called or the RPC methdo is unable to parse the provided arguments.
     #[error("request validation error: [{0:?}]")]
     RequestValidationError(RpcRequestValidationErrorKind),
     /// RPC method call error.
     #[error("handler error: [{0}]")]
     HandlerError(E),
-    /// The RPC server returns an internal server error.
+    /// The RPC server returned an internal server error.
     #[error("internal error: [{info:?}]")]
     InternalError { info: Option<String> },
-    /// The RPC server returns a response without context i.e. a response the client doesn't expect.
+    /// The RPC server returned a response without context i.e. a response the client doesn't expect.
     #[error("error response lacks context: {0}")]
     NonContextualError(RpcError),
     /// Unexpected status codes returned by the RPC server.
