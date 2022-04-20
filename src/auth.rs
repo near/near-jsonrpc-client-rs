@@ -2,7 +2,7 @@
 //!
 //! Some RPC nodes will require authentication before requests can be sent to them.
 //!
-//! This is done by adding your api key to the request as a header.
+//! This is done by adding your api key to the request as a [`header`](crate::JsonRpcClient::header).
 //!
 //! ## Example
 //!
