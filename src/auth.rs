@@ -12,7 +12,7 @@
 //!
 //! # #[tokio::main]
 //! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! let client = JsonRpcClient::connect("https://testnet.rpc.near.dev/")
+//! let client = JsonRpcClient::connect("https://rpc.testnet.near.org")
 //!     .header(auth::ApiKey::new("399ba741-e939-4ffa-8c3c-306ec36fa8de")?);
 //!
 //! let request = methods::block::RpcBlockRequest {
