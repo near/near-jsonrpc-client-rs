@@ -5,6 +5,7 @@
 //! ## Examples
 //!
 //! - Get the validators for a specified epoch.
+//!
 //!     ```
 //!     use near_jsonrpc_client::{methods, JsonRpcClient};
 //!     use near_primitives::types::{EpochReference, EpochId, BlockReference, Finality};
@@ -35,54 +36,8 @@
 //!     # }
 //!     ```
 //!
-//! - Get the validators for a given block
-//!     - By hash
-//!         ```
-//!         use near_jsonrpc_client::{methods, JsonRpcClient};
-//!         use near_primitives::types::{EpochReference, BlockId};
-//!   
-//!         # #[tokio::main]
-//!         # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!         let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
-//!   
-//!         let request = methods::validators::RpcValidatorRequest {
-//!             epoch_reference: EpochReference::BlockId(BlockId::Hash("F5a8etpwPegFXctaZ4GoCB23StRhhK5iWNhLo6t4aPxb".parse()?))
-//!         };
-//!   
-//!         let response = client.call(request).await?;
-//!   
-//!         assert!(matches!(
-//!             response,
-//!             methods::validators::RpcValidatorResponse { .. }
-//!         ));
-//!         # Ok(())
-//!         # }
-//!         ```
-//!
-//!     - By height
-//!         ```
-//!         use near_jsonrpc_client::{methods, JsonRpcClient};
-//!         use near_primitives::types::{EpochReference, BlockId};
-//!   
-//!         # #[tokio::main]
-//!         # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!         let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
-//!   
-//!         let request = methods::validators::RpcValidatorRequest {
-//!             epoch_reference: EpochReference::BlockId(BlockId::Height(61262499))
-//!         };
-//!   
-//!         let response = client.call(request).await?;
-//!   
-//!         assert!(matches!(
-//!             response,
-//!             methods::validators::RpcValidatorResponse { .. }
-//!         ));
-//!         # Ok(())
-//!         # }
-//!         ```
-//!
 //! - Get the validators for the latest block
+//!
 //!     ```
 //!     use near_jsonrpc_client::{methods, JsonRpcClient};
 //!     use near_primitives::types::{EpochReference, EpochId, BlockId};
