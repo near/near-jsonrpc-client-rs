@@ -13,11 +13,11 @@
 //!
 //! let request = methods::status::RpcStatusRequest;
 //!
-//! let response = client.call(request).await;
+//! let response = client.call(request).await?;
 //!
 //! assert!(matches!(
 //!     response,
-//!     Ok(methods::status::RpcStatusResponse { .. })
+//!     methods::status::RpcStatusResponse { .. }
 //! ));
 //! # Ok(())
 //! # }
