@@ -1,3 +1,95 @@
+//! Returns details of a specific chunk.
+//!
+//! You can use the [`block`](crate::methods::block) RPC method to get a valid chunk hash.
+//!
+//! ## Examples
+//!
+//! Chunks can be queried using one of two `ChunkReference` variants: `BlockShardId` or `ChunkHash`.
+//!
+//! - `BlockShardId`: Query a chunk by specifying its block ID (block height or block hash) and shard ID.
+//!
+//!     - `BlockId::Hash`
+//!
+//!       ```
+//!       use near_jsonrpc_client::{methods, JsonRpcClient};
+//!       use near_jsonrpc_primitives::types::chunks;
+//!       use near_primitives::types::BlockId;
+//!
+//!       # #[tokio::main]
+//!       # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!       let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
+//!
+//!       let request = methods::chunk::RpcChunkRequest {
+//!           chunk_reference: chunks::ChunkReference::BlockShardId {
+//!               block_id: BlockId::Hash("6atGq4TUTZerVHU9qWoYfzXNBg3K4C4cca15TE6KfuBr".parse()?),
+//!               shard_id: 0,
+//!           }
+//!       };
+//!
+//!       let response = client.call(request).await?;
+//!
+//!       assert!(matches!(
+//!           response,
+//!           methods::chunk::RpcChunkResponse { .. }
+//!       ));
+//!       # Ok(())
+//!       # }
+//!       ```
+//!
+//!     - `BlockId::Height`
+//!
+//!       ```
+//!       use near_jsonrpc_client::{methods, JsonRpcClient};
+//!       use near_jsonrpc_primitives::types::chunks;
+//!       use near_primitives::types::BlockId;
+//!
+//!       # #[tokio::main]
+//!       # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!       let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
+//!
+//!       let request = methods::chunk::RpcChunkRequest {
+//!           chunk_reference: chunks::ChunkReference::BlockShardId {
+//!               block_id: BlockId::Height(61512623),
+//!               shard_id: 3,
+//!           }
+//!       };
+//!
+//!       let response = client.call(request).await?;
+//!
+//!       assert!(matches!(
+//!           response,
+//!           methods::chunk::RpcChunkResponse { .. }
+//!       ));
+//!       # Ok(())
+//!       # }
+//!       ```
+//!
+//!
+//! - `ChunkHash`: Query a chunk by a specific reference via it's associated chunk hash.
+//!
+//!   ```
+//!   use near_jsonrpc_client::{methods, JsonRpcClient};
+//!   use near_jsonrpc_primitives::types::chunks;
+//!
+//!   # #[tokio::main]
+//!   # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!   let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
+//!
+//!   let request = methods::chunk::RpcChunkRequest{
+//!       chunk_reference: chunks::ChunkReference::ChunkHash {
+//!           chunk_id: "6GTgCQ5genLEEiPspEvdZEJooBzgWRrUnur9eGSdeTTD".parse()?,
+//!       }
+//!   };
+//!
+//!   let response = client.call(request).await?;
+//!
+//!   assert!(matches!(
+//!       response,
+//!       methods::chunk::RpcChunkResponse { .. }
+//!   ));
+//!   # Ok(())
+//!   # }
+//!   ```
 use super::*;
 
 pub use near_jsonrpc_primitives::types::chunks::{RpcChunkError, RpcChunkRequest};
