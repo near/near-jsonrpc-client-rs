@@ -12,17 +12,11 @@
 //!
 //!   # #[tokio::main]
 //!   # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!   let client = JsonRpcClient::connect("https://rpc.testnet.near.org");
-//!
-//!   let block_request = methods::block::RpcBlockRequest {
-//!       block_reference: BlockReference::Finality(Finality::Final),
-//!   };
-//!   let block_response = client.call(block_request).await?;
-//!   let epoch_hash = block_response.header.epoch_id;
+//!   let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
 //!
 //!   let request = methods::validators::RpcValidatorRequest {
 //!       epoch_reference: EpochReference::EpochId(EpochId {
-//!           0: epoch_hash,
+//!           0: "9xrjdZmgjoVkjVE3ui7tY37x9Mkw5wH385qNXE6cho7T".parse()?,
 //!       })
 //!   };
 //!
@@ -44,7 +38,7 @@
 //!
 //!   # #[tokio::main]
 //!   # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!   let client = JsonRpcClient::connect("https://rpc.testnet.near.org");
+//!   let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
 //!
 //!   let request = methods::validators::RpcValidatorRequest {
 //!       epoch_reference: EpochReference::Latest
