@@ -19,6 +19,12 @@ where
     fn method_name(&self) -> &str;
 
     fn params(&self) -> Result<serde_json::Value, io::Error>;
+
+    fn parse_handler_response(
+        response: serde_json::Value,
+    ) -> Result<Result<Self::Response, Self::Error>, serde_json::Error> {
+        Self::Response::parse(response).map(Ok)
+    }
 }
 
 impl<T> private::Sealed for &T where T: private::Sealed {}
