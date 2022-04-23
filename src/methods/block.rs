@@ -1,3 +1,67 @@
+//! Queries data from a specific block on the network.
+//!
+//! Blocks can be referenced using either;
+//! - a [block ID](https://docs.near.org/docs/api/rpc#using-block_id-param) (block height or block hash) for querying historical blocks
+//! - or a [finality specifier](https://docs.near.org/docs/api/rpc#using-finality-param) (“final” or “optimistic”) for latest blocks.
+//!
+//! ## Examples
+//!
+//! - Query historical blocks by using a specific reference (block height or block hash).
+//!
+//!     - `BlockId::Height`
+//!
+//!       ```
+//!       # use near_jsonrpc_client::methods;
+//!       use near_primitives::types::{BlockReference, BlockId};
+//!
+//!       let request = methods::block::RpcBlockRequest {
+//!           block_reference: BlockReference::BlockId(BlockId::Height(83975193))
+//!       };
+//!       ```
+//!
+//!     - `BlockId::Hash`
+//!
+//!       ```
+//!       # use near_jsonrpc_client::methods;
+//!       # fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!       use near_primitives::types::{BlockReference, BlockId};
+//!
+//!       let request = methods::block::RpcBlockRequest {
+//!           block_reference: BlockReference::BlockId(BlockId::Hash(
+//!               "G1SHrwLp55oV3kz94x3ekrR6r4ihNRWdAVZpckgBx4U4".parse()?,
+//!           )),
+//!       };
+//!       # Ok(())
+//!       # }
+//!       ```
+//!
+//! - Query latest blocks.
+//!
+//!     - `Finality::Final`: Get the most recent, completely finalized block.
+//!
+//!       References a block that has been validated on at least 66% of the nodes in the network.
+//!
+//!       ```
+//!       # use near_jsonrpc_client::methods;
+//!       use near_primitives::types::{BlockReference, Finality};
+//!
+//!       let request = methods::block::RpcBlockRequest {
+//!           block_reference: BlockReference::Finality(Finality::Final)
+//!       };
+//!       ```
+//!
+//!     - `Finality::None`: Get the most recently submitted block.
+//!
+//!       Returns the latest block recorded on the node that responded to your query.
+//!
+//!       ```
+//!       # use near_jsonrpc_client::methods;
+//!       use near_primitives::types::{BlockReference, Finality};
+//!
+//!       let request = methods::block::RpcBlockRequest {
+//!           block_reference: BlockReference::Finality(Finality::None)
+//!       };
+//!       ```
 use super::*;
 
 pub use near_jsonrpc_primitives::types::blocks::RpcBlockError;
