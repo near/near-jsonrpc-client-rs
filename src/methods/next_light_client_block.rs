@@ -1,4 +1,4 @@
-//! Returns the next light client block
+//! Returns the next light client block.
 //!
 //! ## Example
 //!
