@@ -16,7 +16,7 @@
 //!     let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
 //!
 //!     let request = methods::gas_price::RpcGasPriceRequest {
-//!         block_id: Some(BlockId::Height(48309771)),
+//!         block_id: Some(BlockId::Height(61512623)),
 //!     };
 //!
 //!     let response = client.call(request).await?;
