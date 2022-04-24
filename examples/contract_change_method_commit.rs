@@ -1,11 +1,9 @@
 use near_jsonrpc_client::{methods, JsonRpcClient};
 use near_jsonrpc_primitives::types::query::QueryResponseKind;
-use near_jsonrpc_primitives::types::transactions::TransactionInfo;
 use near_primitives::transaction::{Action, FunctionCallAction, Transaction};
 use near_primitives::types::BlockReference;
 
 use serde_json::json;
-use tokio::time;
 
 mod utils;
 
@@ -59,28 +57,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         signed_transaction: transaction.sign(&signer),
     };
 
-    let tx_hash = client.call(request).await?.transaction.hash;
+    let response = client.call(request).await?;
 
-    let response = client
-        .call(methods::tx::RpcTransactionStatusRequest {
-            transaction_info: TransactionInfo::TransactionId {
-                hash: tx_hash,
-                account_id: signer.account_id.clone(),
-            },
-        })
-        .await;
-
-    match response {
-        Err(err) => match err.handler_error()? {
-            methods::tx::RpcTransactionError::UnknownTransaction { .. } => {
-                time::sleep(time::Duration::from_secs(2)).await;
-            }
-            err => Err(err)?,
-        },
-        Ok(response) => {
-            println!("response: {:#?}", response);
-        }
-    }
+    println!("response: {:#?}", response);
 
     Ok(())
 }
