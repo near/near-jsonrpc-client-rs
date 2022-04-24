@@ -6,13 +6,11 @@
 //!
 //! ```
 //! use near_jsonrpc_client::{methods, JsonRpcClient};
-//! use near_jsonrpc_primitives::types::{query::QueryResponseKind, transactions};
-//! use near_primitives::types::{AccountId, BlockReference};
+//! use near_primitives::types::{AccountId};
 //! use near_primitives::transaction::{Action, FunctionCallAction, Transaction};
 //! use near_crypto::SecretKey;
 //! use core::str::FromStr;
 //! use serde_json::json;
-//! use tokio::time;
 //!
 //! # #[tokio::main]
 //! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -23,30 +21,15 @@
 //!
 //! let signer = near_crypto::InMemorySigner::from_secret_key(signer_account_id, signer_secret_key);
 //!
-//! let access_key_query_response = client
-//!     .call(methods::query::RpcQueryRequest {
-//!         block_reference: BlockReference::latest(),
-//!         request: near_primitives::views::QueryRequest::ViewAccessKey {
-//!             account_id: signer.account_id.clone(),
-//!             public_key: signer.public_key.clone(),
-//!         },
-//!     })
-//!     .await?;
-//!
-//! let current_nonce = match access_key_query_response.kind {
-//!     QueryResponseKind::AccessKey(access_key) => access_key.nonce,
-//!     _ => Err("failed to extract current nonce")?,
-//!  };
-//!     
 //! let other_account = "rpc_docs.testnet".parse::<AccountId>()?;
 //! let rating = "4.5".parse::<f32>()?;
-//!     
+//!
 //! let transaction = Transaction {
 //!     signer_id: signer.account_id.clone(),
 //!     public_key: signer.public_key.clone(),
-//!     nonce: current_nonce + 1,
+//!     nonce: 10223934 + 1,
 //!     receiver_id: "nosedive.testnet".parse::<AccountId>()?,
-//!     block_hash: access_key_query_response.block_hash,
+//!     block_hash: "AUDcb2iNUbsmCsmYGfGuKzyXKimiNcCZjBKTVsbZGnoH".parse()?,
 //!     actions: vec![Action::FunctionCall(FunctionCallAction {
 //!         method_name: "rate".to_string(),
 //!         args: json!({
@@ -63,41 +46,6 @@
 //! let request = methods::broadcast_tx_async::RpcBroadcastTxAsyncRequest {
 //!     signed_transaction: transaction.sign(&signer)
 //! };
-//!
-//! let sent_at = time::Instant::now();
-//! let tx_hash = client.call(request).await?;
-//!
-//! loop {
-//!     let response = client
-//!         .call(methods::tx::RpcTransactionStatusRequest {
-//!             transaction_info: transactions::TransactionInfo::TransactionId {
-//!                 hash: tx_hash,
-//!                 account_id: signer.account_id.clone(),
-//!             },
-//!         })
-//!     .await;
-//!     let received_at = time::Instant::now();
-//!     let delta = (received_at - sent_at).as_secs();
-//!
-//!     if delta > 60 {
-//!         Err("time limit exceeded for the transaction to be recognized")?;
-//!     }
-//!
-//!     match response {
-//!         Err(err) => match err.handler_error()? {
-//!             methods::tx::RpcTransactionError::UnknownTransaction { .. } => {
-//!                 time::sleep(time::Duration::from_secs(2)).await;
-//!                 continue;
-//!             }
-//!             err => Err(err)?,
-//!         },
-//!         Ok(response) => {
-//!             println!("response gotten after: {}s", delta);
-//!             println!("response: {:#?}", response);
-//!             break;
-//!         }
-//!     }
-//! }
 //! # Ok(())
 //! # }
 //! ```
