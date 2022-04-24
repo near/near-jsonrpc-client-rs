@@ -1,6 +1,12 @@
 //! Sends blocking transactions.
 //!
-//! Sends a signed transaction to the RPC and waits until transaction is fully complete.
+//! Sends a signed transaction to the RPC and waits until the transaction is fully complete.
+//!
+//! Constructs a signed transaction to be sent to an RPC node.
+//!
+//! This code sample doesn't make any requests to the RPC node. It only shows how to construct the request. It's been truncated for brevity.
+//!
+//! A full example on how to use `broadcast_tx_commit` method can be found at [`contract_change_method`](https://github.com/near/near-jsonrpc-client-rs/blob/master/examples/contract_change_method_commit.rs).
 //!
 //! ## Example
 //!
@@ -19,22 +25,6 @@
 //! let signer_secret_key = "ed25519:12dhevYshfiRqFSu8DSfxA27pTkmGRv6C5qQWTJYTcBEoB7MSTyidghi5NWXzWqrxCKgxVx97bpXPYQxYN5dieU".parse()?;
 //!
 //! let signer = near_crypto::InMemorySigner::from_secret_key(signer_account_id, signer_secret_key);
-//! println!("{}, {}", signer.account_id, signer.public_key);
-//!
-//! let access_key_query_response = client
-//!     .call(methods::query::RpcQueryRequest {
-//!         block_reference: BlockReference::latest(),
-//!         request: near_primitives::views::QueryRequest::ViewAccessKey {
-//!             account_id: signer.account_id.clone(),
-//!             public_key: signer.public_key.clone(),
-//!         },
-//!     })
-//!     .await?;
-//!
-//! let current_nonce = match access_key_query_response.kind {
-//!     QueryResponseKind::AccessKey(access_key) => access_key.nonce,
-//!     _ => Err("failed to extract current nonce")?,
-//!  };
 //!     
 //! let other_account = "rpc_docs.testnet".parse::<AccountId>()?;
 //! let rating = "4.5".parse::<f32>()?;
@@ -42,9 +32,9 @@
 //! let transaction = Transaction {
 //!     signer_id: signer.account_id.clone(),
 //!     public_key: signer.public_key.clone(),
-//!     nonce: current_nonce + 1,
+//!     nonce: 904565 + 1,
 //!     receiver_id: "nosedive.testnet".parse::<AccountId>()?,
-//!     block_hash: access_key_query_response.block_hash,
+//!     block_hash: "AUDcb2iNUbsmCsmYGfGuKzyXKimiNcCZjBKTVsbZGnoH".parse()?,
 //!     actions: vec![Action::FunctionCall(FunctionCallAction {
 //!         method_name: "rate".to_string(),
 //!         args: json!({
@@ -61,13 +51,6 @@
 //! let request = methods::broadcast_tx_commit::RpcBroadcastTxCommitRequest {
 //!     signed_transaction: transaction.sign(&signer)
 //! };
-//!
-//! let response = client.call(request).await?;
-//!
-//! assert!(matches!(
-//!     response,
-//!     methods::broadcast_tx_commit::RpcBroadcastTxCommitResponse { .. }
-//! ));
 //! # Ok(())
 //! # }
 //! ```
