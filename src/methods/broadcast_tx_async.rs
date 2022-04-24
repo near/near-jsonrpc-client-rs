@@ -1,8 +1,12 @@
 //! Sends asynchronous transactions.
 //!
-//! Sends a signed transaction to the RPC and returns the transaction hash.
-//!
 //! ## Example
+//!
+//! Constructs a signed transaction to be sent to an RPC node. It returns the transaction hash if successful.
+//!
+//! This code sample doesn't make any requests to the RPC node. It only shows how to construct the request. It's been truncated for brevity sake.
+//!
+//! A full example on how to use `broadcast_tx_async` method can be found at [`contract_change_method`](https://github.com/near/near-jsonrpc-client-rs/blob/master/examples/contract_change_method.rs).
 //!
 //! ```
 //! use near_jsonrpc_client::{methods, JsonRpcClient};
