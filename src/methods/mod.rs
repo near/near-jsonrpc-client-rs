@@ -141,23 +141,6 @@ pub use adversarial::adv_check_store;
 // ======== adversarial ========
 
 /// Converts an RPC Method into JSON.
-///
-/// ## Example
-///
-/// ```
-/// use near_jsonrpc_client::{RpcMethod, methods};
-///
-/// struct RpcResponse {
-///    name: u8
-/// };
-///
-/// struct RpcError {
-///    msg: String
-/// }
-///
-/// let method = methods::any::<Result<RpcResponse, RpcError>>("validators", json!({}))
-/// let method = methods::any::<method::validators::RpcQueryResponse>("validators", json!({}))
-/// ```
 pub fn to_json<M: RpcMethod>(method: &M) -> Result<serde_json::Value, io::Error> {
     let request_payload = near_jsonrpc_primitives::message::Message::request(
         method.method_name().to_string(),
