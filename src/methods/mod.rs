@@ -1,3 +1,4 @@
+//! This module contains all the RPC methods.
 use std::io;
 
 use serde::Deserialize;
@@ -8,6 +9,7 @@ mod private {
     pub trait Sealed {}
 }
 
+/// A trait identifying valid NEAR JSON-RPC methods.
 pub trait RpcMethod: private::Sealed
 where
     Self::Response: RpcHandlerResponse,
@@ -44,12 +46,14 @@ where
     }
 }
 
+/// A trait identifying valid NEAR JSON-RPC method responses.
 pub trait RpcHandlerResponse: serde::de::DeserializeOwned {
     fn parse(value: serde_json::Value) -> Result<Self, serde_json::Error> {
         serde_json::from_value(value)
     }
 }
 
+/// A trait identifying valid NEAR JSON-RPC errors.
 pub trait RpcHandlerError: serde::de::DeserializeOwned {
     /// Parser for the `.error_struct` field in RpcError.
     fn parse(handler_error: serde_json::Value) -> Result<Self, serde_json::Error> {
@@ -136,6 +140,24 @@ pub use adversarial::adv_get_saved_blocks;
 pub use adversarial::adv_check_store;
 // ======== adversarial ========
 
+/// Converts an RPC Method into JSON.
+///
+/// ## Example
+///
+/// ```
+/// use near_jsonrpc_client::{RpcMethod, methods};
+///
+/// struct RpcResponse {
+///    name: u8
+/// };
+///
+/// struct RpcError {
+///    msg: String
+/// }
+///
+/// let method = methods::any::<Result<RpcResponse, RpcError>>("validators", json!({}))
+/// let method = methods::any::<method::validators::RpcQueryResponse>("validators", json!({}))
+/// ```
 pub fn to_json<M: RpcMethod>(method: &M) -> Result<serde_json::Value, io::Error> {
     let request_payload = near_jsonrpc_primitives::message::Message::request(
         method.method_name().to_string(),
