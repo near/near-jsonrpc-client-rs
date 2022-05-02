@@ -1,3 +1,27 @@
+//! Requests the health status of the RPC node.
+//!
+//! ## Example
+//!
+//! Returns the current health stauts of the RPC node the client connects to.
+//!
+//! ```
+//! use near_jsonrpc_client::{methods, JsonRpcClient};
+//!
+//! # #[tokio::main]
+//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! let client = JsonRpcClient::connect("https://rpc.testnet.near.org");
+//!
+//! let request = methods::health::RpcHealthRequest;
+//!
+//! let response = client.call(request).await?;
+//!
+//! assert!(matches!(
+//!     response,
+//!     methods::health::RpcHealthResponse
+//! ));
+//! # Ok(())
+//! # }
+//! ```
 use super::*;
 
 pub use near_jsonrpc_primitives::types::status::{RpcHealthResponse, RpcStatusError};
