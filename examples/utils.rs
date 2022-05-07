@@ -11,7 +11,10 @@ pub fn input(query: &str) -> io::Result<String> {
     Ok(input.trim().to_owned())
 }
 
-fn select<S>(print_msg: fn(), query: &str, chk: fn(&str) -> Option<S>) -> io::Result<S> {
+pub fn select<S, F>(print_msg: fn(), query: &str, chk: F) -> io::Result<S>
+where
+    F: Fn(&str) -> Option<S>,
+{
     loop {
         print_msg();
         for _ in 1..=5 {
