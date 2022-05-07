@@ -7,7 +7,7 @@ pub type RpcGasPriceResponse = near_primitives::views::GasPriceView;
 impl RpcHandlerResponse for RpcGasPriceResponse {}
 
 impl RpcHandlerError for RpcGasPriceError {
-    fn parse_raw_error(value: serde_json::Value) -> Option<Result<Self, serde_json::Error>> {
+    fn parse(value: serde_json::Value) -> Result<Self, serde_json::Error> {
         common::parse_unknown_block!(value => Self)
     }
 }
