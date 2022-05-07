@@ -9,7 +9,7 @@ pub type RpcProtocolConfigResponse = near_chain_configs::ProtocolConfigView;
 impl RpcHandlerResponse for RpcProtocolConfigResponse {}
 
 impl RpcHandlerError for RpcProtocolConfigError {
-    fn parse_raw_error(value: serde_json::Value) -> Option<Result<Self, serde_json::Error>> {
+    fn parse(value: serde_json::Value) -> Result<Self, serde_json::Error> {
         common::parse_unknown_block!(value => Self)
     }
 }
