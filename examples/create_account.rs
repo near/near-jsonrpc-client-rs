@@ -117,11 +117,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     let initial_deposit = loop {
-        let deposit: u128 =
+        let deposit: f64 =
             utils::input("How much do you want to fund this account with (in Ⓝ units)? ")?
                 .parse()?;
-        if deposit >= 1 {
-            break deposit * 1_000_000_000_000_000_000_000_000;
+        if deposit >= 0.0 {
+            break ((deposit * 1_000_000.0) as u128) * 1_000_000_000_000_000_000 as u128;
         }
         println!("(i) Enter a non-zero deposit value!");
     };
@@ -182,6 +182,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("New Account ID: {}", new_account_id);
     println!("    Secret Key: {}", new_key_pair);
     println!("    Public Key: {}", new_key_pair.public_key());
+    println!("       Deposit: {}", initial_deposit);
     println!("-------------------------------------------------------------");
 
     let request = methods::broadcast_tx_async::RpcBroadcastTxAsyncRequest {
