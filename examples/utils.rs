@@ -36,7 +36,7 @@ pub fn select_network() -> io::Result<JsonRpcClient> {
         |selection| match (selection, selection.parse()) {
             ("m" | "main" | "mainnet", _) | (_, Ok(1)) => Some("mainnet"),
             ("t" | "test" | "testnet", _) | (_, Ok(2)) => Some("testnet"),
-            ("c" | "custom", _) | (_, Ok(2)) => Some("custom"),
+            ("c" | "custom", _) | (_, Ok(3)) => Some("custom"),
             _ => None,
         },
     )?;
