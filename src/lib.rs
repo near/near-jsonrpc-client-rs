@@ -115,8 +115,6 @@ use std::{fmt, sync::Arc};
 
 use lazy_static::lazy_static;
 
-use near_jsonrpc_primitives::message::{from_slice, Message};
-
 #[cfg(feature = "auth")]
 pub mod auth;
 pub mod errors;
@@ -250,13 +248,18 @@ impl JsonRpcClient {
                 JsonRpcTransportRecvError::PayloadRecvError(err),
             ))
         })?;
-        let response_message = from_slice(&response_payload).map_err(|err| {
+        let response_payload = serde_json::from_slice::<serde_json::Value>(&response_payload);
+
+        let response_message = near_jsonrpc_primitives::message::decoded_to_parsed(
+            response_payload.and_then(serde_json::from_value),
+        )
+        .map_err(|err| {
             JsonRpcError::TransportError(RpcTransportError::RecvError(
                 JsonRpcTransportRecvError::PayloadParseError(err),
             ))
         })?;
 
-        if let Message::Response(response) = response_message {
+        if let near_jsonrpc_primitives::message::Message::Response(response) = response_message {
             return M::parse_handler_response(response.result?)
                 .map_err(|err| {
                     JsonRpcError::TransportError(RpcTransportError::RecvError(
