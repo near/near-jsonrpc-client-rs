@@ -17,6 +17,8 @@ fn indent(indentation: usize, s: String) -> String {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    env_logger::init();
+
     let client = utils::select_network()?;
 
     let account_id = utils::input("Enter the Account ID whose keys we're listing: ")?.parse()?;

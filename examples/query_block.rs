@@ -59,6 +59,8 @@ pub fn specify_block_reference() -> std::io::Result<near_primitives::types::Bloc
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    env_logger::init();
+
     let client = utils::select_network()?;
 
     // tolerate only 3 retries

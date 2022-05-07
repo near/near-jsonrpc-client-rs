@@ -15,6 +15,7 @@ rust-version = "1.56.0"
 version = "0.3.0"
 
 [dependencies]
+log = "0.4.17"
 uuid = { version = "0.8", features = ["v4"], optional = true }
 borsh = "0.9"
 serde = "1.0.127"
@@ -30,6 +31,7 @@ near-jsonrpc-primitives = "0.12.0"
 
 [dev-dependencies]
 tokio = { version = "1.1", features = ["rt", "macros"] }
+env_logger = "0.9.0"
 
 [features]
 default = ["auth"]

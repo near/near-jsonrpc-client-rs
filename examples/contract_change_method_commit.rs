@@ -9,6 +9,8 @@ mod utils;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    env_logger::init();
+
     let client = JsonRpcClient::connect("https://rpc.testnet.near.org");
 
     let signer_account_id = utils::input("Enter the signer Account ID: ")?.parse()?;

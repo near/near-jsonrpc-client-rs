@@ -141,6 +141,8 @@ pub struct JsonRpcClientConnector {
 impl JsonRpcClientConnector {
     /// Return a JsonRpcClient that connects to the specified server.
     pub fn connect<U: AsUrl>(&self, server_addr: U) -> JsonRpcClient {
+        log::info!("returned a new JSONRPC client handle");
+
         JsonRpcClient {
             inner: Arc::new(JsonRpcInnerClient {
                 server_addr: server_addr.to_string(),
@@ -207,6 +209,8 @@ impl JsonRpcClient {
             ))
         })?;
 
+        log::info!("request payload: {:#}", request_payload);
+
         let request_payload = serde_json::to_vec(&request_payload).map_err(|err| {
             JsonRpcError::TransportError(RpcTransportError::SendError(
                 JsonRpcTransportSendError::PayloadSerializeError(err.into()),
@@ -249,6 +253,10 @@ impl JsonRpcClient {
             ))
         })?;
         let response_payload = serde_json::from_slice::<serde_json::Value>(&response_payload);
+
+        if let Ok(ref response_payload) = response_payload {
+            log::info!("response payload: {:#}", response_payload);
+        }
 
         let response_message = near_jsonrpc_primitives::message::decoded_to_parsed(
             response_payload.and_then(serde_json::from_value),
@@ -342,6 +350,7 @@ impl JsonRpcClient {
             reqwest::header::HeaderValue::from_static("application/json"),
         );
 
+        log::info!("initialized a new JSONRPC client connector");
         JsonRpcClientConnector {
             client: reqwest::Client::builder()
                 .default_headers(headers)
