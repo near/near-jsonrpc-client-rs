@@ -73,15 +73,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         {
             Ok(block_details) => println!("{:#?}", block_details),
             Err(err) => match err.handler_error() {
-                Ok(methods::block::RpcBlockError::UnknownBlock { .. }) => {
+                Some(methods::block::RpcBlockError::UnknownBlock { .. }) => {
                     println!("(i) Unknown block!");
                     continue;
                 }
-                Ok(err) => {
+                Some(err) => {
                     println!("(i) An error occurred `{:#?}`", err);
                     continue;
                 }
-                Err(err) => println!("(i) A non-handler error ocurred `{:#?}`", err),
+                _ => println!("(i) A non-handler error ocurred `{:#?}`", err),
             },
         };
         break;

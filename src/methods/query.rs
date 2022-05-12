@@ -106,17 +106,20 @@ mod tests {
             },
         };
 
-        let response = client.call(request).await.unwrap_err();
+        let response_err = client.call(request).await.unwrap_err();
 
-        let err = response.handler_error()?;
-        assert!(matches!(
-            err,
-            RpcQueryError::UnknownAccessKey {
-                ref public_key,
-                block_height: 63503911,
-                ..
-            } if public_key.to_string() == "ed25519:9KnjTjL6vVoM8heHvCcTgLZ67FwFkiLsNtknFAVsVvYY"
-        ),);
+        assert!(
+            matches!(
+                response_err.handler_error(),
+                Some(RpcQueryError::UnknownAccessKey {
+                    ref public_key,
+                    block_height: 63503911,
+                    ..
+                }) if public_key.to_string() == "ed25519:9KnjTjL6vVoM8heHvCcTgLZ67FwFkiLsNtknFAVsVvYY"
+            ),
+            "{:#?}",
+            response_err
+        );
 
         Ok(())
     }
@@ -137,20 +140,19 @@ mod tests {
             },
         };
 
-        let response = client.call(request).await.unwrap_err();
+        let response_err = client.call(request).await.unwrap_err();
 
-        let err = response.handler_error()?;
         assert!(
             matches!(
-                err,
-                RpcQueryError::ContractExecutionError {
+                response_err.handler_error(),
+                Some(RpcQueryError::ContractExecutionError {
                     ref vm_error,
                     block_height: 63503911,
                     ..
-                } if vm_error.contains("FunctionCallError(MethodResolveError(MethodEmptyName))")
+                }) if vm_error.contains("FunctionCallError(MethodResolveError(MethodEmptyName))")
             ),
-            "{:?}",
-            err
+            "{:#?}",
+            response_err
         );
 
         Ok(())

@@ -238,13 +238,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 println!("(!) Creating the account failed, check above for full logs");
                 break;
             }
-            Err(err) => match err.handler_error()? {
-                RpcTransactionError::TimeoutError
-                | methods::tx::RpcTransactionError::UnknownTransaction { .. } => {
+            Err(err) => match err.handler_error() {
+                Some(
+                    RpcTransactionError::TimeoutError
+                    | methods::tx::RpcTransactionError::UnknownTransaction { .. },
+                ) => {
                     time::sleep(time::Duration::from_secs(2)).await;
                     continue;
                 }
-                err => Err(err)?,
+                _ => Err(err)?,
             },
             _ => {}
         }
