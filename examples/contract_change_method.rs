@@ -81,12 +81,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
 
         match response {
-            Err(err) => match err.handler_error()? {
-                methods::tx::RpcTransactionError::UnknownTransaction { .. } => {
+            Err(err) => match err.handler_error() {
+                Some(methods::tx::RpcTransactionError::UnknownTransaction { .. }) => {
                     time::sleep(time::Duration::from_secs(2)).await;
                     continue;
                 }
-                err => Err(err)?,
+                _ => Err(err)?,
             },
             Ok(response) => {
                 println!("response gotten after: {}s", delta);

@@ -477,16 +477,15 @@ mod tests {
                 ]),
             ))
             .await
-            .expect_err("request must not succeed")
-            .handler_error();
+            .expect_err("request must not succeed");
 
         assert!(
             matches!(
-                tx_error,
-                Ok(methods::tx::RpcTransactionError::UnknownTransaction {
+                tx_error.handler_error(),
+                Some(methods::tx::RpcTransactionError::UnknownTransaction {
                     requested_transaction_hash
                 })
-                if requested_transaction_hash == "9FtHUFBQsZ2MG77K3x3MJ9wjX3UT8zE1TczCrhZEcG8D".parse()?
+                if requested_transaction_hash.to_string() == "9FtHUFBQsZ2MG77K3x3MJ9wjX3UT8zE1TczCrhZEcG8D"
             ),
             "expected an Ok(RpcTransactionError::UnknownTransaction) with matching hash, found [{:?}]",
             tx_error
@@ -541,7 +540,8 @@ mod tests {
                 ),
             )
             .await
-            .expect_err("request must not succeed")
+            .expect_err("request must not succeed");
+        let tx_error = tx_error
             .handler_error()
             .expect("expected a handler error from query request");
 
