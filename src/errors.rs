@@ -74,11 +74,11 @@ pub enum JsonRpcError<E> {
 }
 
 impl<E> JsonRpcError<E> {
-    pub fn handler_error(self) -> Result<E, Self> {
-        match self {
-            Self::ServerError(JsonRpcServerError::HandlerError(err)) => Ok(err),
-            err => Err(err),
+    pub fn handler_error(&self) -> Option<&E> {
+        if let Self::ServerError(JsonRpcServerError::HandlerError(err)) = self {
+            return Some(err);
         }
+        None
     }
 }
 
