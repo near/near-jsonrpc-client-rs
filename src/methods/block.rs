@@ -23,7 +23,7 @@
 //!
 //!       ```
 //!       # use near_jsonrpc_client::methods;
-//!       # fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!       # fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 //!       use near_primitives::types::{BlockReference, BlockId};
 //!
 //!       let request = methods::block::RpcBlockRequest {

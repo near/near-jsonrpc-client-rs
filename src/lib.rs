@@ -40,7 +40,7 @@
 //!    use near_jsonrpc_primitives::types::transactions::TransactionInfo;
 //!
 //!    # #[tokio::main]
-//!    # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!    # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 //!    let mainnet_client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
 //!
 //!    let tx_status_request = methods::tx::RpcTransactionStatusRequest {
@@ -419,11 +419,9 @@ impl AsUrl for reqwest::Url {}
 mod tests {
     use crate::{methods, JsonRpcClient};
 
-    const RPC_SERVER_ADDR: &'static str = "https://archival-rpc.mainnet.near.org";
-
     #[tokio::test]
     async fn chk_status_testnet() {
-        let client = JsonRpcClient::connect(RPC_SERVER_ADDR);
+        let client = JsonRpcClient::connect("https://rpc.testnet.near.org");
 
         let status = client.call(methods::status::RpcStatusRequest).await;
 
@@ -436,8 +434,8 @@ mod tests {
 
     #[tokio::test]
     #[cfg(feature = "any")]
-    async fn any_typed_ok() -> Result<(), Box<dyn std::error::Error>> {
-        let client = JsonRpcClient::connect(RPC_SERVER_ADDR);
+    async fn any_typed_ok() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
 
         let tx_status = client
             .call(methods::any::<methods::tx::RpcTransactionStatusRequest>(
@@ -466,7 +464,7 @@ mod tests {
     #[tokio::test]
     #[cfg(feature = "any")]
     async fn any_typed_err() -> Result<(), Box<dyn std::error::Error>> {
-        let client = JsonRpcClient::connect(RPC_SERVER_ADDR);
+        let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
 
         let tx_error = client
             .call(methods::any::<methods::tx::RpcTransactionStatusRequest>(
@@ -497,7 +495,7 @@ mod tests {
     #[tokio::test]
     #[cfg(feature = "any")]
     async fn any_untyped_ok() {
-        let client = JsonRpcClient::connect(RPC_SERVER_ADDR);
+        let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
 
         let status = client
             .call(
@@ -527,7 +525,7 @@ mod tests {
     #[tokio::test]
     #[cfg(feature = "any")]
     async fn any_untyped_err() {
-        let client = JsonRpcClient::connect(RPC_SERVER_ADDR);
+        let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
 
         let tx_error = client
             .call(
