@@ -222,7 +222,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 },
             ) => {
                 // outcome.status != SuccessValue(`false`)
-                if near_primitives::serialize::from_base64(s)? != b"false" {
+                if near_primitives::serialize::from_base64(s).unwrap() == b"false" {
                     println!("(i) Account successfully created after {}s", delta);
                 } else {
                     println!("{:#?}", outcome);

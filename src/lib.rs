@@ -436,7 +436,7 @@ mod tests {
 
     #[tokio::test]
     #[cfg(feature = "any")]
-    async fn any_typed_ok() -> Result<(), Box<dyn std::error::Error>> {
+    async fn any_typed_ok() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let client = JsonRpcClient::connect(RPC_SERVER_ADDR);
 
         let tx_status = client
