@@ -81,6 +81,17 @@ let partial_genesis = mainnet_client.call(genesis_config_request).await?;
 println!("{:#?}", partial_genesis);
 ```
 
+By default, `near-jsonrpc-client` uses `native-tls`. On Linux, this introduces a dependency on the system `openssl` library. In some situations, for example when cross-compiling, it can be problematic to depend on non-Rust libraries.
+
+If you wish to switch to an all-Rust TLS implementation, you may do so using the `rustls-tls` feature flag. Note that the `native-tls` feature is enabled by default. Therefore, to disable it and use `rustls-tls` instead, you must also use `default-features = false`. The default `auth` feature must then be declared explicitly.
+
+
+```toml
+# in Cargo.toml
+near-jsonrpc-client = { ..., default-features = false, features = ["auth","rustls-tls"] }
+```
+
+
 ## Releasing
 
 Versioning and releasing of this crate is automated and managed by [custom fork](https://github.com/miraclx/cargo-workspaces/tree/grouping-versioning-and-exclusion) of [`cargo-workspaces`](https://github.com/pksunkara/cargo-workspaces). To publish a new version of this crate, you can do so by bumping the `version` under the `[workspace.metadata.workspaces]` section in the [package manifest](https://github.com/near/near-jsonrpc-client-rs/blob/master/Cargo.toml) and submit a PR.
