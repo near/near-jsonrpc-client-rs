@@ -7,13 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.4.0.beta.1] - 2022-10-03
+## [0.4.0] - 2022-10-03
 
-- Updated nearcore dependencies, which now requires a MSRV of `1.64.0`. <https://github.com/near/near-jsonrpc-client-rs/pull/110>
+- Updated nearcore dependencies, which now requires a MSRV of `1.64.0`. <https://github.com/near/near-jsonrpc-client-rs/pull/100>, <https://github.com/near/near-jsonrpc-client-rs/pull/110>
 - Added `rustls-tls` feature flag to enable `rustls` as an alternative to `native-tls`. <https://github.com/near/near-jsonrpc-client-rs/pull/103>
 - Switched to using `log::debug!` instead of `log::info!` for debug logging. <https://github.com/near/near-jsonrpc-client-rs/pull/107>
+- Fixed `gas_price` RPC method serialization. <https://github.com/near/near-jsonrpc-client-rs/pull/73>
+- Fixed `query` method error deserialization. <https://github.com/near/near-jsonrpc-client-rs/pull/82>
+- Reworked the `JsonRpcError`::`handler_error` method. <https://github.com/near/near-jsonrpc-client-rs/pull/99>
+- Moved auth specific logic behind a feature flag. <https://github.com/near/near-jsonrpc-client-rs/pull/55>
+- Added the `methods::to_json()` helper method for visualizing the serialization of the RPC methods. <https://github.com/near/near-jsonrpc-client-rs/pull/49>
 
-## [0.4.0.beta.0] - 2022-05-31
+## [0.4.0-beta.0] - 2022-05-31
 
 - Updated nearcore dependencies, fixing a previous breaking change. <https://github.com/near/near-jsonrpc-client-rs/pull/100>
 - Fixed `gas_price` RPC method serialization. <https://github.com/near/near-jsonrpc-client-rs/pull/73>
@@ -45,7 +50,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > Release Page: <https://github.com/near/near-jsonrpc-client-rs/releases/tag/v0.1.0>
 
-[unreleased]: https://github.com/near/near-jsonrpc-client-rs/compare/v0.3.0...HEAD
+[unreleased]: https://github.com/near/near-jsonrpc-client-rs/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/near/near-jsonrpc-client-rs/compare/v0.4.0-beta.0...v0.4.0
+[0.4.0-beta.0]: https://github.com/near/near-jsonrpc-client-rs/compare/v0.3.0...v0.4.0-beta.0
 [0.3.0]: https://github.com/near/near-jsonrpc-client-rs/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/near/near-jsonrpc-client-rs/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/near/near-jsonrpc-client-rs/releases/tag/v0.1.0
