@@ -7,7 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Updated nearcore dependencies, which now requires a MSRV of `1.64.0`. <https://github.com/near/nearcore/pull/7248>
+- Updated nearcore dependencies, which now requires a MSRV of `1.64.0`. <https://github.com/near/near-jsonrpc-client-rs/pull/110>
+- Updated other dependencies, with some general improvements. <https://github.com/near/near-jsonrpc-client-rs/pull/111>
 
 ## [0.4.0] - 2022-04-31
 
