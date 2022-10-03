@@ -49,7 +49,7 @@ use serde::Deserialize;
 use serde_json::json;
 
 use near_jsonrpc_client::{methods, JsonRpcClient};
-use near_primitives::serialize::u128_dec_format;
+use near_primitives::serialize::dec_format;
 use near_primitives::types::*;
 
 #[derive(Debug, Deserialize)]
@@ -58,11 +58,11 @@ struct PartialGenesisConfig {
     chain_id: String,
     genesis_height: BlockHeight,
     epoch_length: BlockHeightDelta,
-    #[serde(with = "u128_dec_format")]
+    #[serde(with = "dec_format")]
     min_gas_price: Balance,
-    #[serde(with = "u128_dec_format")]
+    #[serde(with = "dec_format")]
     max_gas_price: Balance,
-    #[serde(with = "u128_dec_format")]
+    #[serde(with = "dec_format")]
     total_supply: Balance,
     validators: Vec<AccountInfo>,
 }
