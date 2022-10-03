@@ -5,3 +5,6 @@ Cargo.lock
 # IDEs
 .idea
 .vscode
+
+# macOS
+.DS_Store
