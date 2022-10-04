@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.4.0] - 2022-10-03
 
 - Updated nearcore dependencies, which now requires a MSRV of `1.64.0`. <https://github.com/near/near-jsonrpc-client-rs/pull/100>, <https://github.com/near/near-jsonrpc-client-rs/pull/110>
+- Updated other dependencies, with some general improvements. <https://github.com/near/near-jsonrpc-client-rs/pull/111>
 - Added `rustls-tls` feature flag to enable `rustls` as an alternative to `native-tls`. <https://github.com/near/near-jsonrpc-client-rs/pull/103>
 - Switched to using `log::debug!` instead of `log::info!` for debug logging. <https://github.com/near/near-jsonrpc-client-rs/pull/107>
 - Fixed `gas_price` RPC method serialization. <https://github.com/near/near-jsonrpc-client-rs/pull/73>
