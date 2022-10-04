@@ -21,12 +21,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.4.0-beta.0] - 2022-05-31
 
-- Updated nearcore dependencies, fixing a previous breaking change. <https://github.com/near/near-jsonrpc-client-rs/pull/100>
-- Fixed `gas_price` RPC method serialization. <https://github.com/near/near-jsonrpc-client-rs/pull/73>
-- Fixed `query` method error deserialization. <https://github.com/near/near-jsonrpc-client-rs/pull/82>
-- Reworked the `JsonRpcError`::`handler_error` method. <https://github.com/near/near-jsonrpc-client-rs/pull/99>
-- Moved auth specific logic behind a feature flag. <https://github.com/near/near-jsonrpc-client-rs/pull/55>
-- Added the `methods::to_json()` helper method for visualizing the serialization of the RPC methods. <https://github.com/near/near-jsonrpc-client-rs/pull/49>
+<details>
+<summary>
+  <em>
+    Superceded by <a href="#040---2022-10-04">
+      <code> 0.4.0 </code>
+    </a>
+  </em>
+</summary>
+
+> - Updated nearcore dependencies, fixing a previous breaking change. <https://github.com/near/near-jsonrpc-client-rs/pull/100>
+> - Fixed `gas_price` RPC method serialization. <https://github.com/near/near-jsonrpc-client-rs/pull/73>
+> - Fixed `query` method error deserialization. <https://github.com/near/near-jsonrpc-client-rs/pull/82>
+> - Reworked the `JsonRpcError`::`handler_error` method. <https://github.com/near/near-jsonrpc-client-rs/pull/99>
+> - Moved auth specific logic behind a feature flag. <https://github.com/near/near-jsonrpc-client-rs/pull/55>
+> - Added the `methods::to_json()` helper method for visualizing the serialization of the RPC methods. <https://github.com/near/near-jsonrpc-client-rs/pull/49>
+
+</details>
 
 ## [0.3.0] - 2022-02-09
 
