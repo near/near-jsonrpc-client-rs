@@ -113,15 +113,24 @@ jobs:
             -f tag_name='${{ env.GIT_LATEST_TAG }}' \
             -q .body \
         )"
+        echo "Default Release Note"
+        echo "$DEFAULT_RELEASE_NOTE"
+        echo
         CONTRIBUTORS="$(
           <<< "$DEFAULT_RELEASE_NOTE" \
           perl -ne 'print if s/.+ by (@[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}) in https.+$/\1/i' \
           | sort -u \
         )"
+        echo "Contributors"
+        echo "$CONTRIBUTORS"
+        echo
         PRETTY_CONTRIBUTOR_LIST="$(
           xargs <<< "$CONTRIBUTORS" \
           | sed 's/ /, /g;s/\(.*\), \(.*\)$/\1 and \2/' \
         )"
+        echo "Prettified Contributors"
+        echo "$PRETTY_CONTRIBUTOR_LIST"
+        echo
         echo "::set-output name=contributors::$PRETTY_CONTRIBUTOR_LIST"
 
     - name: Create release
