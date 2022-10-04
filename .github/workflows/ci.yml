@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [ master ]
+    branches:
   pull_request:
     branches: [ master ]
 
@@ -102,6 +102,28 @@ jobs:
       id: extract-release-notes
       uses: ffurrer2/extract-release-notes@c24866884b7a0d2fd2095be2e406b6f260479da8
 
+    - name: Get Contributors
+      id: get-contributors
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        DEFAULT_RELEASE_NOTE="$(
+          gh api \
+            /repos/${{ github.repository }}/releases/generate-notes \
+            -f tag_name='${{ env.GIT_LATEST_TAG }}' \
+            -q .body \
+        )"
+        CONTRIBUTORS="$(
+          <<< "$DEFAULT_RELEASE_NOTE" \
+          perl -ne 'print if s/.+ by (@[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}) in https.+$/\1/i' \
+          | sort -u \
+        )"
+        PRETTY_CONTRIBUTOR_LIST="$(
+          xargs <<< "$CONTRIBUTORS" \
+          | sed 's/ /, /g;s/\(.*\), \(.*\)$/\1 and \2/' \
+        )"
+        echo "::set-output name=contributors::$PRETTY_CONTRIBUTOR_LIST"
+
     - name: Create release
       if: steps.tag-and-publish.outputs.tagged == 1
       uses: actions/create-release@v1
@@ -118,3 +140,6 @@ jobs:
           **Crate Link**: ${{ steps.tag-and-publish.outputs.git_tag_message }}
 
           **Full Changelog**: https://github.com/${{ github.repository }}/compare/${{ env.GIT_PREVIOUS_TAG }}...${{ env.GIT_LATEST_TAG }}
+          <sup>
+          🎉  Thanks to ${{ steps.get-contributors.outputs.contributors }} for their contributions to this release. 🎉
+          </sup>
