@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <details>
 <summary>
   <em>
-    Superceded by <a href="#040---2022-10-04">
+    Superseded by <a href="#040---2022-10-04">
       <code> 0.4.0 </code>
     </a>
   </em>
