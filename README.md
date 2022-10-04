@@ -2,10 +2,10 @@
 
 Lower-level API for interfacing with the NEAR Protocol via JSONRPC.
 
-[![crates.io](https://img.shields.io/crates/v/near-jsonrpc-client?label=latest)](https://crates.io/crates/near-jsonrpc-client)
+[![Crates.io](https://img.shields.io/crates/v/near-jsonrpc-client?label=latest)](https://crates.io/crates/near-jsonrpc-client)
 [![Documentation](https://docs.rs/near-jsonrpc-client/badge.svg)](https://docs.rs/near-jsonrpc-client)
-![MIT or Apache 2.0 licensed](https://img.shields.io/crates/l/near-jsonrpc-client.svg)
-[![Dependency Status](https://deps.rs/crate/near-jsonrpc-client/0.3.0/status.svg)](https://deps.rs/crate/near-jsonrpc-client/0.3.0)
+[![MIT or Apache 2.0 Licensed](https://img.shields.io/crates/l/near-jsonrpc-client.svg)](#license)
+[![Dependency Status](https://deps.rs/crate/near-jsonrpc-client/0.4.0/status.svg)](https://deps.rs/crate/near-jsonrpc-client/0.4.0)
 
 ## Usage
 
@@ -85,12 +85,10 @@ By default, `near-jsonrpc-client` uses `native-tls`. On Linux, this introduces a
 
 If you wish to switch to an all-Rust TLS implementation, you may do so using the `rustls-tls` feature flag. Note that the `native-tls` feature is enabled by default. Therefore, to disable it and use `rustls-tls` instead, you must also use `default-features = false`. The default `auth` feature must then be declared explicitly.
 
-
 ```toml
 # in Cargo.toml
 near-jsonrpc-client = { ..., default-features = false, features = ["auth","rustls-tls"] }
 ```
-
 
 ## Releasing
 
