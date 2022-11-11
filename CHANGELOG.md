@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Fixed an issue where an `&RpcMethod`'s response was being parsed differently from an `RpcMethod`. <https://github.com/near/near-jsonrpc-client-rs/pull/114>
+
 ## [0.4.0] - 2022-10-04
 
 - Updated nearcore dependencies, which now requires a MSRV of `1.64.0`. <https://github.com/near/near-jsonrpc-client-rs/pull/100>, <https://github.com/near/near-jsonrpc-client-rs/pull/110>
