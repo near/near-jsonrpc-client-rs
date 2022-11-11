@@ -42,6 +42,12 @@ where
     fn params(&self) -> Result<serde_json::Value, io::Error> {
         T::params(self)
     }
+
+    fn parse_handler_response(
+        response: serde_json::Value,
+    ) -> Result<Result<Self::Response, Self::Error>, serde_json::Error> {
+        T::parse_handler_response(response)
+    }
 }
 
 pub trait RpcHandlerResponse: serde::de::DeserializeOwned {
