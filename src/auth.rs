@@ -1,4 +1,4 @@
-use std::fmt;
+use std::{fmt, str};
 
 use reqwest::header::HeaderValue;
 
@@ -11,7 +11,7 @@ impl ApiKey {
 
     /// Creates a new API key from a string.
     pub fn new<K: IntoApiKey>(api_key: K) -> Result<Self, InvalidApiKey> {
-        if let Ok(api_key) = uuid::Uuid::parse_str(api_key.as_ref()) {
+        if let Ok(api_key) = uuid::Uuid::try_parse(api_key.as_ref()) {
             if let Ok(api_key) = api_key.to_string().try_into() {
                 return Ok(ApiKey(api_key));
             }
@@ -21,9 +21,8 @@ impl ApiKey {
 
     /// Returns the API key as a string slice.
     pub fn as_str(&self) -> &str {
-        self.0
-            .to_str()
-            .expect("fatal: api key should contain only ascii characters")
+        // SAFETY: `HeaderValue` is guaranteed to be a valid UTF-8 string.
+        unsafe { str::from_utf8_unchecked(self.0.as_bytes()) }
     }
 }
 
@@ -40,12 +39,6 @@ impl crate::header::HeaderEntry for ApiKey {
     }
 }
 
-impl fmt::Display for ApiKey {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "x-api-key: {}", self.as_str())
-    }
-}
-
 /// An error returned when an API key contains invalid characters.
 #[derive(Eq, Clone, PartialEq)]
 pub struct InvalidApiKey {
@@ -54,14 +47,14 @@ pub struct InvalidApiKey {
 
 impl fmt::Debug for InvalidApiKey {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str("InvalidApiKey")
+        f.pad("InvalidApiKey")
     }
 }
 
 impl std::error::Error for InvalidApiKey {}
 impl fmt::Display for InvalidApiKey {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Invalid API key")
+        f.pad("Invalid API key")
     }
 }
 
@@ -89,7 +82,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn api_key() {
+    fn construct() {
         ApiKey::new("some-value").expect_err("should not have been a valid API key");
 
         ApiKey::new("0ee1872b-355f-4254-8e2b-1c0b8199ee92")
@@ -102,21 +95,15 @@ mod tests {
     }
 
     #[test]
-    fn display() {
+    fn as_str() {
         let api_key = ApiKey::new("0ee1872b-355f-4254-8e2b-1c0b8199ee92")
             .expect("should have been a valid API key");
 
-        assert_eq!(
-            api_key.to_string(),
-            "x-api-key: 0ee1872b-355f-4254-8e2b-1c0b8199ee92"
-        );
+        assert_eq!(api_key.as_str(), "0ee1872b-355f-4254-8e2b-1c0b8199ee92");
 
         let api_key = ApiKey::new("0ee1872b355f42548e2b1c0b8199ee92")
             .expect("should have been a valid API key");
 
-        assert_eq!(
-            api_key.to_string(),
-            "x-api-key: 0ee1872b-355f-4254-8e2b-1c0b8199ee92"
-        );
+        assert_eq!(api_key.as_str(), "0ee1872b-355f-4254-8e2b-1c0b8199ee92");
     }
 }
