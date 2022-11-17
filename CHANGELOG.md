@@ -9,20 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `ApiKey::as_bytes` returns a byte slice of the key without utf-8 validation. <https://github.com/near/near-jsonrpc-client-rs/pull/119>
 - `ApiKey::new` now accepts byte arrays and byte slices. <https://github.com/near/near-jsonrpc-client-rs/pull/119>
+- `ApiKey::as_bytes` returns a byte slice of the key without utf-8 validation. <https://github.com/near/near-jsonrpc-client-rs/pull/119>
 
 ### Changed
 
-- The `auth` module is no longer feature gated. <https://github.com/near/near-jsonrpc-client-rs/pull/119>
 - `ApiKey::new` no longer requres the input of a valid UUID. <https://github.com/near/near-jsonrpc-client-rs/pull/119>
+- The `auth` module is no longer feature gated. <https://github.com/near/near-jsonrpc-client-rs/pull/119>
 
 ### Breaking
 
 - Replaced the `auth::IntoApiKey` trait with `header::IntoHeaderValue`. <https://github.com/near/near-jsonrpc-client-rs/pull/119>
 - Replaced the `ApiKey::as_str` method with `ApiKey::to_str`, now returning a `Result`. <https://github.com/near/near-jsonrpc-client-rs/pull/119>
-- Removed `Display` on `ApiKey`. <https://github.com/near/near-jsonrpc-client-rs/pull/117>
 - Replaced the `InvalidApiKey` error with `InvalidHeaderValue` re-exported from `http`. <https://github.com/near/near-jsonrpc-client-rs/pull/119>
+- Removed `Display` on `ApiKey`. <https://github.com/near/near-jsonrpc-client-rs/pull/117>
 
 ## [0.4.1] - 2022-11-11
 
