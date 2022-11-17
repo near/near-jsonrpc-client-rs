@@ -14,11 +14,15 @@ async fn unauthorized() -> Result<(), Box<dyn std::error::Error>> {
         block_reference: BlockReference::Finality(Finality::Final),
     };
 
-    if let Err(err) = client.call(request).await {
-        eprintln!("\x1b[33mThe unauthorized request failed as expected.\x1b[0m");
-        eprintln!("Error: {:#?}", err);
-    } else {
-        panic!("The unauthorized request succeeded unexpectedly.");
+    match client.call(request).await {
+        Ok(_) => panic!("The unauthorized request succeeded unexpectedly."),
+        Err(ServerError(ResponseStatusError(Unauthorized))) => {
+            eprintln!("\x1b[33mThe unauthorized request failed as expected.\x1b[0m");
+        }
+        Err(error) => {
+            eprintln!("\x1b[31mThe unauthorized request failed with an unexpected error.\x1b[0m");
+            eprintln!("Error: {:#?}", error);
+        }
     }
 
     Ok(())
@@ -36,9 +40,8 @@ async fn authorized(api_key: &str) -> Result<(), Box<dyn std::error::Error>> {
         Ok(block) => println!("{:#?}", block),
         Err(error) => {
             eprintln!(
-                "\x1b[33mThe authorized request failed unexpectedly, is the API key valid?\x1b[0m"
+                "\x1b[31mThe authorized request failed unexpectedly, is the API key valid?\x1b[0m"
             );
-
             match error {
                 ServerError(ResponseStatusError(Unauthorized)) => {
                     println!("Unauthorized: {}", error)
