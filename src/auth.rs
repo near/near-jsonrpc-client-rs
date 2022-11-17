@@ -1,3 +1,34 @@
+//! Client Authentication.
+//!
+//! Some RPC nodes will require authentication before requests can be sent to them.
+//!
+//! This is done by adding your api key to the request as a [`header`](crate::JsonRpcClient::header).
+//!
+//! ## Example
+//!
+//! ```
+//! use near_jsonrpc_client::{JsonRpcClient, auth, methods};
+//! use near_primitives::types::{BlockReference, Finality};
+//!
+//! # #[tokio::main]
+//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! let client = JsonRpcClient::connect("https://rpc.testnet.near.org")
+//!     .header(auth::ApiKey::new("399ba741-e939-4ffa-8c3c-306ec36fa8de")?);
+//!
+//! let request = methods::block::RpcBlockRequest {
+//!     block_reference: BlockReference::Finality(Finality::Final),
+//! };
+//!
+//! let response = client.call(request).await?;
+//!
+//! assert!(matches!(
+//!     response,
+//!     methods::block::RpcBlockResponse { .. }
+//! ));
+//! # Ok(())
+//! # }
+//! ```
+
 use super::header::{HeaderValue, InvalidHeaderValue, ToStrError};
 
 /// NEAR JSON RPC API key.
