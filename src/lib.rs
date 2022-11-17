@@ -9,7 +9,7 @@
 //!   - a `Response` type (e.g [`methods::query::RpcQueryResponse`])
 //!   - and an `Error` type (e.g [`methods::query::RpcQueryError`])
 //!
-//! Calling a constructed request on a client returns with the result and error types for that method.
+//! Calling a constructed request on a client returns with the response and error types for that method.
 //!
 //! ## Examples
 //!
@@ -299,10 +299,8 @@ impl JsonRpcClient {
     /// let client = JsonRpcClient::connect("https://rpc.testnet.near.org");
     /// let client = client.header(("user-agent", "someclient/0.1.0"))?; // <- returns a result
     ///
-    /// # #[cfg(feature = "auth")]
     /// use near_jsonrpc_client::auth;
     ///
-    /// # #[cfg(feature = "auth")]
     /// let client = client.header(
     ///     auth::ApiKey::new("cadc4c83-5566-4c94-aa36-773605150f44")?, // <- error handling here
     /// ); // <- returns the client
