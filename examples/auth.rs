@@ -6,7 +6,7 @@ use near_jsonrpc_client::{auth, methods, JsonRpcClient};
 use near_primitives::types::{BlockReference, Finality};
 
 async fn unauthorized() -> Result<(), Box<dyn std::error::Error>> {
-    let client = JsonRpcClient::connect("https://rpc.testnet.near.org");
+    let client = JsonRpcClient::connect("https://near-mainnet.api.pagoda.co/rpc/v1/");
 
     let request = methods::block::RpcBlockRequest {
         block_reference: BlockReference::Finality(Finality::Final),
@@ -27,8 +27,8 @@ async fn unauthorized() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 async fn authorized() -> Result<(), Box<dyn std::error::Error>> {
-    let client = JsonRpcClient::connect("https://rpc.testnet.near.org")
-        .header(auth::ApiKey::new("399ba741-e939-4ffa-8c3c-306ec36fa8de")?);
+    let client = JsonRpcClient::connect("https://near-mainnet.api.pagoda.co/rpc/v1/")
+        .header(auth::ApiKey::new("45d124c6-f549-4793-b78d-b40a2564fdae")?);
 
     let request = methods::block::RpcBlockRequest {
         block_reference: BlockReference::Finality(Finality::Final),
