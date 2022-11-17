@@ -7,7 +7,7 @@ pub struct ApiKey(HeaderValue);
 impl ApiKey {
     pub const HEADER_NAME: &'static str = "x-api-key";
 
-    /// Creates a new API key from a string.
+    /// Creates a new API key.
     pub fn new<K: IntoHeaderValue>(api_key: K) -> Result<Self, InvalidHeaderValue> {
         api_key.to_header_value().map(ApiKey)
     }
