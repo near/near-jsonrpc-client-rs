@@ -115,7 +115,6 @@ use std::{fmt, sync::Arc};
 
 use lazy_static::lazy_static;
 
-#[cfg(feature = "auth")]
 pub mod auth;
 pub mod errors;
 pub mod header;
