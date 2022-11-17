@@ -1,10 +1,36 @@
-//! Client Authentication.
+//! Helpers for Client Authentication.
 //!
 //! Some RPC nodes will require authentication before requests can be sent to them.
 //!
-//! This is done by adding your api key to the request as a [`header`](crate::JsonRpcClient::header).
+//! This module provides the [`ApiKey`] and [`Authorization`] types that can be used to authenticate
+//! requests.
 //!
 //! ## Example
+//!
+//! ### API Key (`x-api-key` Header)
+//!
+//! ```
+//! use near_jsonrpc_client::{JsonRpcClient, auth, methods};
+//! use near_primitives::types::{BlockReference, Finality};
+//!
+//! # #[tokio::main]
+//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! let client = JsonRpcClient::connect("https://rpc.testnet.near.org");
+//!
+//! let client = client.header(auth::ApiKey::new("399ba741-e939-4ffa-8c3c-306ec36fa8de")?);
+//!
+//! let request = methods::block::RpcBlockRequest {
+//!     block_reference: BlockReference::Finality(Finality::Final),
+//! };
+//!
+//! let response = client.call(request).await?;
+//!
+//! assert!(matches!(response, methods::block::RpcBlockResponse { .. }));
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! ### `Authorization` Header
 //!
 //! ```
 //! use near_jsonrpc_client::{JsonRpcClient, auth, methods};
@@ -13,7 +39,9 @@
 //! # #[tokio::main]
 //! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! let client = JsonRpcClient::connect("https://rpc.testnet.near.org")
-//!     .header(auth::ApiKey::new("399ba741-e939-4ffa-8c3c-306ec36fa8de")?);
+//!     .header(auth::Authorization::bearer(
+//!         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+//!     )?);
 //!
 //! let request = methods::block::RpcBlockRequest {
 //!     block_reference: BlockReference::Finality(Finality::Final),
@@ -21,10 +49,7 @@
 //!
 //! let response = client.call(request).await?;
 //!
-//! assert!(matches!(
-//!     response,
-//!     methods::block::RpcBlockResponse { .. }
-//! ));
+//! assert!(matches!(response, methods::block::RpcBlockResponse { .. }));
 //! # Ok(())
 //! # }
 //! ```
@@ -42,6 +67,8 @@ impl ApiKey {
     pub const HEADER_NAME: &'static str = "x-api-key";
 
     /// Creates a new API key.
+    ///
+    /// See the [`auth`](self) module documentation for more information.
     pub fn new<K: AsRef<[u8]>>(api_key: K) -> Result<Self, InvalidHeaderValue> {
         HeaderValue::from_bytes(api_key.as_ref()).map(|mut api_key| {
             ApiKey({
@@ -75,7 +102,7 @@ impl crate::header::HeaderEntry for ApiKey {
     }
 }
 
-/// HTTP Authorization scheme.
+/// HTTP authorization scheme.
 #[derive(Eq, Hash, Copy, Clone, Debug, PartialEq)]
 #[non_exhaustive]
 pub enum AuthorizationScheme {
@@ -90,6 +117,10 @@ impl Authorization {
     pub const HEADER_NAME: &'static str = "Authorization";
 
     /// Creates a new authorization token with the bearer scheme.
+    ///
+    /// This does not perform any token-specific validation on the token.
+    ///
+    /// See the [`auth`](self) module documentation for more information.
     pub fn bearer<T: AsRef<str>>(token: T) -> Result<Self, InvalidHeaderValue> {
         HeaderValue::from_bytes(&[b"Bearer ", token.as_ref().as_bytes()].concat()).map(
             |mut token| {
