@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - `ApiKey::new` no longer requres the input of a valid UUID. <https://github.com/near/near-jsonrpc-client-rs/pull/119>
+- `Debug` on `ApiKey` doesn't reveal the key anymore. <https://github.com/near/near-jsonrpc-client-rs/pull/120>
 - The `auth` module is no longer feature gated. <https://github.com/near/near-jsonrpc-client-rs/pull/119>
 
 ### Breaking

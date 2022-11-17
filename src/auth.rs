@@ -9,7 +9,12 @@ impl ApiKey {
 
     /// Creates a new API key.
     pub fn new<K: AsRef<[u8]>>(api_key: K) -> Result<Self, InvalidHeaderValue> {
-        HeaderValue::from_bytes(api_key.as_ref()).map(ApiKey)
+        HeaderValue::from_bytes(api_key.as_ref()).map(|mut api_key| {
+            ApiKey({
+                api_key.set_sensitive(true);
+                api_key
+            })
+        })
     }
 
     /// Returns a `&str` slice if the API Key only contains visible ASCII chars.
@@ -33,5 +38,24 @@ impl crate::header::HeaderEntry for ApiKey {
 
     fn header_pair(self) -> (Self::HeaderName, Self::HeaderValue) {
         (Self::HEADER_NAME, self.0)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn sensitive_debug() {
+        let api_key = ApiKey::new("this is a very secret secret").unwrap();
+
+        assert_eq!(format!("{:?}", api_key), "ApiKey(Sensitive)");
+
+        assert_eq!(
+            api_key.to_str().expect("valid secret"),
+            "this is a very secret secret"
+        );
+
+        assert_eq!(api_key.as_bytes(), b"this is a very secret secret");
     }
 }
