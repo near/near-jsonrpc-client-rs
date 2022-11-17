@@ -200,14 +200,15 @@ pub use into_header_value::IntoHeaderValue;
 mod into_header_value {
     use super::{HeaderValue, InvalidHeaderValue};
 
-    pub trait Sealed: AsRef<[u8]> {
+    pub trait Sealed: AsRef<[u8]> {}
+
+    /// A marker trait used to identify values that can be made into API keys.
+    pub trait IntoHeaderValue: Sealed {
+        /// Convert this value into a [`HeaderValue`].
         fn to_header_value(&self) -> Result<HeaderValue, InvalidHeaderValue> {
             HeaderValue::from_bytes(self.as_ref())
         }
     }
-
-    /// A marker trait used to identify values that can be made into API keys.
-    pub trait IntoHeaderValue: Sealed {}
 
     impl Sealed for String {}
 
