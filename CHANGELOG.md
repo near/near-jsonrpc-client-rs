@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- BREAKING: Removed `Display` on `ApiKey`. <https://github.com/near/near-jsonrpc-client-rs/pull/117>
+
 ## [0.4.1] - 2022-11-11
 
 - Fixed an issue where an `&RpcMethod`'s response was being parsed differently from an `RpcMethod`. <https://github.com/near/near-jsonrpc-client-rs/pull/114>
