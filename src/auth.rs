@@ -1,4 +1,4 @@
-//! Helpers for Client Authentication.
+//! Helpers for client authentication.
 //!
 //! Some RPC nodes will require authentication before requests can be sent to them.
 //!

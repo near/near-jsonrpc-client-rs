@@ -1,4 +1,4 @@
-//! Client Headers.
+//! Client headers.
 //!
 //! This module includes everything you need to build valid header entries.
 
