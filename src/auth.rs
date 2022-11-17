@@ -44,6 +44,7 @@ impl crate::header::HeaderEntry for ApiKey {
     }
 }
 
+/// HTTP Authorization scheme.
 #[derive(Eq, Hash, Copy, Clone, Debug, PartialEq)]
 #[non_exhaustive]
 pub enum AuthorizationScheme {
