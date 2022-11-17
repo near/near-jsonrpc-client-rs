@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking
 
-- Replaced the `auth::IntoApiKey` trait with `header::IntoHeaderValue`. <https://github.com/near/near-jsonrpc-client-rs/pull/119>
+- Removed the `auth::IntoApiKey` trait, any thing you can get a byte slice from is now a valid `ApiKey` input. <https://github.com/near/near-jsonrpc-client-rs/pull/119>
 - Replaced the `ApiKey::as_str` method with `ApiKey::to_str`, now returning a `Result`. <https://github.com/near/near-jsonrpc-client-rs/pull/119>
 - Replaced the `InvalidApiKey` error with `InvalidHeaderValue` re-exported from `http`. <https://github.com/near/near-jsonrpc-client-rs/pull/119>
 - Removed `Display` on `ApiKey`. <https://github.com/near/near-jsonrpc-client-rs/pull/117>
