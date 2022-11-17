@@ -42,6 +42,12 @@ where
     fn params(&self) -> Result<serde_json::Value, io::Error> {
         T::params(self)
     }
+
+    fn parse_handler_response(
+        response: serde_json::Value,
+    ) -> Result<Result<Self::Response, Self::Error>, serde_json::Error> {
+        T::parse_handler_response(response)
+    }
 }
 
 pub trait RpcHandlerResponse: serde::de::DeserializeOwned {
@@ -61,7 +67,7 @@ pub trait RpcHandlerError: serde::de::DeserializeOwned {
     /// This would only ever be used as a fallback if [`RpcHandlerError::parse`] fails.
     ///
     /// Defaults to `None` meaning there's no alternative deserialization available.
-    fn parse_raw_error(_error: serde_json::Value) -> Option<Result<Self, serde_json::Error>> {
+    fn parse_legacy_error(_error: serde_json::Value) -> Option<Result<Self, serde_json::Error>> {
         None
     }
 }
@@ -153,12 +159,16 @@ mod common {
     // their UnknownBlock variants.
     macro_rules! _parse_unknown_block {
         ($json:expr => $err_ty:ident) => {
-            if $json["name"] == "UNKNOWN_BLOCK" {
-                Some(Ok($err_ty::UnknownBlock {
-                    error_message: "".to_string(),
-                }))
-            } else {
-                None
+            match $json {
+                err => {
+                    if err["name"] == "UNKNOWN_BLOCK" {
+                        Ok($err_ty::UnknownBlock {
+                            error_message: "".to_string(),
+                        })
+                    } else {
+                        serde_json::from_value(err)
+                    }
+                }
             }
         };
     }
@@ -203,7 +213,7 @@ mod common {
 
     // broadcast_tx_commit, tx, EXPERIMENTAL_check_tx, EXPERIMENTAL_tx_status
     impl RpcHandlerError for near_jsonrpc_primitives::types::transactions::RpcTransactionError {
-        fn parse_raw_error(value: serde_json::Value) -> Option<Result<Self, serde_json::Error>> {
+        fn parse_legacy_error(value: serde_json::Value) -> Option<Result<Self, serde_json::Error>> {
             match serde_json::from_value::<near_jsonrpc_primitives::errors::ServerError>(value) {
                 Ok(near_jsonrpc_primitives::errors::ServerError::TxExecutionError(
                     near_primitives::errors::TxExecutionError::InvalidTxError(context),
@@ -219,7 +229,7 @@ mod common {
 
     // EXPERIMENTAL_changes, EXPERIMENTAL_changes_in_block
     impl RpcHandlerError for near_jsonrpc_primitives::types::changes::RpcStateChangesError {
-        fn parse_raw_error(value: serde_json::Value) -> Option<Result<Self, serde_json::Error>> {
+        fn parse(value: serde_json::Value) -> Result<Self, serde_json::Error> {
             parse_unknown_block!(value => Self)
         }
     }

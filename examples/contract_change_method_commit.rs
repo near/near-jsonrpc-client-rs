@@ -1,11 +1,9 @@
 use near_jsonrpc_client::{methods, JsonRpcClient};
 use near_jsonrpc_primitives::types::query::QueryResponseKind;
-use near_jsonrpc_primitives::types::transactions::TransactionInfo;
 use near_primitives::transaction::{Action, FunctionCallAction, Transaction};
 use near_primitives::types::BlockReference;
 
 use serde_json::json;
-use tokio::time;
 
 mod utils;
 
@@ -57,44 +55,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         })],
     };
 
-    let request = methods::broadcast_tx_async::RpcBroadcastTxAsyncRequest {
+    let request = methods::broadcast_tx_commit::RpcBroadcastTxCommitRequest {
         signed_transaction: transaction.sign(&signer),
     };
 
-    let sent_at = time::Instant::now();
-    let tx_hash = client.call(request).await?;
+    let response = client.call(request).await?;
 
-    loop {
-        let response = client
-            .call(methods::tx::RpcTransactionStatusRequest {
-                transaction_info: TransactionInfo::TransactionId {
-                    hash: tx_hash,
-                    account_id: signer.account_id.clone(),
-                },
-            })
-            .await;
-        let received_at = time::Instant::now();
-        let delta = (received_at - sent_at).as_secs();
-
-        if delta > 60 {
-            Err("time limit exceeded for the transaction to be recognized")?;
-        }
-
-        match response {
-            Err(err) => match err.handler_error() {
-                Some(methods::tx::RpcTransactionError::UnknownTransaction { .. }) => {
-                    time::sleep(time::Duration::from_secs(2)).await;
-                    continue;
-                }
-                _ => Err(err)?,
-            },
-            Ok(response) => {
-                println!("response gotten after: {}s", delta);
-                println!("response: {:#?}", response);
-                break;
-            }
-        }
-    }
+    println!("response: {:#?}", response);
 
     Ok(())
 }

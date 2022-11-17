@@ -7,11 +7,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Added the `methods::to_json()` helper method for visualizing the serialization of the RPC methods. <https://github.com/near/near-jsonrpc-client-rs/pull/49>
-- Extracted all the RPC methods into their own modules instead of all being defined in the same `methods.rs` file. <https://github.com/near/near-jsonrpc-client-rs/pull/50>
-- Moved auth specific logic behind a feature flag. <https://github.com/near/near-jsonrpc-client-rs/pull/55>
+### Added
+
+- `ApiKey::new` now accepts byte arrays and byte slices. <https://github.com/near/near-jsonrpc-client-rs/pull/119>
+- `ApiKey::as_bytes` returns a byte slice of the key without utf-8 validation. <https://github.com/near/near-jsonrpc-client-rs/pull/119>
+
+### Changed
+
+- `ApiKey::new` no longer requres the input of a valid UUID. <https://github.com/near/near-jsonrpc-client-rs/pull/119>
+- `Debug` on `ApiKey` doesn't reveal the key anymore. <https://github.com/near/near-jsonrpc-client-rs/pull/120>
+- The `auth` module is no longer feature gated. <https://github.com/near/near-jsonrpc-client-rs/pull/119>
+
+### Breaking
+
+- Removed the `auth::IntoApiKey` trait, any thing you can get a byte slice from is now a valid `ApiKey` input. <https://github.com/near/near-jsonrpc-client-rs/pull/119>
+- Replaced the `ApiKey::as_str` method with `ApiKey::to_str`, now returning a `Result`. <https://github.com/near/near-jsonrpc-client-rs/pull/119>
+- Replaced the `InvalidApiKey` error with `InvalidHeaderValue` re-exported from `http`. <https://github.com/near/near-jsonrpc-client-rs/pull/119>
+- Removed `Display` on `ApiKey`. <https://github.com/near/near-jsonrpc-client-rs/pull/117>
+
+## [0.4.1] - 2022-11-11
+
+- Fixed an issue where an `&RpcMethod`'s response was being parsed differently from an `RpcMethod`. <https://github.com/near/near-jsonrpc-client-rs/pull/114>
+
+## [0.4.0] - 2022-10-04
+
+- Updated nearcore dependencies, which now requires a MSRV of `1.64.0`. <https://github.com/near/near-jsonrpc-client-rs/pull/100>, <https://github.com/near/near-jsonrpc-client-rs/pull/110>
+- Updated other dependencies, with some general improvements. <https://github.com/near/near-jsonrpc-client-rs/pull/111>
+- Added `rustls-tls` feature flag to enable `rustls` as an alternative to `native-tls`. <https://github.com/near/near-jsonrpc-client-rs/pull/103>
+- Switched to using `log::debug!` instead of `log::info!` for debug logging. <https://github.com/near/near-jsonrpc-client-rs/pull/107>
 - Fixed `gas_price` RPC method serialization. <https://github.com/near/near-jsonrpc-client-rs/pull/73>
 - Fixed `query` method error deserialization. <https://github.com/near/near-jsonrpc-client-rs/pull/82>
+- Reworked the `JsonRpcError`::`handler_error` method. <https://github.com/near/near-jsonrpc-client-rs/pull/99>
+- Moved auth specific logic behind a feature flag. <https://github.com/near/near-jsonrpc-client-rs/pull/55>
+- Added the `methods::to_json()` helper method for visualizing the serialization of the RPC methods. <https://github.com/near/near-jsonrpc-client-rs/pull/49>
+
+## [0.4.0-beta.0] - 2022-05-31
+
+<details>
+<summary>
+  <em>
+    Superseded by <a href="https://github.com/near/near-jsonrpc-client-rs/compare/v0.4.0-beta.0...v0.4.0">
+      <code> 0.4.0 </code>
+    </a>
+  </em>
+</summary>
+
+> - Updated nearcore dependencies, fixing a previous breaking change. <https://github.com/near/near-jsonrpc-client-rs/pull/100>
+> - Fixed `gas_price` RPC method serialization. <https://github.com/near/near-jsonrpc-client-rs/pull/73>
+> - Fixed `query` method error deserialization. <https://github.com/near/near-jsonrpc-client-rs/pull/82>
+> - Reworked the `JsonRpcError`::`handler_error` method. <https://github.com/near/near-jsonrpc-client-rs/pull/99>
+> - Moved auth specific logic behind a feature flag. <https://github.com/near/near-jsonrpc-client-rs/pull/55>
+> - Added the `methods::to_json()` helper method for visualizing the serialization of the RPC methods. <https://github.com/near/near-jsonrpc-client-rs/pull/49>
+
+</details>
 
 ## [0.3.0] - 2022-02-09
 
@@ -36,7 +84,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > Release Page: <https://github.com/near/near-jsonrpc-client-rs/releases/tag/v0.1.0>
 
-[unreleased]: https://github.com/near/near-jsonrpc-client-rs/compare/v0.3.0...HEAD
+[unreleased]: https://github.com/near/near-jsonrpc-client-rs/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/near/near-jsonrpc-client-rs/compare/v0.4.0...v0.4.1
+[0.4.0]: https://github.com/near/near-jsonrpc-client-rs/compare/v0.3.0...v0.4.0
+[0.4.0-beta.0]: https://github.com/near/near-jsonrpc-client-rs/compare/v0.3.0...v0.4.0-beta.0
 [0.3.0]: https://github.com/near/near-jsonrpc-client-rs/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/near/near-jsonrpc-client-rs/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/near/near-jsonrpc-client-rs/releases/tag/v0.1.0

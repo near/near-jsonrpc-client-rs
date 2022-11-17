@@ -74,11 +74,11 @@ pub enum JsonRpcError<E> {
 }
 
 impl<E> JsonRpcError<E> {
-    pub fn handler_error(self) -> Result<E, Self> {
-        match self {
-            Self::ServerError(JsonRpcServerError::HandlerError(err)) => Ok(err),
-            err => Err(err),
+    pub fn handler_error(&self) -> Option<&E> {
+        if let Self::ServerError(JsonRpcServerError::HandlerError(err)) = self {
+            return Some(err);
         }
+        None
     }
 }
 
@@ -111,7 +111,7 @@ impl<E: super::methods::RpcHandlerError> From<RpcError> for JsonRpcError<E> {
             None => {}
         }
         if let Some(ref raw_err_data) = err.data {
-            match E::parse_raw_error(raw_err_data.clone()) {
+            match E::parse_legacy_error(raw_err_data.clone()) {
                 Some(Ok(handler_error)) => {
                     return JsonRpcError::ServerError(JsonRpcServerError::HandlerError(
                         handler_error,

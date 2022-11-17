@@ -40,7 +40,7 @@
 //!    use near_jsonrpc_primitives::types::transactions::TransactionInfo;
 //!
 //!    # #[tokio::main]
-//!    # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!    # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 //!    let mainnet_client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
 //!
 //!    let tx_status_request = methods::tx::RpcTransactionStatusRequest {
@@ -73,7 +73,7 @@
 //!
 //!    # use near_jsonrpc_client::errors::JsonRpcError;
 //!    use near_jsonrpc_client::{methods, JsonRpcClient};
-//!    use near_primitives::serialize::u128_dec_format;
+//!    use near_primitives::serialize::dec_format;
 //!    use near_primitives::types::*;
 //!
 //!    #[derive(Debug, Deserialize)]
@@ -82,11 +82,11 @@
 //!        chain_id: String,
 //!        genesis_height: BlockHeight,
 //!        epoch_length: BlockHeightDelta,
-//!        #[serde(with = "u128_dec_format")]
+//!        #[serde(with = "dec_format")]
 //!        min_gas_price: Balance,
-//!        #[serde(with = "u128_dec_format")]
+//!        #[serde(with = "dec_format")]
 //!        max_gas_price: Balance,
-//!        #[serde(with = "u128_dec_format")]
+//!        #[serde(with = "dec_format")]
 //!        total_supply: Balance,
 //!        validators: Vec<AccountInfo>,
 //!    }
@@ -115,9 +115,6 @@ use std::{fmt, sync::Arc};
 
 use lazy_static::lazy_static;
 
-use near_jsonrpc_primitives::message::{from_slice, Message};
-
-#[cfg(feature = "auth")]
 pub mod auth;
 pub mod errors;
 pub mod header;
@@ -143,6 +140,8 @@ pub struct JsonRpcClientConnector {
 impl JsonRpcClientConnector {
     /// Return a JsonRpcClient that connects to the specified server.
     pub fn connect<U: AsUrl>(&self, server_addr: U) -> JsonRpcClient {
+        log::debug!("returned a new JSONRPC client handle");
+
         JsonRpcClient {
             inner: Arc::new(JsonRpcInnerClient {
                 server_addr: server_addr.to_string(),
@@ -209,6 +208,8 @@ impl JsonRpcClient {
             ))
         })?;
 
+        log::debug!("request payload: {:#}", request_payload);
+
         let request_payload = serde_json::to_vec(&request_payload).map_err(|err| {
             JsonRpcError::TransportError(RpcTransportError::SendError(
                 JsonRpcTransportSendError::PayloadSerializeError(err.into()),
@@ -250,13 +251,22 @@ impl JsonRpcClient {
                 JsonRpcTransportRecvError::PayloadRecvError(err),
             ))
         })?;
-        let response_message = from_slice(&response_payload).map_err(|err| {
+        let response_payload = serde_json::from_slice::<serde_json::Value>(&response_payload);
+
+        if let Ok(ref response_payload) = response_payload {
+            log::debug!("response payload: {:#}", response_payload);
+        }
+
+        let response_message = near_jsonrpc_primitives::message::decoded_to_parsed(
+            response_payload.and_then(serde_json::from_value),
+        )
+        .map_err(|err| {
             JsonRpcError::TransportError(RpcTransportError::RecvError(
                 JsonRpcTransportRecvError::PayloadParseError(err),
             ))
         })?;
 
-        if let Message::Response(response) = response_message {
+        if let near_jsonrpc_primitives::message::Message::Response(response) = response_message {
             return M::parse_handler_response(response.result?)
                 .map_err(|err| {
                     JsonRpcError::TransportError(RpcTransportError::RecvError(
@@ -339,6 +349,7 @@ impl JsonRpcClient {
             reqwest::header::HeaderValue::from_static("application/json"),
         );
 
+        log::debug!("initialized a new JSONRPC client connector");
         JsonRpcClientConnector {
             client: reqwest::Client::builder()
                 .default_headers(headers)
@@ -407,11 +418,9 @@ impl AsUrl for reqwest::Url {}
 mod tests {
     use crate::{methods, JsonRpcClient};
 
-    const RPC_SERVER_ADDR: &'static str = "https://archival-rpc.mainnet.near.org";
-
     #[tokio::test]
     async fn chk_status_testnet() {
-        let client = JsonRpcClient::connect(RPC_SERVER_ADDR);
+        let client = JsonRpcClient::connect("https://rpc.testnet.near.org");
 
         let status = client.call(methods::status::RpcStatusRequest).await;
 
@@ -424,8 +433,8 @@ mod tests {
 
     #[tokio::test]
     #[cfg(feature = "any")]
-    async fn any_typed_ok() -> Result<(), Box<dyn std::error::Error>> {
-        let client = JsonRpcClient::connect(RPC_SERVER_ADDR);
+    async fn any_typed_ok() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
 
         let tx_status = client
             .call(methods::any::<methods::tx::RpcTransactionStatusRequest>(
@@ -454,7 +463,7 @@ mod tests {
     #[tokio::test]
     #[cfg(feature = "any")]
     async fn any_typed_err() -> Result<(), Box<dyn std::error::Error>> {
-        let client = JsonRpcClient::connect(RPC_SERVER_ADDR);
+        let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
 
         let tx_error = client
             .call(methods::any::<methods::tx::RpcTransactionStatusRequest>(
@@ -465,16 +474,15 @@ mod tests {
                 ]),
             ))
             .await
-            .expect_err("request must not succeed")
-            .handler_error();
+            .expect_err("request must not succeed");
 
         assert!(
             matches!(
-                tx_error,
-                Ok(methods::tx::RpcTransactionError::UnknownTransaction {
+                tx_error.handler_error(),
+                Some(methods::tx::RpcTransactionError::UnknownTransaction {
                     requested_transaction_hash
                 })
-                if requested_transaction_hash == "9FtHUFBQsZ2MG77K3x3MJ9wjX3UT8zE1TczCrhZEcG8D".parse()?
+                if requested_transaction_hash.to_string() == "9FtHUFBQsZ2MG77K3x3MJ9wjX3UT8zE1TczCrhZEcG8D"
             ),
             "expected an Ok(RpcTransactionError::UnknownTransaction) with matching hash, found [{:?}]",
             tx_error
@@ -486,7 +494,7 @@ mod tests {
     #[tokio::test]
     #[cfg(feature = "any")]
     async fn any_untyped_ok() {
-        let client = JsonRpcClient::connect(RPC_SERVER_ADDR);
+        let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
 
         let status = client
             .call(
@@ -516,7 +524,7 @@ mod tests {
     #[tokio::test]
     #[cfg(feature = "any")]
     async fn any_untyped_err() {
-        let client = JsonRpcClient::connect(RPC_SERVER_ADDR);
+        let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
 
         let tx_error = client
             .call(
@@ -529,7 +537,8 @@ mod tests {
                 ),
             )
             .await
-            .expect_err("request must not succeed")
+            .expect_err("request must not succeed");
+        let tx_error = tx_error
             .handler_error()
             .expect("expected a handler error from query request");
 

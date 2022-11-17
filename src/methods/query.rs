@@ -92,6 +92,37 @@ struct LegacyQueryError {
 mod tests {
     use {super::*, crate::*};
 
+    /// This test is to make sure the method executor treats `&RpcMethod`s the same as `RpcMethod`s.
+    #[tokio::test]
+    async fn test_unknown_method() -> Result<(), Box<dyn std::error::Error>> {
+        let client = JsonRpcClient::connect("https://rpc.testnet.near.org");
+
+        let request = RpcQueryRequest {
+            block_reference: near_primitives::types::BlockReference::latest(),
+            request: near_primitives::views::QueryRequest::CallFunction {
+                account_id: "testnet".parse()?,
+                method_name: "some_unavailable_method".to_string(),
+                args: vec![].into(),
+            },
+        };
+
+        let response_err = client.call(&request).await.unwrap_err();
+
+        assert!(
+            matches!(
+                response_err.handler_error(),
+                Some(RpcQueryError::ContractExecutionError {
+                    ref vm_error,
+                    ..
+                }) if vm_error.contains("FunctionCallError(MethodResolveError(MethodNotFound))")
+            ),
+            "this is unexpected: {:#?}",
+            response_err
+        );
+
+        Ok(())
+    }
+
     #[tokio::test]
     async fn test_unknown_access_key() -> Result<(), Box<dyn std::error::Error>> {
         let client = JsonRpcClient::connect("https://archival-rpc.testnet.near.org");
@@ -106,17 +137,20 @@ mod tests {
             },
         };
 
-        let response = client.call(request).await.unwrap_err();
+        let response_err = client.call(request).await.unwrap_err();
 
-        let err = response.handler_error()?;
-        assert!(matches!(
-            err,
-            RpcQueryError::UnknownAccessKey {
-                ref public_key,
-                block_height: 63503911,
-                ..
-            } if public_key.to_string() == "ed25519:9KnjTjL6vVoM8heHvCcTgLZ67FwFkiLsNtknFAVsVvYY"
-        ),);
+        assert!(
+            matches!(
+                response_err.handler_error(),
+                Some(RpcQueryError::UnknownAccessKey {
+                    ref public_key,
+                    block_height: 63503911,
+                    ..
+                }) if public_key.to_string() == "ed25519:9KnjTjL6vVoM8heHvCcTgLZ67FwFkiLsNtknFAVsVvYY"
+            ),
+            "this is unexpected: {:#?}",
+            response_err
+        );
 
         Ok(())
     }
@@ -130,27 +164,25 @@ mod tests {
                 near_primitives::types::BlockId::Height(63503911),
             ),
             request: near_primitives::views::QueryRequest::CallFunction {
-                #[allow(deprecated)]
                 account_id: "miraclx.testnet".parse()?,
                 method_name: "".to_string(),
                 args: vec![].into(),
             },
         };
 
-        let response = client.call(request).await.unwrap_err();
+        let response_err = client.call(request).await.unwrap_err();
 
-        let err = response.handler_error()?;
         assert!(
             matches!(
-                err,
-                RpcQueryError::ContractExecutionError {
+                response_err.handler_error(),
+                Some(RpcQueryError::ContractExecutionError {
                     ref vm_error,
                     block_height: 63503911,
                     ..
-                } if vm_error.contains("FunctionCallError(MethodResolveError(MethodEmptyName))")
+                }) if vm_error.contains("FunctionCallError(MethodResolveError(MethodEmptyName))")
             ),
-            "{:?}",
-            err
+            "this is unexpected: {:#?}",
+            response_err
         );
 
         Ok(())

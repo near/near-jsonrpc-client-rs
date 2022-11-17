@@ -11,7 +11,10 @@ pub fn input(query: &str) -> io::Result<String> {
     Ok(input.trim().to_owned())
 }
 
-fn select<S>(print_msg: fn(), query: &str, chk: fn(&str) -> Option<S>) -> io::Result<S> {
+pub fn select<S, F>(print_msg: fn(), query: &str, chk: F) -> io::Result<S>
+where
+    F: Fn(&str) -> Option<S>,
+{
     loop {
         print_msg();
         for _ in 1..=5 {
@@ -36,7 +39,7 @@ pub fn select_network() -> io::Result<JsonRpcClient> {
         |selection| match (selection, selection.parse()) {
             ("m" | "main" | "mainnet", _) | (_, Ok(1)) => Some("mainnet"),
             ("t" | "test" | "testnet", _) | (_, Ok(2)) => Some("testnet"),
-            ("c" | "custom", _) | (_, Ok(2)) => Some("custom"),
+            ("c" | "custom", _) | (_, Ok(3)) => Some("custom"),
             _ => None,
         },
     )?;
