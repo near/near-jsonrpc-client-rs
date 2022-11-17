@@ -16,7 +16,6 @@ version = "0.4.1"
 
 [dependencies]
 log = "0.4.17"
-uuid = { version = "1.1.2", features = ["v4"], optional = true }
 borsh = "0.9.3"
 serde = "1.0.145"
 reqwest = { version = "0.11.12", features = ["json"], default-features = false }
@@ -34,9 +33,8 @@ tokio = { version = "1.21.2", features = ["macros", "rt-multi-thread"] }
 env_logger = "0.9.1"
 
 [features]
-default = ["auth", "native-tls"]
+default = ["native-tls"]
 any = []
-auth = ["uuid"]
 sandbox = []
 adversarial = []
 native-tls = ["reqwest/native-tls"]
@@ -44,7 +42,6 @@ rustls-tls = ["reqwest/rustls-tls"]
 
 [[example]]
 name = "auth"
-required-features = ["auth"]
 
 [package.metadata.docs.rs]
-features = ["any", "auth", "sandbox"]
+features = ["any", "sandbox"]

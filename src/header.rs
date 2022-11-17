@@ -4,10 +4,7 @@
 
 use std::marker::PhantomData;
 
-pub use reqwest::header::HeaderValue;
-use reqwest::header::IntoHeaderName;
-
-use super::JsonRpcClient;
+pub use reqwest::header::{HeaderName, HeaderValue, InvalidHeaderValue, ToStrError};
 
 /// [`HeaderEntry`] attribute identifying those that have been prevalidated.
 ///
@@ -122,74 +119,121 @@ where
     fn header_pair(self) -> (Self::HeaderName, Self::HeaderValue);
 }
 
-mod private {
+pub use discriminant::HeaderEntryDiscriminant;
+mod discriminant {
+    use reqwest::header::IntoHeaderName;
+
+    use super::{super::JsonRpcClient, HeaderEntry, HeaderValue, Postvalidated, Prevalidated};
+
     pub trait Sealed {}
-}
 
-/// Trait for defining a [`HeaderEntry`]'s application on a client.
-pub trait HeaderEntryDiscriminant<H>: private::Sealed {
-    type Output;
+    /// Trait for defining a [`HeaderEntry`]'s application on a client.
+    pub trait HeaderEntryDiscriminant<H>: Sealed {
+        type Output;
 
-    fn apply(client: JsonRpcClient, entry: H) -> Self::Output;
-}
+        fn apply(client: JsonRpcClient, entry: H) -> Self::Output;
+    }
 
-impl private::Sealed for Prevalidated {}
-impl<T> HeaderEntryDiscriminant<T> for Prevalidated
-where
-    T: HeaderEntry<Self, HeaderValue = HeaderValue>,
-    T::HeaderName: IntoHeaderName,
-{
-    type Output = JsonRpcClient;
+    impl Sealed for Prevalidated {}
+    impl<T> HeaderEntryDiscriminant<T> for Prevalidated
+    where
+        T: HeaderEntry<Self, HeaderValue = HeaderValue>,
+        T::HeaderName: IntoHeaderName,
+    {
+        type Output = JsonRpcClient;
 
-    fn apply(mut client: JsonRpcClient, entry: T) -> Self::Output {
-        let (k, v) = entry.header_pair();
-        client.headers.insert(k, v);
-        client
+        fn apply(mut client: JsonRpcClient, entry: T) -> Self::Output {
+            let (k, v) = entry.header_pair();
+            client.headers.insert(k, v);
+            client
+        }
+    }
+
+    impl<E> Sealed for Postvalidated<E> {}
+    impl<T, E> HeaderEntryDiscriminant<T> for Postvalidated<E>
+    where
+        T: HeaderEntry<Self>,
+        T::HeaderName: IntoHeaderName,
+        T::HeaderValue: TryInto<HeaderValue, Error = E>,
+    {
+        type Output = Result<JsonRpcClient, E>;
+
+        fn apply(mut client: JsonRpcClient, entry: T) -> Self::Output {
+            let (k, v) = entry.header_pair();
+            client.headers.insert(k, v.try_into()?);
+            Ok(client)
+        }
+    }
+
+    impl<N: IntoHeaderName> HeaderEntry<Prevalidated> for (N, HeaderValue) {
+        type HeaderName = N;
+        type HeaderValue = HeaderValue;
+
+        fn header_name(&self) -> &Self::HeaderName {
+            &self.0
+        }
+
+        fn header_pair(self) -> (Self::HeaderName, Self::HeaderValue) {
+            self
+        }
+    }
+
+    impl<N, V> HeaderEntry<Postvalidated<V::Error>> for (N, V)
+    where
+        N: IntoHeaderName,
+        V: TryInto<HeaderValue>,
+    {
+        type HeaderName = N;
+        type HeaderValue = V;
+
+        fn header_name(&self) -> &Self::HeaderName {
+            &self.0
+        }
+
+        fn header_pair(self) -> (Self::HeaderName, Self::HeaderValue) {
+            self
+        }
     }
 }
 
-impl<E> private::Sealed for Postvalidated<E> {}
-impl<T, E> HeaderEntryDiscriminant<T> for Postvalidated<E>
-where
-    T: HeaderEntry<Self>,
-    T::HeaderName: IntoHeaderName,
-    T::HeaderValue: TryInto<HeaderValue, Error = E>,
-{
-    type Output = Result<JsonRpcClient, E>;
+pub use into_header_value::IntoHeaderValue;
+mod into_header_value {
+    use super::{HeaderValue, InvalidHeaderValue};
 
-    fn apply(mut client: JsonRpcClient, entry: T) -> Self::Output {
-        let (k, v) = entry.header_pair();
-        client.headers.insert(k, v.try_into()?);
-        Ok(client)
-    }
-}
-
-impl<N: IntoHeaderName> HeaderEntry<Prevalidated> for (N, HeaderValue) {
-    type HeaderName = N;
-    type HeaderValue = HeaderValue;
-
-    fn header_name(&self) -> &Self::HeaderName {
-        &self.0
+    pub trait Sealed: AsRef<[u8]> {
+        fn to_header_value(&self) -> Result<HeaderValue, InvalidHeaderValue> {
+            HeaderValue::from_bytes(self.as_ref())
+        }
     }
 
-    fn header_pair(self) -> (Self::HeaderName, Self::HeaderValue) {
-        self
-    }
-}
+    /// A marker trait used to identify values that can be made into API keys.
+    pub trait IntoHeaderValue: Sealed {}
 
-impl<N, V> HeaderEntry<Postvalidated<V::Error>> for (N, V)
-where
-    N: IntoHeaderName,
-    V: TryInto<HeaderValue>,
-{
-    type HeaderName = N;
-    type HeaderValue = V;
+    impl Sealed for String {}
 
-    fn header_name(&self) -> &Self::HeaderName {
-        &self.0
-    }
+    impl IntoHeaderValue for String {}
 
-    fn header_pair(self) -> (Self::HeaderName, Self::HeaderValue) {
-        self
-    }
+    impl Sealed for &String {}
+
+    impl IntoHeaderValue for &String {}
+
+    impl Sealed for &str {}
+
+    impl IntoHeaderValue for &str {}
+
+    impl Sealed for [u8] {}
+
+    impl IntoHeaderValue for [u8] {}
+
+    impl Sealed for &[u8] {}
+
+    impl IntoHeaderValue for &[u8] {}
+
+    impl<const N: usize> Sealed for [u8; N] {}
+
+    impl<const N: usize> IntoHeaderValue for [u8; N] {}
+
+    impl<const N: usize> Sealed for &[u8; N] {}
+
+    impl<const N: usize> IntoHeaderValue for &[u8; N] {}
 }
