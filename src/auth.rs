@@ -1,4 +1,4 @@
-use super::header::{HeaderValue, IntoHeaderValue, InvalidHeaderValue, ToStrError};
+use super::header::{HeaderValue, InvalidHeaderValue, ToStrError};
 
 /// NEAR JSON RPC API key.
 #[derive(Eq, Hash, Clone, Debug, PartialEq)]
@@ -8,8 +8,8 @@ impl ApiKey {
     pub const HEADER_NAME: &'static str = "x-api-key";
 
     /// Creates a new API key.
-    pub fn new<K: IntoHeaderValue>(api_key: K) -> Result<Self, InvalidHeaderValue> {
-        api_key.to_header_value().map(ApiKey)
+    pub fn new<K: AsRef<[u8]>>(api_key: K) -> Result<Self, InvalidHeaderValue> {
+        HeaderValue::from_bytes(api_key.as_ref()).map(ApiKey)
     }
 
     /// Returns a `&str` slice if the API Key only contains visible ASCII chars.
