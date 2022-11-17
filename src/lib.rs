@@ -209,6 +209,7 @@ impl JsonRpcClient {
         })?;
 
         log::debug!("request payload: {:#}", request_payload);
+        log::debug!("request headers: {:#?}", self.headers());
 
         let request_payload = serde_json::to_vec(&request_payload).map_err(|err| {
             JsonRpcError::TransportError(RpcTransportError::SendError(
@@ -228,6 +229,7 @@ impl JsonRpcClient {
                 JsonRpcTransportSendError::PayloadSendError(err),
             ))
         })?;
+        log::debug!("response headers: {:#?}", response.headers());
         match response.status() {
             reqwest::StatusCode::OK => {}
             non_ok_status => {
