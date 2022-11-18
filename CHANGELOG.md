@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `ApiKey::new` now accepts byte arrays and byte slices. <https://github.com/near/near-jsonrpc-client-rs/pull/119>
+- `Authorization::bearer` method for token-authenticated requests. <https://github.com/near/near-jsonrpc-client-rs/pull/121>
 - `ApiKey::as_bytes` returns a byte slice of the key without utf-8 validation. <https://github.com/near/near-jsonrpc-client-rs/pull/119>
 
 ### Changed
