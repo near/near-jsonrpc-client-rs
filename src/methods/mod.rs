@@ -145,7 +145,7 @@ pub use adversarial::adv_check_store;
 pub fn to_json<M: RpcMethod>(method: &M) -> Result<serde_json::Value, io::Error> {
     let request_payload = near_jsonrpc_primitives::message::Message::request(
         method.method_name().to_string(),
-        Option::from(method.params().unwrap()).into(),
+        method.params()?,
     );
 
     Ok(json!(request_payload))
@@ -178,7 +178,7 @@ mod common {
         tx: &near_primitives::transaction::SignedTransaction,
     ) -> Result<String, io::Error> {
         Ok(near_primitives::serialize::to_base64(
-            &borsh::BorshSerialize::try_to_vec(&tx)?,
+            borsh::BorshSerialize::try_to_vec(&tx)?,
         ))
     }
 
