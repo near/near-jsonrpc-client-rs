@@ -145,7 +145,7 @@ pub use adversarial::adv_check_store;
 pub fn to_json<M: RpcMethod>(method: &M) -> Result<serde_json::Value, io::Error> {
     let request_payload = near_jsonrpc_primitives::message::Message::request(
         method.method_name().to_string(),
-        Some(method.params()?),
+        Option::from(method.params().unwrap()).into(),
     );
 
     Ok(json!(request_payload))
