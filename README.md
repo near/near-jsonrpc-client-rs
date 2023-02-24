@@ -5,7 +5,7 @@ Lower-level API for interfacing with the NEAR Protocol via JSONRPC.
 [![Crates.io](https://img.shields.io/crates/v/near-jsonrpc-client?label=latest)](https://crates.io/crates/near-jsonrpc-client)
 [![Documentation](https://docs.rs/near-jsonrpc-client/badge.svg)](https://docs.rs/near-jsonrpc-client)
 [![MIT or Apache 2.0 Licensed](https://img.shields.io/crates/l/near-jsonrpc-client.svg)](#license)
-[![Dependency Status](https://deps.rs/crate/near-jsonrpc-client/0.4.0/status.svg)](https://deps.rs/crate/near-jsonrpc-client/0.4.0)
+[![Dependency Status](https://deps.rs/crate/near-jsonrpc-client/0.5.0/status.svg)](https://deps.rs/crate/near-jsonrpc-client/0.5.0)
 
 ## Usage
 
