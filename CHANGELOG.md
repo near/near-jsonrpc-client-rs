@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Updated nearcore dependencies to `0.16.0`. <https://github.com/near/near-jsonrpc-client-rs/pull/122>
 - `ApiKey::new` no longer requres the input of a valid UUID. <https://github.com/near/near-jsonrpc-client-rs/pull/119>
 - `Debug` on `ApiKey` doesn't reveal the key anymore. <https://github.com/near/near-jsonrpc-client-rs/pull/120>
 - The `auth` module is no longer feature gated. <https://github.com/near/near-jsonrpc-client-rs/pull/119>
@@ -25,12 +26,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replaced the `ApiKey::as_str` method with `ApiKey::to_str`, now returning a `Result`. <https://github.com/near/near-jsonrpc-client-rs/pull/119>
 - Replaced the `InvalidApiKey` error with `InvalidHeaderValue` re-exported from `http`. <https://github.com/near/near-jsonrpc-client-rs/pull/119>
 - Removed `Display` on `ApiKey`. <https://github.com/near/near-jsonrpc-client-rs/pull/117>
-
-## [0.4.2] - 2023-02-24
-- update `near-primitives` and associated crates to `0.16.0`
-- downgrade tokio to `1.19.0` to be compatible with `near-primitives` subdependency versions of `tokio`
-- fix signature type bug introduced in https://github.com/near/nearcore/pull/8460
-- updated error msg str to exclude FunctionCallError
 
 ## [0.4.1] - 2022-11-11
 
