@@ -114,7 +114,7 @@ mod tests {
                 Some(RpcQueryError::ContractExecutionError {
                     ref vm_error,
                     ..
-                }) if vm_error.contains("FunctionCallError(MethodResolveError(MethodNotFound))")
+                }) if vm_error.contains("MethodResolveError(MethodNotFound)")
             ),
             "this is unexpected: {:#?}",
             response_err
@@ -179,7 +179,7 @@ mod tests {
                     ref vm_error,
                     block_height: 63503911,
                     ..
-                }) if vm_error.contains("FunctionCallError(MethodResolveError(MethodEmptyName))")
+                }) if vm_error.contains("MethodResolveError(MethodEmptyName)")
             ),
             "this is unexpected: {:#?}",
             response_err
