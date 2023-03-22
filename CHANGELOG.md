@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2023-03-22
+
+- Updated `borsh` to `0.10.2`. <https://github.com/near/near-jsonrpc-client-rs/pull/124>
+
 ## [0.5.0] - 2023-02-24
 
 ### Added
