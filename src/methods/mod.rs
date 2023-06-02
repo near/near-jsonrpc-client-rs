@@ -178,7 +178,7 @@ mod common {
         tx: &near_primitives::transaction::SignedTransaction,
     ) -> Result<String, io::Error> {
         Ok(near_primitives::serialize::to_base64(
-            borsh::BorshSerialize::try_to_vec(&tx)?,
+            &borsh::BorshSerialize::try_to_vec(&tx)?,
         ))
     }
 
