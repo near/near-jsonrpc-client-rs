@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0](https://github.com/near/near-jsonrpc-client-rs/compare/v0.5.1...v0.6.0) - 2023-06-02
+
+### Other
+- [**breaking**] Upgrade near primitive crates version to 0.17.0 ([#126](https://github.com/near/near-jsonrpc-client-rs/pull/126))
+
 ## [0.5.1] - 2023-03-22
 
 - Updated `borsh` to `0.10.2`. <https://github.com/near/near-jsonrpc-client-rs/pull/124>
