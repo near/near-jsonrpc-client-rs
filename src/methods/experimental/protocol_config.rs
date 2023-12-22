@@ -1,3 +1,32 @@
+//! Queries the protocol config of the blockchain at a given block.
+//!
+//! The `RpcProtocolConfigRequest` takes in a [`BlockReference`](https://docs.rs/near-primitives/0.12.0/near_primitives/types/enum.BlockReference.html) enum which has multiple variants.
+//!
+//! ## Example
+//!
+//! Returns the protocol config of the blockchain at a given block.
+//!
+//! ```
+//! use near_jsonrpc_client::{methods, JsonRpcClient};
+//! use near_primitives::types::{BlockReference, BlockId};
+//!
+//! # #[tokio::main]
+//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
+//!
+//! let request = methods::EXPERIMENTAL_protocol_config::RpcProtocolConfigRequest {
+//!     block_reference: BlockReference::BlockId(BlockId::Height(47988413))
+//! };
+//!
+//! let response = client.call(request).await?;
+//!
+//! assert!(matches!(
+//!     response,
+//!     methods::EXPERIMENTAL_protocol_config::RpcProtocolConfigResponse { .. }
+//! ));
+//! # Ok(())
+//! # }
+//! ```
 use super::*;
 
 pub use near_jsonrpc_primitives::types::config::{
