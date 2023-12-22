@@ -5,7 +5,7 @@
 //! use near_primitives::types::TransactionOrReceiptId;
 //!
 //! # #[tokio::main]
-//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 //! let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
 //!
 //! let request = methods::light_client_proof::RpcLightClientExecutionProofRequest {
@@ -35,7 +35,7 @@ pub use near_jsonrpc_primitives::types::light_client::{
 impl RpcHandlerResponse for RpcLightClientExecutionProofResponse {}
 
 impl RpcHandlerError for RpcLightClientProofError {
-    fn parse_raw_error(value: serde_json::Value) -> Option<Result<Self, serde_json::Error>> {
+    fn parse(value: serde_json::Value) -> Result<Self, serde_json::Error> {
         common::parse_unknown_block!(value => Self)
     }
 }

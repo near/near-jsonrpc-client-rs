@@ -12,23 +12,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = utils::select_network()?;
 
     let contract_id: AccountId =
-        utils::input("Enter the contract whose code we're downloading: ")?.parse()?;
+        utils::input("Enter the contract whose state you want to inspect: ")?.parse()?;
 
     let request = methods::query::RpcQueryRequest {
         block_reference: BlockReference::Finality(Finality::Final),
-        request: QueryRequest::ViewCode {
+        request: QueryRequest::ViewState {
             account_id: contract_id.clone(),
+            prefix: near_primitives::types::StoreKey::from(Vec::new()),
+            include_proof: false,
         },
     };
 
     let response = client.call(request).await?;
 
-    if let QueryResponseKind::ViewCode(result) = response.kind {
-        let path = format!("/tmp/{}.wasm", contract_id);
-        println!("⚙️  [{}]", contract_id);
-        println!("🏋        size: {} bytes", result.code.len());
-        std::fs::write(&path, result.code)?;
-        println!("💾   saved to: {}", path);
+    if let QueryResponseKind::ViewState(result) = response.kind {
+        println!("{:#?}", result);
     }
 
     Ok(())

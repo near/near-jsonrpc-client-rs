@@ -1,3 +1,56 @@
+//! For all intents and purposes, the predefined structures in `methods` should suffice, if you find that they
+//! don't or you crave extra flexibility, well, you can opt in to use the generic constructor `methods::any()` with the `any` feature flag.
+//!
+//! In this example, we retrieve only the parts from the genesis config response that we care about.
+//!
+//! ```toml
+//! # in Cargo.toml
+//! near-jsonrpc-client = { ..., features = ["any"] }
+//! ```
+//!
+//! ```
+//! use serde::Deserialize;
+//! use serde_json::json;
+//!
+//! # use near_jsonrpc_client::errors::JsonRpcError;
+//! use near_jsonrpc_client::{methods, JsonRpcClient};
+//! use near_primitives::serialize::u128_dec_format;
+//! use near_primitives::types::*;
+//!
+//! #[derive(Debug, Deserialize)]
+//! struct PartialGenesisConfig {
+//!     protocol_version: ProtocolVersion,
+//!     chain_id: String,
+//!     genesis_height: BlockHeight,
+//!     epoch_length: BlockHeightDelta,
+//!     #[serde(with = "u128_dec_format")]
+//!     min_gas_price: Balance,
+//!     #[serde(with = "u128_dec_format")]
+//!     max_gas_price: Balance,
+//!     #[serde(with = "u128_dec_format")]
+//!     total_supply: Balance,
+//!     validators: Vec<AccountInfo>,
+//! }
+//!
+//! impl methods::RpcHandlerResponse for PartialGenesisConfig {}
+//!
+//! # #[tokio::main]
+//! # async fn main() -> Result<(), JsonRpcError<()>> {
+//! let client = JsonRpcClient::connect("https://rpc.mainnet.near.org");
+//!
+//! # #[cfg(feature = "any")] {
+//! let genesis_config_request = methods::any::<Result<PartialGenesisConfig, ()>>(
+//!     "EXPERIMENTAL_genesis_config",
+//!     json!(null),
+//! );
+//!
+//! let partial_genesis = client.call(genesis_config_request).await?;
+//!
+//! println!("{:#?}", partial_genesis);
+//! # }
+//! # Ok(())
+//! # }
+//! ```
 use super::*;
 
 use std::marker::PhantomData;

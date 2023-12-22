@@ -1,3 +1,58 @@
+//! Sends asynchronous transactions.
+//!
+//! ## Example
+//!
+//! Constructs a signed transaction to be sent to an RPC node. It returns the transaction hash if successful.
+//!
+//! This code sample doesn't make any requests to the RPC node. It only shows how to construct the request. It's been truncated for brevity sake.
+//!
+//! A full example on how to use `broadcast_tx_async` method can be found at [`contract_change_method`](https://github.com/near/near-jsonrpc-client-rs/blob/master/examples/contract_change_method.rs).
+//!
+//! ```
+//! use near_jsonrpc_client::{methods, JsonRpcClient};
+//! use near_primitives::types::{AccountId};
+//! use near_primitives::transaction::{Action, FunctionCallAction, Transaction};
+//! use near_crypto::SecretKey;
+//! use core::str::FromStr;
+//! use serde_json::json;
+//!
+//! # #[tokio::main]
+//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! let client = JsonRpcClient::connect("https://archival-rpc.testnet.near.org");
+//!
+//! let signer_account_id = "fido.testnet".parse::<AccountId>()?;
+//! let signer_secret_key = SecretKey::from_str("ed25519:12dhevYshfiRqFSu8DSfxA27pTkmGRv6C5qQWTJYTcBEoB7MSTyidghi5NWXzWqrxCKgxVx97bpXPYQxYN5dieU")?;
+//!
+//! let signer = near_crypto::InMemorySigner::from_secret_key(signer_account_id, signer_secret_key);
+//!
+//! let other_account = "rpc_docs.testnet".parse::<AccountId>()?;
+//! let rating = "4.5".parse::<f32>()?;
+//!
+//! let transaction = Transaction {
+//!     signer_id: signer.account_id.clone(),
+//!     public_key: signer.public_key.clone(),
+//!     nonce: 10223934 + 1,
+//!     receiver_id: "nosedive.testnet".parse::<AccountId>()?,
+//!     block_hash: "AUDcb2iNUbsmCsmYGfGuKzyXKimiNcCZjBKTVsbZGnoH".parse()?,
+//!     actions: vec![Action::FunctionCall(FunctionCallAction {
+//!         method_name: "rate".to_string(),
+//!         args: json!({
+//!             "account_id": other_account,
+//!             "rating": rating,
+//!         })
+//!         .to_string()
+//!         .into_bytes(),
+//!         gas: 100_000_000_000_000, // 100 TeraGas
+//!         deposit: 0,
+//!     })],
+//! };
+//!
+//! let request = methods::broadcast_tx_async::RpcBroadcastTxAsyncRequest {
+//!     signed_transaction: transaction.sign(&signer)
+//! };
+//! # Ok(())
+//! # }
+//! ```
 use super::*;
 
 pub use near_primitives::transaction::SignedTransaction;
@@ -10,11 +65,12 @@ pub struct RpcBroadcastTxAsyncRequest {
 }
 
 impl From<RpcBroadcastTxAsyncRequest>
-    for near_jsonrpc_primitives::types::transactions::RpcBroadcastTransactionRequest
+    for near_jsonrpc_primitives::types::transactions::RpcSendTransactionRequest
 {
     fn from(this: RpcBroadcastTxAsyncRequest) -> Self {
         Self {
             signed_transaction: this.signed_transaction,
+            wait_until: near_primitives::views::TxExecutionStatus::None,
         }
     }
 }

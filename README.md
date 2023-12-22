@@ -2,10 +2,10 @@
 
 Lower-level API for interfacing with the NEAR Protocol via JSONRPC.
 
-[![crates.io](https://img.shields.io/crates/v/near-jsonrpc-client?label=latest)](https://crates.io/crates/near-jsonrpc-client)
+[![Crates.io](https://img.shields.io/crates/v/near-jsonrpc-client?label=latest)](https://crates.io/crates/near-jsonrpc-client)
 [![Documentation](https://docs.rs/near-jsonrpc-client/badge.svg)](https://docs.rs/near-jsonrpc-client)
-![MIT or Apache 2.0 licensed](https://img.shields.io/crates/l/near-jsonrpc-client.svg)
-[![Dependency Status](https://deps.rs/crate/near-jsonrpc-client/0.3.0/status.svg)](https://deps.rs/crate/near-jsonrpc-client/0.3.0)
+[![MIT or Apache 2.0 Licensed](https://img.shields.io/crates/l/near-jsonrpc-client.svg)](#license)
+[![Dependency Status](https://deps.rs/crate/near-jsonrpc-client/0.5.1/status.svg)](https://deps.rs/crate/near-jsonrpc-client/0.5.1)
 
 ## Usage
 
@@ -49,7 +49,7 @@ use serde::Deserialize;
 use serde_json::json;
 
 use near_jsonrpc_client::{methods, JsonRpcClient};
-use near_primitives::serialize::u128_dec_format;
+use near_primitives::serialize::dec_format;
 use near_primitives::types::*;
 
 #[derive(Debug, Deserialize)]
@@ -58,11 +58,11 @@ struct PartialGenesisConfig {
     chain_id: String,
     genesis_height: BlockHeight,
     epoch_length: BlockHeightDelta,
-    #[serde(with = "u128_dec_format")]
+    #[serde(with = "dec_format")]
     min_gas_price: Balance,
-    #[serde(with = "u128_dec_format")]
+    #[serde(with = "dec_format")]
     max_gas_price: Balance,
-    #[serde(with = "u128_dec_format")]
+    #[serde(with = "dec_format")]
     total_supply: Balance,
     validators: Vec<AccountInfo>,
 }
@@ -79,6 +79,15 @@ let genesis_config_request = methods::any::<Result<PartialGenesisConfig, ()>>(
 let partial_genesis = mainnet_client.call(genesis_config_request).await?;
 
 println!("{:#?}", partial_genesis);
+```
+
+By default, `near-jsonrpc-client` uses `native-tls`. On Linux, this introduces a dependency on the system `openssl` library. In some situations, for example when cross-compiling, it can be problematic to depend on non-Rust libraries.
+
+If you wish to switch to an all-Rust TLS implementation, you may do so using the `rustls-tls` feature flag. Note that the `native-tls` feature is enabled by default. Therefore, to disable it and use `rustls-tls` instead, you must also use `default-features = false`. The default `auth` feature must then be declared explicitly.
+
+```toml
+# in Cargo.toml
+near-jsonrpc-client = { ..., default-features = false, features = ["auth","rustls-tls"] }
 ```
 
 ## Releasing

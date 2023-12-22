@@ -16,7 +16,7 @@
 //!       use near_primitives::types::BlockId;
 //!
 //!       # #[tokio::main]
-//!       # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!       # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 //!       let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
 //!
 //!       let request = methods::chunk::RpcChunkRequest {
@@ -72,7 +72,7 @@
 //!   use near_jsonrpc_primitives::types::chunks;
 //!
 //!   # #[tokio::main]
-//!   # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!   # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 //!   let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
 //!
 //!   let request = methods::chunk::RpcChunkRequest{
@@ -99,7 +99,7 @@ pub type RpcChunkResponse = near_primitives::views::ChunkView;
 impl RpcHandlerResponse for RpcChunkResponse {}
 
 impl RpcHandlerError for RpcChunkError {
-    fn parse_raw_error(value: serde_json::Value) -> Option<Result<Self, serde_json::Error>> {
+    fn parse(value: serde_json::Value) -> Result<Self, serde_json::Error> {
         common::parse_unknown_block!(value => Self)
     }
 }
