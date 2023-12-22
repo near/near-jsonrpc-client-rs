@@ -45,8 +45,8 @@
 //!
 //!    let tx_status_request = methods::tx::RpcTransactionStatusRequest {
 //!        transaction_info: TransactionInfo::TransactionId {
-//!            hash: "9FtHUFBQsZ2MG77K3x3MJ9wjX3UT8zE1TczCrhZEcG8U".parse()?,
-//!            account_id: "miraclx.near".parse()?,
+//!            tx_hash: "9FtHUFBQsZ2MG77K3x3MJ9wjX3UT8zE1TczCrhZEcG8U".parse()?,
+//!            sender_account_id: "miraclx.near".parse()?,
 //!        },
 //!    };
 //!
@@ -450,7 +450,7 @@ mod tests {
             matches!(
                 tx_status,
                 Ok(methods::tx::RpcTransactionStatusResponse { ref transaction, .. })
-                if transaction.signer_id.as_ref() == "miraclx.near"
+                if transaction.signer_id == "miraclx.near"
                 && transaction.hash == "9FtHUFBQsZ2MG77K3x3MJ9wjX3UT8zE1TczCrhZEcG8U".parse()?
             ),
             "expected an Ok(RpcTransactionStatusResponse) with matching signer_id + hash, found [{:?}]",

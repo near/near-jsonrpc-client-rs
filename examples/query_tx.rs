@@ -96,8 +96,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         match client
             .call(methods::tx::RpcTransactionStatusRequest {
                 transaction_info: methods::tx::TransactionInfo::TransactionId {
-                    hash: tx_hash,
-                    account_id,
+                    tx_hash,
+                    sender_account_id: account_id,
                 },
             })
             .await

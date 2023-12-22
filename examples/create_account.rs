@@ -140,13 +140,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             block_hash: latest_hash,
             actions: vec![
                 Action::CreateAccount(CreateAccountAction {}),
-                Action::AddKey(AddKeyAction {
+                Action::AddKey(Box::new(AddKeyAction {
                     access_key: near_primitives::account::AccessKey {
                         nonce: 0,
                         permission: near_primitives::account::AccessKeyPermission::FullAccess,
                     },
                     public_key: new_key_pair.public_key(),
-                }),
+                })),
                 Action::Transfer(TransferAction {
                     deposit: initial_deposit,
                 }),
@@ -166,7 +166,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             nonce: current_nonce + 1,
             receiver_id: contract_id,
             block_hash: latest_hash,
-            actions: vec![Action::FunctionCall(FunctionCallAction {
+            actions: vec![Action::FunctionCall(Box::new(FunctionCallAction {
                 method_name: "create_account".to_string(),
                 args: json!({
                     "new_account_id": new_account_id,
@@ -176,7 +176,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .into_bytes(),
                 gas: 300_000_000_000_000,
                 deposit: initial_deposit,
-            })],
+            }))],
         }
     };
 
@@ -202,8 +202,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let response = client
             .call(methods::tx::RpcTransactionStatusRequest {
                 transaction_info: TransactionInfo::TransactionId {
-                    hash: tx_hash,
-                    account_id: signer.account_id.clone(),
+                    tx_hash,
+                    sender_account_id: signer.account_id.clone(),
                 },
             })
             .await;

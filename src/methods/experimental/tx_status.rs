@@ -12,11 +12,12 @@ pub struct RpcTransactionStatusRequest {
 }
 
 impl From<RpcTransactionStatusRequest>
-    for near_jsonrpc_primitives::types::transactions::RpcTransactionStatusCommonRequest
+    for near_jsonrpc_primitives::types::transactions::RpcTransactionStatusRequest
 {
     fn from(this: RpcTransactionStatusRequest) -> Self {
         Self {
             transaction_info: this.transaction_info,
+            wait_until: near_primitives::views::TxExecutionStatus::None,
         }
     }
 }
@@ -34,10 +35,14 @@ impl RpcMethod for RpcTransactionStatusRequest {
     fn params(&self) -> Result<serde_json::Value, io::Error> {
         Ok(match &self.transaction_info {
             TransactionInfo::Transaction(signed_transaction) => {
-                json!([common::serialize_signed_transaction(signed_transaction)?])
+                match signed_transaction {
+                    near_jsonrpc_primitives::types::transactions::SignedTransaction::SignedTransaction(tx) => {
+                        json!([common::serialize_signed_transaction(tx)?])
+                    },
+                }
             }
-            TransactionInfo::TransactionId { hash, account_id } => {
-                json!([hash, account_id])
+            TransactionInfo::TransactionId { tx_hash,sender_account_id } => {
+                json!([tx_hash, sender_account_id])
             }
         })
     }
