@@ -2,10 +2,10 @@
 
 Lower-level API for interfacing with the NEAR Protocol via JSONRPC.
 
-[![crates.io](https://img.shields.io/crates/v/near-jsonrpc-client?label=latest)](https://crates.io/crates/near-jsonrpc-client)
+[![Crates.io](https://img.shields.io/crates/v/near-jsonrpc-client?label=latest)](https://crates.io/crates/near-jsonrpc-client)
 [![Documentation](https://docs.rs/near-jsonrpc-client/badge.svg)](https://docs.rs/near-jsonrpc-client)
-![MIT or Apache 2.0 licensed](https://img.shields.io/crates/l/near-jsonrpc-client.svg)
-[![Dependency Status](https://deps.rs/crate/near-jsonrpc-client/0.3.0/status.svg)](https://deps.rs/crate/near-jsonrpc-client/0.3.0)
+[![MIT or Apache 2.0 Licensed](https://img.shields.io/crates/l/near-jsonrpc-client.svg)](#license)
+[![Dependency Status](https://deps.rs/crate/near-jsonrpc-client/0.5.1/status.svg)](https://deps.rs/crate/near-jsonrpc-client/0.5.1)
 
 ## Usage
 
@@ -33,6 +33,7 @@ println!("{:?}", tx_status);
 ```
 
 Check out [`the examples folder`](https://github.com/near/near-jsonrpc-client-rs/tree/master/examples) for a comprehensive list of helpful demos. You can run the examples with `cargo`. For example: `cargo run --example view_account`.
+
 
 ## Releasing
 

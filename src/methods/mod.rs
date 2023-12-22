@@ -1,3 +1,4 @@
+//! This module contains all the RPC methods.
 use std::io;
 
 use serde::Deserialize;
@@ -8,6 +9,7 @@ mod private {
     pub trait Sealed {}
 }
 
+/// A trait identifying valid NEAR JSON-RPC methods.
 pub trait RpcMethod: private::Sealed
 where
     Self::Response: RpcHandlerResponse,
@@ -42,14 +44,22 @@ where
     fn params(&self) -> Result<serde_json::Value, io::Error> {
         T::params(self)
     }
+
+    fn parse_handler_response(
+        response: serde_json::Value,
+    ) -> Result<Result<Self::Response, Self::Error>, serde_json::Error> {
+        T::parse_handler_response(response)
+    }
 }
 
+/// A trait identifying valid NEAR JSON-RPC method responses.
 pub trait RpcHandlerResponse: serde::de::DeserializeOwned {
     fn parse(value: serde_json::Value) -> Result<Self, serde_json::Error> {
         serde_json::from_value(value)
     }
 }
 
+/// A trait identifying valid NEAR JSON-RPC errors.
 pub trait RpcHandlerError: serde::de::DeserializeOwned {
     /// Parser for the `.error_struct` field in RpcError.
     fn parse(handler_error: serde_json::Value) -> Result<Self, serde_json::Error> {
@@ -61,7 +71,7 @@ pub trait RpcHandlerError: serde::de::DeserializeOwned {
     /// This would only ever be used as a fallback if [`RpcHandlerError::parse`] fails.
     ///
     /// Defaults to `None` meaning there's no alternative deserialization available.
-    fn parse_raw_error(_error: serde_json::Value) -> Option<Result<Self, serde_json::Error>> {
+    fn parse_legacy_error(_error: serde_json::Value) -> Option<Result<Self, serde_json::Error>> {
         None
     }
 }
@@ -136,10 +146,11 @@ pub use adversarial::adv_get_saved_blocks;
 pub use adversarial::adv_check_store;
 // ======== adversarial ========
 
+/// Converts an RPC Method into JSON.
 pub fn to_json<M: RpcMethod>(method: &M) -> Result<serde_json::Value, io::Error> {
     let request_payload = near_jsonrpc_primitives::message::Message::request(
         method.method_name().to_string(),
-        Some(method.params()?),
+        method.params()?,
     );
 
     Ok(json!(request_payload))
@@ -153,12 +164,16 @@ mod common {
     // their UnknownBlock variants.
     macro_rules! _parse_unknown_block {
         ($json:expr => $err_ty:ident) => {
-            if $json["name"] == "UNKNOWN_BLOCK" {
-                Some(Ok($err_ty::UnknownBlock {
-                    error_message: "".to_string(),
-                }))
-            } else {
-                None
+            match $json {
+                err => {
+                    if err["name"] == "UNKNOWN_BLOCK" {
+                        Ok($err_ty::UnknownBlock {
+                            error_message: "".to_string(),
+                        })
+                    } else {
+                        serde_json::from_value(err)
+                    }
+                }
             }
         };
     }
@@ -167,9 +182,7 @@ mod common {
     pub fn serialize_signed_transaction(
         tx: &near_primitives::transaction::SignedTransaction,
     ) -> Result<String, io::Error> {
-        Ok(near_primitives::serialize::to_base64(
-            &borsh::BorshSerialize::try_to_vec(&tx)?,
-        ))
+        Ok(near_primitives::serialize::to_base64(&borsh::to_vec(&tx)?))
     }
 
     // adv_*
@@ -203,7 +216,7 @@ mod common {
 
     // broadcast_tx_commit, tx, EXPERIMENTAL_check_tx, EXPERIMENTAL_tx_status
     impl RpcHandlerError for near_jsonrpc_primitives::types::transactions::RpcTransactionError {
-        fn parse_raw_error(value: serde_json::Value) -> Option<Result<Self, serde_json::Error>> {
+        fn parse_legacy_error(value: serde_json::Value) -> Option<Result<Self, serde_json::Error>> {
             match serde_json::from_value::<near_jsonrpc_primitives::errors::ServerError>(value) {
                 Ok(near_jsonrpc_primitives::errors::ServerError::TxExecutionError(
                     near_primitives::errors::TxExecutionError::InvalidTxError(context),
@@ -219,7 +232,7 @@ mod common {
 
     // EXPERIMENTAL_changes, EXPERIMENTAL_changes_in_block
     impl RpcHandlerError for near_jsonrpc_primitives::types::changes::RpcStateChangesError {
-        fn parse_raw_error(value: serde_json::Value) -> Option<Result<Self, serde_json::Error>> {
+        fn parse(value: serde_json::Value) -> Result<Self, serde_json::Error> {
             parse_unknown_block!(value => Self)
         }
     }

@@ -9,6 +9,8 @@ mod utils;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    env_logger::init();
+
     let client = JsonRpcClient::connect("https://rpc.testnet.near.org");
 
     let signer_account_id = utils::input("Enter the signer Account ID: ")?.parse()?;
@@ -40,7 +42,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         nonce: current_nonce + 1,
         receiver_id: "nosedive.testnet".parse()?,
         block_hash: access_key_query_response.block_hash,
-        actions: vec![Action::FunctionCall(FunctionCallAction {
+        actions: vec![Action::FunctionCall(Box::new(FunctionCallAction {
             method_name: "rate".to_string(),
             args: json!({
                 "account_id": other_account,
@@ -50,7 +52,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .into_bytes(),
             gas: 100_000_000_000_000, // 100 TeraGas
             deposit: 0,
-        })],
+        }))],
     };
 
     let request = methods::broadcast_tx_commit::RpcBroadcastTxCommitRequest {

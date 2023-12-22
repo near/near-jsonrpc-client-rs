@@ -1,6 +1,6 @@
 [package]
 name = "near-jsonrpc-client"
-version = "0.0.0" # managed by cargo-workspaces, see below
+version = "0.6.0"
 authors = ["Near Inc <hello@nearprotocol.com>"]
 edition = "2021"
 license = "MIT OR Apache-2.0"
@@ -8,39 +8,36 @@ repository = "https://github.com/near/near-jsonrpc-client-rs"
 description = "Lower-level API for interfacing with the NEAR Protocol via JSONRPC"
 categories = ["asynchronous", "api-bindings", "network-programming"]
 keywords = ["near", "api", "jsonrpc", "rpc", "async"]
-rust-version = "1.56.0"
-
-# cargo-workspaces
-[workspace.metadata.workspaces]
-version = "0.3.0"
+rust-version = "1.67.1"
 
 [dependencies]
-uuid = { version = "0.8", features = ["v4"], optional = true }
-borsh = "0.9"
-serde = "1.0.127"
-reqwest = { version = "0.11.4", features = ["json"] }
-thiserror = "1.0.28"
-serde_json = "1.0.66"
+log = "0.4.17"
+borsh = "1.3.0"
+serde = "1.0.145"
+reqwest = { version = "0.11.12", features = ["json"], default-features = false }
+thiserror = "1.0.37"
+serde_json = "1.0.85"
 lazy_static = "1.4.0"
 
-near-crypto = "0.12.0"
-near-primitives = "0.12.0"
-near-chain-configs = "0.12.0"
-near-jsonrpc-primitives = "0.12.0"
+near-crypto = "0.19.0"
+near-primitives = "0.19.0"
+near-chain-configs = "0.19.0"
+near-jsonrpc-primitives = "0.19.0"
 
 [dev-dependencies]
-tokio = { version = "1.1", features = ["rt", "macros"] }
+tokio = { version = "1.0", features = ["macros", "rt-multi-thread"] }
+env_logger = "0.10.0"
 
 [features]
-default = ["auth"]
+default = ["native-tls"]
 any = []
-auth = ["uuid"]
 sandbox = []
 adversarial = []
+native-tls = ["reqwest/native-tls"]
+rustls-tls = ["reqwest/rustls-tls"]
 
 [[example]]
 name = "auth"
-required-features = ["auth"]
 
 [package.metadata.docs.rs]
-features = ["any", "auth", "sandbox"]
+features = ["any", "sandbox"]

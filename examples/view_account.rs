@@ -7,6 +7,8 @@ mod utils;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    env_logger::init();
+
     let client = utils::select_network()?;
 
     let account_id: AccountId = utils::input("Enter an Account ID to lookup: ")?.parse()?;

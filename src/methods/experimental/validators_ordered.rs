@@ -1,3 +1,30 @@
+//! Returns the ordered validators of a block.
+//!
+//! ## Example
+//!
+//! Returns the ordered validators for this [block](https://explorer.near.org/blocks/3Lq3Mtfpc3spH9oF5dXnUzvCBEqjTQwX1yCqKibwzgWR).
+//!
+//! ```
+//! use near_jsonrpc_client::{methods, JsonRpcClient};
+//! use near_primitives::types::BlockId;
+//!
+//! # #[tokio::main]
+//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
+//!
+//! let request = methods::EXPERIMENTAL_validators_ordered::RpcValidatorsOrderedRequest {
+//!     block_id: Some(BlockId::Hash("3Lq3Mtfpc3spH9oF5dXnUzvCBEqjTQwX1yCqKibwzgWR".parse()?))
+//! };
+//!
+//! let response = client.call(request).await?;
+//!
+//! assert!(matches!(
+//!     response,
+//!     methods::EXPERIMENTAL_validators_ordered::RpcValidatorsOrderedResponse { .. }
+//! ));
+//! # Ok(())
+//! # }
+//! ```
 use super::*;
 
 pub use near_jsonrpc_primitives::types::validator::{

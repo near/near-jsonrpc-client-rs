@@ -1,3 +1,27 @@
+//! Queries the genesis config of the network.
+//!
+//! ## Example
+//!
+//! Returns the genesis config of the network.
+//!
+//! ```
+//! use near_jsonrpc_client::{methods, JsonRpcClient};
+//!
+//! # #[tokio::main]
+//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! let client = JsonRpcClient::connect("https://rpc.mainnet.near.org");
+//!
+//! let request = methods::EXPERIMENTAL_genesis_config::RpcGenesisConfigRequest;
+//!
+//! let response = client.call(request).await?;
+//!
+//! assert!(matches!(
+//!     response,
+//!     methods::EXPERIMENTAL_genesis_config::RpcGenesisConfigResponse { .. }
+//! ));
+//! # Ok(())
+//! # }
+//! ```
 use super::*;
 
 pub type RpcGenesisConfigResponse = near_chain_configs::GenesisConfig;

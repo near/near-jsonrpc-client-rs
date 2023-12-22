@@ -17,6 +17,8 @@ pub struct AccountStatus {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    env_logger::init();
+
     let client = JsonRpcClient::connect("https://rpc.testnet.near.org");
 
     let account_id = utils::input("Enter the account to view: ")?;
