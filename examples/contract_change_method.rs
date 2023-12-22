@@ -44,7 +44,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         nonce: current_nonce + 1,
         receiver_id: "nosedive.testnet".parse()?,
         block_hash: access_key_query_response.block_hash,
-        actions: vec![Action::FunctionCall(FunctionCallAction {
+        actions: vec![Action::FunctionCall(Box::new(FunctionCallAction {
             method_name: "rate".to_string(),
             args: json!({
                 "account_id": other_account,
@@ -54,7 +54,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .into_bytes(),
             gas: 100_000_000_000_000, // 100 TeraGas
             deposit: 0,
-        })],
+        }))],
     };
 
     let request = methods::broadcast_tx_async::RpcBroadcastTxAsyncRequest {
@@ -68,8 +68,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let response = client
             .call(methods::tx::RpcTransactionStatusRequest {
                 transaction_info: TransactionInfo::TransactionId {
-                    hash: tx_hash,
-                    account_id: signer.account_id.clone(),
+                    tx_hash,
+                    sender_account_id: signer.account_id.clone(),
                 },
             })
             .await;

@@ -11,11 +11,12 @@ pub struct RpcBroadcastTxCommitRequest {
 }
 
 impl From<RpcBroadcastTxCommitRequest>
-    for near_jsonrpc_primitives::types::transactions::RpcBroadcastTransactionRequest
+    for near_jsonrpc_primitives::types::transactions::RpcSendTransactionRequest
 {
     fn from(this: RpcBroadcastTxCommitRequest) -> Self {
         Self {
             signed_transaction: this.signed_transaction,
+            wait_until: near_primitives::views::TxExecutionStatus::None,
         }
     }
 }
