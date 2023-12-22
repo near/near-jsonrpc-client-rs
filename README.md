@@ -34,61 +34,6 @@ println!("{:?}", tx_status);
 
 Check out [`the examples folder`](https://github.com/near/near-jsonrpc-client-rs/tree/master/examples) for a comprehensive list of helpful demos. You can run the examples with `cargo`. For example: `cargo run --example view_account`.
 
-For all intents and purposes, the predefined structures in `methods` should suffice, if you find that they
-don't or you crave extra flexibility, well, you can opt in to use the generic constructor `methods::any()` with the `any` feature flag.
-
-In this example, we retrieve only the parts from the genesis config response that we care about.
-
-```toml
-# in Cargo.toml
-near-jsonrpc-client = { ..., features = ["any"] }
-```
-
-```rust
-use serde::Deserialize;
-use serde_json::json;
-
-use near_jsonrpc_client::{methods, JsonRpcClient};
-use near_primitives::serialize::dec_format;
-use near_primitives::types::*;
-
-#[derive(Debug, Deserialize)]
-struct PartialGenesisConfig {
-    protocol_version: ProtocolVersion,
-    chain_id: String,
-    genesis_height: BlockHeight,
-    epoch_length: BlockHeightDelta,
-    #[serde(with = "dec_format")]
-    min_gas_price: Balance,
-    #[serde(with = "dec_format")]
-    max_gas_price: Balance,
-    #[serde(with = "dec_format")]
-    total_supply: Balance,
-    validators: Vec<AccountInfo>,
-}
-
-impl methods::RpcHandlerResponse for PartialGenesisConfig {}
-
-let mainnet_client = JsonRpcClient::connect("https://rpc.mainnet.near.org");
-
-let genesis_config_request = methods::any::<Result<PartialGenesisConfig, ()>>(
-    "EXPERIMENTAL_genesis_config",
-    json!(null),
-);
-
-let partial_genesis = mainnet_client.call(genesis_config_request).await?;
-
-println!("{:#?}", partial_genesis);
-```
-
-By default, `near-jsonrpc-client` uses `native-tls`. On Linux, this introduces a dependency on the system `openssl` library. In some situations, for example when cross-compiling, it can be problematic to depend on non-Rust libraries.
-
-If you wish to switch to an all-Rust TLS implementation, you may do so using the `rustls-tls` feature flag. Note that the `native-tls` feature is enabled by default. Therefore, to disable it and use `rustls-tls` instead, you must also use `default-features = false`. The default `auth` feature must then be declared explicitly.
-
-```toml
-# in Cargo.toml
-near-jsonrpc-client = { ..., default-features = false, features = ["auth","rustls-tls"] }
-```
 
 ## Releasing
 
