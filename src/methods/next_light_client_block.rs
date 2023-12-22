@@ -6,7 +6,7 @@
 //! use near_jsonrpc_client::{methods, JsonRpcClient};
 //!
 //! # #[tokio::main]
-//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 //! let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
 //!
 //! let request = methods::next_light_client_block::RpcLightClientNextBlockRequest {

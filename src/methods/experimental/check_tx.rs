@@ -16,7 +16,7 @@
 //! use serde_json::json;
 //!
 //! # #[tokio::main]
-//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 //! let client = JsonRpcClient::connect("https://archival-rpc.testnet.near.org");
 //!
 //! let signer_account_id = "fido.testnet".parse::<AccountId>()?;
@@ -33,7 +33,7 @@
 //!     nonce: 904565 + 1,
 //!     receiver_id: "nosedive.testnet".parse::<AccountId>()?,
 //!     block_hash: "AUDcb2iNUbsmCsmYGfGuKzyXKimiNcCZjBKTVsbZGnoH".parse()?,
-//!     actions: vec![Action::FunctionCall(FunctionCallAction {
+//!     actions: vec![Action::FunctionCall(Box::new(FunctionCallAction {
 //!         method_name: "rate".to_string(),
 //!         args: json!({
 //!             "account_id": other_account,
@@ -43,7 +43,7 @@
 //!         .into_bytes(),
 //!         gas: 100_000_000_000_000, // 100 TeraGas
 //!         deposit: 0,
-//!     })],
+//!     }))],
 //! };
 //!
 //! let request = methods::EXPERIMENTAL_check_tx::RpcCheckTxRequest {

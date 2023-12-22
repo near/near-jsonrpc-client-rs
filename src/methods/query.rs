@@ -21,7 +21,7 @@
 //! use near_primitives::{types::{BlockReference, BlockId}, views::QueryRequest};
 //!
 //! # #[tokio::main]
-//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 //! let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
 //!
 //! let request = methods::query::RpcQueryRequest {
@@ -48,7 +48,7 @@
 //! use near_primitives::{types::{BlockReference, BlockId}, views::QueryRequest};
 //!
 //! # #[tokio::main]
-//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 //! let client = JsonRpcClient::connect("https://archival-rpc.testnet.near.org");
 //!
 //! let request = methods::query::RpcQueryRequest {
@@ -83,7 +83,8 @@
 //!     block_reference: BlockReference::latest(),
 //!     request: QueryRequest::ViewState {
 //!         account_id: "nosedive.testnet".parse()?,
-//!         prefix: StoreKey::from(vec![])
+//!         prefix: StoreKey::from(vec![]),
+//!         include_proof: false,
 //!     }
 //! };
 //!
@@ -133,7 +134,7 @@
 //! use near_primitives::{types::{BlockReference, BlockId}, views::QueryRequest};
 //!
 //! # #[tokio::main]
-//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 //! let client = JsonRpcClient::connect("https://archival-rpc.testnet.near.org");
 //!
 //! let request = methods::query::RpcQueryRequest {
