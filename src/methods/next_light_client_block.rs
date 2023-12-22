@@ -1,3 +1,27 @@
+//! Returns the next light client block.
+//!
+//! ## Example
+//!
+//! ```
+//! use near_jsonrpc_client::{methods, JsonRpcClient};
+//!
+//! # #[tokio::main]
+//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
+//!
+//! let request = methods::next_light_client_block::RpcLightClientNextBlockRequest {
+//!     last_block_hash: "ANm3jm5wq1Z4rJv6tXWyiDtC3wYKpXVHY4iq6bE1te7B".parse()?,
+//! };
+//!
+//! let response = client.call(request).await?;
+//!
+//! assert!(matches!(
+//!     response,
+//!     Some(methods::next_light_client_block::LightClientBlockView { .. })
+//! ));
+//! # Ok(())
+//! # }
+//! ```
 use super::*;
 
 pub use near_jsonrpc_primitives::types::light_client::{
