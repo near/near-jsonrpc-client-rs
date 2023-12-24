@@ -8,7 +8,7 @@
 //!
 //! A full example on how to use `broadcast_tx_async` method can be found at [`contract_change_method`](https://github.com/near/near-jsonrpc-client-rs/blob/master/examples/contract_change_method.rs).
 //!
-//! ```
+//! ```no_run
 //! use near_jsonrpc_client::{methods, JsonRpcClient};
 //! use near_primitives::types::{AccountId};
 //! use near_primitives::transaction::{Action, FunctionCallAction, Transaction};

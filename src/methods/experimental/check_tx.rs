@@ -6,7 +6,7 @@
 //!
 //! ## Example
 //!
-//! ```
+//! ```no_run
 //! use near_jsonrpc_client::{methods, JsonRpcClient};
 //! use near_jsonrpc_primitives::types::{query::QueryResponseKind, transactions};
 //! use near_primitives::types::{AccountId, BlockReference};
