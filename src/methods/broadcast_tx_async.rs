@@ -8,7 +8,7 @@
 //!
 //! A full example on how to use `broadcast_tx_async` method can be found at [`contract_change_method`](https://github.com/near/near-jsonrpc-client-rs/blob/master/examples/contract_change_method.rs).
 //!
-//! ```
+//! ```no_run
 //! use near_jsonrpc_client::{methods, JsonRpcClient};
 //! use near_primitives::types::{AccountId};
 //! use near_primitives::transaction::{Action, FunctionCallAction, Transaction};
@@ -17,7 +17,7 @@
 //! use serde_json::json;
 //!
 //! # #[tokio::main]
-//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 //! let client = JsonRpcClient::connect("https://archival-rpc.testnet.near.org");
 //!
 //! let signer_account_id = "fido.testnet".parse::<AccountId>()?;
@@ -34,7 +34,7 @@
 //!     nonce: 10223934 + 1,
 //!     receiver_id: "nosedive.testnet".parse::<AccountId>()?,
 //!     block_hash: "AUDcb2iNUbsmCsmYGfGuKzyXKimiNcCZjBKTVsbZGnoH".parse()?,
-//!     actions: vec![Action::FunctionCall(FunctionCallAction {
+//!     actions: vec![Action::FunctionCall(Box::new(FunctionCallAction {
 //!         method_name: "rate".to_string(),
 //!         args: json!({
 //!             "account_id": other_account,
@@ -44,7 +44,7 @@
 //!         .into_bytes(),
 //!         gas: 100_000_000_000_000, // 100 TeraGas
 //!         deposit: 0,
-//!     })],
+//!     }))],
 //! };
 //!
 //! let request = methods::broadcast_tx_async::RpcBroadcastTxAsyncRequest {

@@ -13,7 +13,7 @@
 //!     use near_primitives::{views::StateChangesRequestView, types::{BlockReference, BlockId}};
 //!
 //!     # #[tokio::main]
-//!     # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 //!     let client = JsonRpcClient::connect("https://archival-rpc.testnet.near.org");
 //!
 //!     let request = methods::EXPERIMENTAL_changes::RpcStateChangesInBlockByTypeRequest {
@@ -40,7 +40,7 @@
 //!     use near_primitives::{views::StateChangesRequestView, types::{BlockReference, BlockId, AccountWithPublicKey}};
 //!
 //!     # #[tokio::main]
-//!     # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 //!     let client = JsonRpcClient::connect("https://archival-rpc.testnet.near.org");
 //!
 //!     let request = methods::EXPERIMENTAL_changes::RpcStateChangesInBlockByTypeRequest {
@@ -55,8 +55,8 @@
 //!                         account_id: "rpc_docs.testnet".parse()?,
 //!                         public_key: "ed25519:FxGiXr6Dgn92kqBqbQzuoYdKngiizCnywpaN7ALar3Vv".parse()?,
 //!                     }
-//!                     
-//!                ],   
+//!
+//!                ],
 //!         }
 //!     };
 //!
@@ -77,7 +77,7 @@
 //!     use near_primitives::{views::StateChangesRequestView, types::{BlockReference, BlockId}};
 //!
 //!     # #[tokio::main]
-//!     # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 //!     let client = JsonRpcClient::connect("https://archival-rpc.testnet.near.org");
 //!
 //!     let request = methods::EXPERIMENTAL_changes::RpcStateChangesInBlockByTypeRequest {
@@ -104,7 +104,7 @@
 //!     use near_primitives::{views::StateChangesRequestView, types::{BlockReference, BlockId}};
 //!
 //!     # #[tokio::main]
-//!     # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 //!     let client = JsonRpcClient::connect("https://archival-rpc.testnet.near.org");
 //!
 //!     let request = methods::EXPERIMENTAL_changes::RpcStateChangesInBlockByTypeRequest {
@@ -131,7 +131,7 @@
 //!     use near_primitives::{views::StateChangesRequestView, types::{BlockReference, BlockId, StoreKey}, hash::CryptoHash};
 //!
 //!     # #[tokio::main]
-//!     # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 //!     let client = JsonRpcClient::connect("https://archival-rpc.testnet.near.org");
 //!
 //!     let request = methods::EXPERIMENTAL_changes::RpcStateChangesInBlockByTypeRequest {

@@ -10,7 +10,7 @@
 //!
 //! ## Example
 //!
-//! ```
+//! ```no_run
 //! use near_jsonrpc_client::{methods, JsonRpcClient};
 //! use near_jsonrpc_primitives::types::{query::QueryResponseKind, transactions::TransactionInfo};
 //! use near_primitives::types::{AccountId, BlockReference};
@@ -18,24 +18,24 @@
 //! use serde_json::json;
 //!
 //! # #[tokio::main]
-//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 //! let client = JsonRpcClient::connect("https://archival-rpc.testnet.near.org");
 //!
 //! let signer_account_id = "fido.testnet".parse::<AccountId>()?;
 //! let signer_secret_key = "ed25519:12dhevYshfiRqFSu8DSfxA27pTkmGRv6C5qQWTJYTcBEoB7MSTyidghi5NWXzWqrxCKgxVx97bpXPYQxYN5dieU".parse()?;
 //!
 //! let signer = near_crypto::InMemorySigner::from_secret_key(signer_account_id, signer_secret_key);
-//!     
+//!
 //! let other_account = "rpc_docs.testnet".parse::<AccountId>()?;
 //! let rating = "4.5".parse::<f32>()?;
-//!     
+//!
 //! let transaction = Transaction {
 //!     signer_id: signer.account_id.clone(),
 //!     public_key: signer.public_key.clone(),
 //!     nonce: 904565 + 1,
 //!     receiver_id: "nosedive.testnet".parse::<AccountId>()?,
 //!     block_hash: "AUDcb2iNUbsmCsmYGfGuKzyXKimiNcCZjBKTVsbZGnoH".parse()?,
-//!     actions: vec![Action::FunctionCall(FunctionCallAction {
+//!     actions: vec![Action::FunctionCall(Box::new(FunctionCallAction {
 //!         method_name: "rate".to_string(),
 //!         args: json!({
 //!             "account_id": other_account,
@@ -45,8 +45,8 @@
 //!         .into_bytes(),
 //!         gas: 100_000_000_000_000, // 100 TeraGas
 //!         deposit: 0,
-//!     })],
-//! };  
+//!     }))],
+//! };
 //!
 //! let request = methods::broadcast_tx_commit::RpcBroadcastTxCommitRequest {
 //!     signed_transaction: transaction.sign(&signer)
