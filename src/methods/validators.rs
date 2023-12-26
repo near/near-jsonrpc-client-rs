@@ -11,13 +11,13 @@
 //!   use near_primitives::types::{EpochReference, EpochId, BlockReference, Finality};
 //!
 //!   # #[tokio::main]
-//!   # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!   # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 //!   let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
 //!
 //!   let request = methods::validators::RpcValidatorRequest {
-//!       epoch_reference: EpochReference::EpochId(EpochId {
-//!           0: "9xrjdZmgjoVkjVE3ui7tY37x9Mkw5wH385qNXE6cho7T".parse()?,
-//!       })
+//!       epoch_reference: EpochReference::EpochId(
+//!           "9xrjdZmgjoVkjVE3ui7tY37x9Mkw5wH385qNXE6cho7T".parse()?,
+//!       )
 //!   };
 //!
 //!   let response = client.call(request).await?;

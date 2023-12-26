@@ -9,7 +9,7 @@
 //! use near_primitives::types::BlockId;
 //!
 //! # #[tokio::main]
-//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 //! let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
 //!
 //! let request = methods::EXPERIMENTAL_validators_ordered::RpcValidatorsOrderedRequest {

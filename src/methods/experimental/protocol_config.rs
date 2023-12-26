@@ -6,7 +6,7 @@
 //!
 //! Returns the protocol config of the blockchain at a given block.
 //!
-//! ```
+//! ```no_run
 //! use near_jsonrpc_client::{methods, JsonRpcClient};
 //! use near_primitives::types::{BlockReference, BlockId};
 //!
@@ -15,7 +15,7 @@
 //! let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
 //!
 //! let request = methods::EXPERIMENTAL_protocol_config::RpcProtocolConfigRequest {
-//!     block_reference: BlockReference::BlockId(BlockId::Height(47988413))
+//!     block_reference: BlockReference::BlockId(BlockId::Height(100_000_000))
 //! };
 //!
 //! let response = client.call(request).await?;
