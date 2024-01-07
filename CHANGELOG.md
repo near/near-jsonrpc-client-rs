@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0](https://github.com/near/near-jsonrpc-client-rs/compare/v0.6.0...v0.7.0) - 2024-01-07
+
+### Added
+- Added a new example to view contract state ([#129](https://github.com/near/near-jsonrpc-client-rs/pull/129))
+
+### Fixed
+- Fixed doc tests after the recent crate updates ([#135](https://github.com/near/near-jsonrpc-client-rs/pull/135))
+
+### Other
+- *(docs)* revise crate-level docs ([#88](https://github.com/near/near-jsonrpc-client-rs/pull/88))
+- *(docs)* revise README docs ([#91](https://github.com/near/near-jsonrpc-client-rs/pull/91))
+- *(docs)* revise module-level docs for RPC methods ([#87](https://github.com/near/near-jsonrpc-client-rs/pull/87))
+- *(docs)* document the experimental `tx_status` RPC method ([#63](https://github.com/near/near-jsonrpc-client-rs/pull/63))
+- *(docs)* document the experimental `genesis_config` RPC method ([#64](https://github.com/near/near-jsonrpc-client-rs/pull/64))
+- *(docs)* document the `EXPERIMENTAL_protocol_config` RPC method ([#65](https://github.com/near/near-jsonrpc-client-rs/pull/65))
+- *(docs)* document the `EXPERIMENTAL_changes_in_block` RPC method ([#66](https://github.com/near/near-jsonrpc-client-rs/pull/66))
+- *(docs)* document the `EXPERIMENTAL_receipt` RPC method ([#67](https://github.com/near/near-jsonrpc-client-rs/pull/67))
+- *(docs)* document the `query` RPC method ([#68](https://github.com/near/near-jsonrpc-client-rs/pull/68))
+- *(docs)* document the experimental `validators_ordered` RPC method ([#69](https://github.com/near/near-jsonrpc-client-rs/pull/69))
+- *(docs)* document the `gas_price` RPC method ([#70](https://github.com/near/near-jsonrpc-client-rs/pull/70))
+- *(docs)* document the `EXPERIMENTAL_changes` RPC method ([#71](https://github.com/near/near-jsonrpc-client-rs/pull/71))
+- *(docs)* document the `EXPERIMENTAL_check_tx` RPC method ([#72](https://github.com/near/near-jsonrpc-client-rs/pull/72))
+- *(docs)* document the `sandbox_fast_forward` RPC method ([#75](https://github.com/near/near-jsonrpc-client-rs/pull/75))
+- *(docs)* document the `validators` RPC method ([#76](https://github.com/near/near-jsonrpc-client-rs/pull/76))
+- *(docs)* document the `next_light_client_block` RPC method ([#78](https://github.com/near/near-jsonrpc-client-rs/pull/78))
+- *(docs)* document the `broadcast_tx_async` RPC method ([#79](https://github.com/near/near-jsonrpc-client-rs/pull/79))
+- *(docs)* document the `broadcast_tx_commit` RPC method ([#80](https://github.com/near/near-jsonrpc-client-rs/pull/80))
+- *(docs)* document the `sandbox_patch_state` RPC method ([#81](https://github.com/near/near-jsonrpc-client-rs/pull/81))
+- *(docs)* document the error types and variants in the `errors` module ([#84](https://github.com/near/near-jsonrpc-client-rs/pull/84))
+- *(docs)* document the generic `methods::any()` constructor ([#89](https://github.com/near/near-jsonrpc-client-rs/pull/89))
+- [**breaking**] Bump dependencies ([#134](https://github.com/near/near-jsonrpc-client-rs/pull/134))
+
 ## [0.6.0](https://github.com/near/near-jsonrpc-client-rs/compare/v0.5.1...v0.6.0) - 2023-06-02
 
 ### Other
