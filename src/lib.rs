@@ -35,7 +35,7 @@
 //!
 //! 2. Query transaction status from mainnet RPC
 //!
-//!    ```
+//!    ```no_run
 //!    use near_jsonrpc_client::{methods, JsonRpcClient};
 //!    use near_jsonrpc_primitives::types::transactions::TransactionInfo;
 //!
