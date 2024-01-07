@@ -21,12 +21,12 @@
 //!
 //!    # #[tokio::main]
 //!    # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!    let testnet_client = JsonRpcClient::connect("https://rpc.testnet.near.org");
+//!    let client = JsonRpcClient::connect("https://rpc.testnet.near.org");
 //!
-//!    let status_request = methods::status::RpcStatusRequest; // no params
+//!    let request = methods::status::RpcStatusRequest; // no params
 //!
 //!    // call a method on the server via the connected client
-//!    let server_status = testnet_client.call(status_request).await?;
+//!    let server_status = client.call(request).await?;
 //!
 //!    println!("{:?}", server_status);
 //!    # Ok(())
@@ -35,13 +35,13 @@
 //!
 //! 2. Query transaction status from mainnet RPC
 //!
-//!    ```
+//!    ```no_run
 //!    use near_jsonrpc_client::{methods, JsonRpcClient};
 //!    use near_jsonrpc_primitives::types::transactions::TransactionInfo;
 //!
 //!    # #[tokio::main]
 //!    # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-//!    let mainnet_client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
+//!    let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
 //!
 //!    let tx_status_request = methods::tx::RpcTransactionStatusRequest {
 //!        transaction_info: TransactionInfo::TransactionId {
@@ -50,67 +50,12 @@
 //!        },
 //!    };
 //!
-//!    let tx_status = mainnet_client.call(tx_status_request).await?;
+//!    let tx_status = client.call(tx_status_request).await?;
 //!
 //!    println!("{:?}", tx_status);
 //!    # Ok(())
 //!    # }
 //!    ```
-//!
-//! 3. For all intents and purposes, the predefined structures in `methods` should suffice, if you find that they
-//!    don't or you crave extra flexibility, well, you can opt in to use the generic constructor `methods::any()` with the `any` feature flag.
-//!
-//!    In this example, we retrieve only the parts from the genesis config response that we care about.
-//!
-//!    ```toml
-//!    # in Cargo.toml
-//!    near-jsonrpc-client = { ..., features = ["any"] }
-//!    ```
-//!
-//!    ```
-//!    use serde::Deserialize;
-//!    use serde_json::json;
-//!
-//!    # use near_jsonrpc_client::errors::JsonRpcError;
-//!    use near_jsonrpc_client::{methods, JsonRpcClient};
-//!    use near_primitives::serialize::dec_format;
-//!    use near_primitives::types::*;
-//!
-//!    #[derive(Debug, Deserialize)]
-//!    struct PartialGenesisConfig {
-//!        protocol_version: ProtocolVersion,
-//!        chain_id: String,
-//!        genesis_height: BlockHeight,
-//!        epoch_length: BlockHeightDelta,
-//!        #[serde(with = "dec_format")]
-//!        min_gas_price: Balance,
-//!        #[serde(with = "dec_format")]
-//!        max_gas_price: Balance,
-//!        #[serde(with = "dec_format")]
-//!        total_supply: Balance,
-//!        validators: Vec<AccountInfo>,
-//!    }
-//!
-//!    impl methods::RpcHandlerResponse for PartialGenesisConfig {}
-//!
-//!    # #[tokio::main]
-//!    # async fn main() -> Result<(), JsonRpcError<()>> {
-//!    let mainnet_client = JsonRpcClient::connect("https://rpc.mainnet.near.org");
-//!
-//!    # #[cfg(feature = "any")] {
-//!    let genesis_config_request = methods::any::<Result<PartialGenesisConfig, ()>>(
-//!        "EXPERIMENTAL_genesis_config",
-//!        json!(null),
-//!    );
-//!
-//!    let partial_genesis = mainnet_client.call(genesis_config_request).await?;
-//!
-//!    println!("{:#?}", partial_genesis);
-//!    # }
-//!    # Ok(())
-//!    # }
-//!    ```
-
 use std::{fmt, sync::Arc};
 
 use lazy_static::lazy_static;
@@ -159,6 +104,29 @@ struct JsonRpcInnerClient {
 
 #[derive(Clone)]
 /// A NEAR JSON RPC Client.
+///
+/// This is the main struct that you will use to interact with the NEAR JSON RPC API.
+///
+/// ## Example
+///
+///```
+/// use near_jsonrpc_client::{methods, JsonRpcClient};
+/// use near_primitives::types::{BlockReference, Finality};
+///
+/// # #[tokio::main]
+/// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// let client = JsonRpcClient::connect("https://rpc.testnet.near.org");
+///
+/// let request = methods::block::RpcBlockRequest {
+///     block_reference: BlockReference::Finality(Finality::Final),
+/// };
+///
+/// let server_status = client.call(request).await?;
+///
+/// println!("{:?}", server_status);
+/// # Ok(())
+/// # }
+/// ```
 pub struct JsonRpcClient {
     inner: Arc<JsonRpcInnerClient>,
     headers: reqwest::header::HeaderMap,
@@ -175,29 +143,51 @@ impl JsonRpcClient {
     /// ## Example
     ///
     /// ```
-    /// use near_jsonrpc_client::{methods, JsonRpcClient};
+    /// use near_jsonrpc_client::JsonRpcClient;
     ///
-    /// # #[tokio::main]
-    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    /// let mainnet_client = JsonRpcClient::connect("https://rpc.testnet.near.org");
-    ///
-    /// let status_request = methods::status::RpcStatusRequest;
-    /// let server_status = mainnet_client.call(status_request).await?;
-    ///
-    /// println!("{:?}", server_status);
-    /// # Ok(())
-    /// # }
+    /// let client = JsonRpcClient::connect("https://rpc.testnet.near.org");
     /// ```
     pub fn connect<U: AsUrl>(server_addr: U) -> JsonRpcClient {
         DEFAULT_CONNECTOR.connect(server_addr)
     }
 
     /// Get the server address the client connects to.
+    ///
+    /// It basically returns the server address passed to `connect()`.
+    ///
+    /// ## Example
+    ///
+    /// ```
+    /// # use near_jsonrpc_client::JsonRpcClient;
+    /// let client = JsonRpcClient::connect("https://rpc.testnet.near.org");
+    ///
+    /// assert_eq!(client.server_addr(), "https://rpc.testnet.near.org");
+    /// ```
     pub fn server_addr(&self) -> &str {
         &self.inner.server_addr
     }
 
     /// RPC method executor for the client.
+    ///
+    /// ## Example
+    ///
+    /// ```
+    /// use near_jsonrpc_client::{methods, JsonRpcClient};
+    ///
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let client = JsonRpcClient::connect("https://rpc.testnet.near.org");
+    ///
+    /// let request = methods::status::RpcStatusRequest;
+    /// let response = client.call(request).await?;
+    ///
+    /// assert!(matches!(
+    ///     response,
+    ///     methods::status::RpcStatusResponse { .. }
+    /// ));
+    /// # Ok(())
+    /// # }
+    /// ```
     pub async fn call<M>(&self, method: M) -> MethodCallResult<M::Response, M::Error>
     where
         M: methods::RpcMethod,
