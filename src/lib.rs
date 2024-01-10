@@ -38,6 +38,7 @@
 //!    ```no_run
 //!    use near_jsonrpc_client::{methods, JsonRpcClient};
 //!    use near_jsonrpc_primitives::types::transactions::TransactionInfo;
+//!    use near_primitives::views::TxExecutionStatus;
 //!
 //!    # #[tokio::main]
 //!    # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -48,6 +49,7 @@
 //!            tx_hash: "9FtHUFBQsZ2MG77K3x3MJ9wjX3UT8zE1TczCrhZEcG8U".parse()?,
 //!            sender_account_id: "miraclx.near".parse()?,
 //!        },
+//!        wait_until: TxExecutionStatus::Executed,
 //!    };
 //!
 //!    let tx_status = client.call(tx_status_request).await?;
@@ -439,9 +441,9 @@ mod tests {
         assert!(
             matches!(
                 tx_status,
-                Ok(methods::tx::RpcTransactionStatusResponse { ref transaction, .. })
-                if transaction.signer_id == "miraclx.near"
-                && transaction.hash == "9FtHUFBQsZ2MG77K3x3MJ9wjX3UT8zE1TczCrhZEcG8U".parse()?
+                Ok(methods::tx::RpcTransactionResponse { ref final_execution_outcome, .. })
+                if final_execution_outcome.unwrap().into_outcome().transaction.signer_id == "miraclx.near"
+                && final_execution_outcome.unwrap().into_outcome().transaction.hash == "9FtHUFBQsZ2MG77K3x3MJ9wjX3UT8zE1TczCrhZEcG8U".parse()?
             ),
             "expected an Ok(RpcTransactionStatusResponse) with matching signer_id + hash, found [{:?}]",
             tx_status

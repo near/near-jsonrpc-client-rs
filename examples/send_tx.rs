@@ -4,8 +4,6 @@ use near_jsonrpc_primitives::types::transactions::{RpcTransactionError, Transact
 use near_primitives::transaction::{Action, FunctionCallAction, Transaction};
 use near_primitives::types::BlockReference;
 use near_primitives::views::TxExecutionStatus;
-
-use serde_json::json;
 use tokio::time;
 
 mod utils;
@@ -18,6 +16,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let signer_account_id = utils::input("Enter the signer Account ID: ")?.parse()?;
     let signer_secret_key = utils::input("Enter the signer's private key: ")?.parse()?;
+    let wait_until_str = utils::input("Enter the desired guaranteed execution status (can be one of: NONE, INCLUDED, INCLUDED_FINAL, EXECUTED, FINAL): ")?;
+    let wait_until: TxExecutionStatus =
+        serde_json::from_str(&("\"".to_owned() + &wait_until_str + "\""))?;
 
     let signer = near_crypto::InMemorySigner::from_secret_key(signer_account_id, signer_secret_key);
 
@@ -47,7 +48,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         block_hash: access_key_query_response.block_hash,
         actions: vec![Action::FunctionCall(Box::new(FunctionCallAction {
             method_name: "rate".to_string(),
-            args: json!({
+            args: serde_json::json!({
                 "account_id": other_account,
                 "rating": rating,
             })
@@ -57,49 +58,55 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             deposit: 0,
         }))],
     };
+    let tx_hash = transaction.get_hash_and_size().0;
 
-    let request = methods::broadcast_tx_async::RpcBroadcastTxAsyncRequest {
+    let request = methods::send_tx::RpcSendTransactionRequest {
         signed_transaction: transaction.sign(&signer),
+        wait_until: wait_until.clone(),
     };
 
     let sent_at = time::Instant::now();
-    let tx_hash = client.call(request).await?;
-
-    loop {
-        let response = client
-            .call(methods::tx::RpcTransactionStatusRequest {
-                transaction_info: TransactionInfo::TransactionId {
-                    tx_hash,
-                    sender_account_id: signer.account_id.clone(),
-                },
-                wait_until: TxExecutionStatus::Executed,
-            })
-            .await;
-        let received_at = time::Instant::now();
-        let delta = (received_at - sent_at).as_secs();
-
-        if delta > 60 {
-            Err("time limit exceeded for the transaction to be recognized")?;
-        }
-
-        match response {
-            Err(err) => match err.handler_error() {
-                Some(
-                    RpcTransactionError::TimeoutError
-                    | RpcTransactionError::UnknownTransaction { .. },
-                ) => {
-                    time::sleep(time::Duration::from_secs(2)).await;
-                    continue;
-                }
+    let response = match client.call(request).await {
+        Ok(response) => response,
+        Err(err) => {
+            match err.handler_error() {
+                Some(RpcTransactionError::TimeoutError) => {}
                 _ => Err(err)?,
-            },
-            Ok(response) => {
-                println!("response gotten after: {}s", delta);
-                println!("response: {:#?}", response);
-                break;
+            }
+            loop {
+                let response = client
+                    .call(methods::tx::RpcTransactionStatusRequest {
+                        transaction_info: TransactionInfo::TransactionId {
+                            tx_hash,
+                            sender_account_id: signer.account_id.clone(),
+                        },
+                        wait_until: wait_until.clone(),
+                    })
+                    .await;
+                let received_at = time::Instant::now();
+                let delta = (received_at - sent_at).as_secs();
+
+                if delta > 60 {
+                    Err("time limit exceeded for the transaction to be recognized")?;
+                }
+
+                match response {
+                    Err(err) => match err.handler_error() {
+                        Some(RpcTransactionError::TimeoutError) => {}
+                        _ => Err(err)?,
+                    },
+                    Ok(response) => {
+                        break response;
+                    }
+                }
             }
         }
-    }
+    };
+
+    let received_at = time::Instant::now();
+    let delta = (received_at - sent_at).as_secs();
+    println!("response gotten after: {}s", delta);
+    println!("response: {:#?}", response);
 
     Ok(())
 }

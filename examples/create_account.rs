@@ -18,6 +18,7 @@ use near_primitives::transaction::{
     Action, AddKeyAction, CreateAccountAction, FunctionCallAction, Transaction, TransferAction,
 };
 use near_primitives::types::{AccountId, BlockReference};
+use near_primitives::views::{FinalExecutionStatus, TxExecutionStatus};
 
 use serde_json::json;
 use tokio::time;
@@ -205,6 +206,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     tx_hash,
                     sender_account_id: signer.account_id.clone(),
                 },
+                wait_until: TxExecutionStatus::Final,
             })
             .await;
         let received_at = time::Instant::now();
@@ -215,40 +217,38 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
 
         match response {
-            Ok(
-                ref outcome @ near_primitives::views::FinalExecutionOutcomeView {
-                    status: near_primitives::views::FinalExecutionStatus::SuccessValue(ref s),
-                    ..
-                },
-            ) => {
-                // outcome.status != SuccessValue(`false`)
-                if s == b"false" {
-                    println!("(i) Account successfully created after {}s", delta);
-                } else {
-                    println!("{:#?}", outcome);
-                    println!("(!) Creating the account failed, check above for full logs");
+            Ok(tx) => {
+                // it's fine to unwrap because we asked for finalized tx
+                let outcome = tx.final_execution_outcome.unwrap().into_outcome();
+                match outcome.status {
+                    FinalExecutionStatus::Failure(err) => {
+                        println!("{:#?}", err);
+                        println!("(!) Creating the account failed, check above for full logs");
+                        break;
+                    }
+                    FinalExecutionStatus::SuccessValue(ref s) => {
+                        // outcome.status != SuccessValue(`false`)
+                        if s == b"false" {
+                            println!("(i) Account successfully created after {}s", delta);
+                        } else {
+                            println!("{:#?}", outcome);
+                            println!("(!) Creating the account failed, check above for full logs");
+                        }
+                        break;
+                    }
+                    _ => {}
                 }
-                break;
-            }
-            Ok(near_primitives::views::FinalExecutionOutcomeView {
-                status: near_primitives::views::FinalExecutionStatus::Failure(err),
-                ..
-            }) => {
-                println!("{:#?}", err);
-                println!("(!) Creating the account failed, check above for full logs");
-                break;
             }
             Err(err) => match err.handler_error() {
                 Some(
                     RpcTransactionError::TimeoutError
-                    | methods::tx::RpcTransactionError::UnknownTransaction { .. },
+                    | RpcTransactionError::UnknownTransaction { .. },
                 ) => {
                     time::sleep(time::Duration::from_secs(2)).await;
                     continue;
                 }
                 _ => Err(err)?,
             },
-            _ => {}
         }
     }
 

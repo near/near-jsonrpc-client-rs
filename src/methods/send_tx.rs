@@ -1,12 +1,12 @@
-//! Sends blocking transactions.
+//! Sends a transaction.
 //!
-//! Sends a signed transaction to the RPC and waits until the transaction is fully complete.
+//! Sends a signed transaction to the RPC, returns the guaranteed execution status and the results the blockchain can provide at the moment.
 //!
 //! Constructs a signed transaction to be sent to an RPC node.
 //!
 //! This code sample doesn't make any requests to the RPC node. It only shows how to construct the request. It's been truncated for brevity.
 //!
-//! A full example on how to use `broadcast_tx_commit` method can be found at [`contract_change_method`](https://github.com/near/near-jsonrpc-client-rs/blob/master/examples/contract_change_method_commit.rs).
+//! A full example on how to use `send_tx` method can be found at [`send_tx`](https://github.com/near/near-jsonrpc-client-rs/blob/master/examples/send_tx.rs).
 //!
 //! ## Example
 //!
@@ -19,6 +19,7 @@
 //!
 //! # #[tokio::main]
 //! # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+//! use near_primitives::views::TxExecutionStatus;
 //! let client = JsonRpcClient::connect("https://archival-rpc.testnet.near.org");
 //!
 //! let signer_account_id = "fido.testnet".parse::<AccountId>()?;
@@ -48,48 +49,35 @@
 //!     }))],
 //! };
 //!
-//! let request = methods::broadcast_tx_commit::RpcBroadcastTxCommitRequest {
-//!     signed_transaction: transaction.sign(&signer)
+//! let request = methods::send_tx::RpcSendTransactionRequest {
+//!     signed_transaction: transaction.sign(&signer),
+//!     wait_until: TxExecutionStatus::IncludedFinal,
 //! };
 //! # Ok(())
 //! # }
 //! ```
 use super::*;
+pub use near_jsonrpc_primitives::types::transactions::{
+    RpcSendTransactionRequest, RpcTransactionResponse,
+};
 
 pub use near_jsonrpc_primitives::types::transactions::RpcTransactionError;
 pub use near_primitives::transaction::SignedTransaction;
 
-pub type RpcBroadcastTxCommitResponse = near_primitives::views::FinalExecutionOutcomeView;
-
-#[derive(Debug)]
-pub struct RpcBroadcastTxCommitRequest {
-    pub signed_transaction: SignedTransaction,
-}
-
-impl From<RpcBroadcastTxCommitRequest>
-    for near_jsonrpc_primitives::types::transactions::RpcSendTransactionRequest
-{
-    fn from(this: RpcBroadcastTxCommitRequest) -> Self {
-        Self {
-            signed_transaction: this.signed_transaction,
-            wait_until: near_primitives::views::TxExecutionStatus::default(),
-        }
-    }
-}
-
-impl RpcMethod for RpcBroadcastTxCommitRequest {
-    type Response = RpcBroadcastTxCommitResponse;
+impl RpcMethod for RpcSendTransactionRequest {
+    type Response = RpcTransactionResponse;
     type Error = RpcTransactionError;
 
     fn method_name(&self) -> &str {
-        "broadcast_tx_commit"
+        "send_tx"
     }
 
     fn params(&self) -> Result<serde_json::Value, io::Error> {
-        Ok(json!([common::serialize_signed_transaction(
-            &self.signed_transaction
-        )?]))
+        Ok(json!([
+            common::serialize_signed_transaction(&self.signed_transaction)?,
+            self.wait_until
+        ]))
     }
 }
 
-impl private::Sealed for RpcBroadcastTxCommitRequest {}
+impl private::Sealed for RpcSendTransactionRequest {}
