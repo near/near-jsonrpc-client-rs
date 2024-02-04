@@ -17,8 +17,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let signer_account_id = utils::input("Enter the signer Account ID: ")?.parse()?;
     let signer_secret_key = utils::input("Enter the signer's private key: ")?.parse()?;
     let wait_until_str = utils::input("Enter the desired guaranteed execution status (can be one of: NONE, INCLUDED, INCLUDED_FINAL, EXECUTED, FINAL): ")?;
-    let wait_until: TxExecutionStatus =
-        serde_json::from_str(&("\"".to_owned() + &wait_until_str + "\""))?;
+    let wait_until: TxExecutionStatus = serde_json::from_value(serde_json::json!(wait_until_str))?;
 
     let signer = near_crypto::InMemorySigner::from_secret_key(signer_account_id, signer_secret_key);
 
