@@ -93,22 +93,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             break 'root;
         };
 
+        let wait_until_str = utils::input("Enter the desired guaranteed execution status (can be one of: NONE, INCLUDED, INCLUDED_FINAL, EXECUTED, FINAL): ")?;
+        let wait_until = serde_json::from_value(serde_json::json!(wait_until_str))?;
+
         match client
             .call(methods::tx::RpcTransactionStatusRequest {
                 transaction_info: methods::tx::TransactionInfo::TransactionId {
                     tx_hash,
                     sender_account_id: account_id,
                 },
+                wait_until,
             })
             .await
         {
-            Ok(block_details) => println!("{:#?}", block_details),
+            Ok(tx_details) => println!("{:#?}", tx_details),
             Err(err) => match err.handler_error() {
                 Some(err) => {
                     println!("(i) An error occurred `{:#?}`", err);
                     continue;
                 }
-                _ => println!("(i) A non-handler error ocurred `{:#?}`", err),
+                _ => println!("(i) A non-handler error occurred `{:#?}`", err),
             },
         };
         break;

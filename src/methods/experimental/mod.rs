@@ -6,9 +6,6 @@ pub use changes as EXPERIMENTAL_changes;
 pub mod changes_in_block;
 pub use changes_in_block as EXPERIMENTAL_changes_in_block;
 
-pub mod check_tx;
-pub use check_tx as EXPERIMENTAL_check_tx;
-
 pub mod genesis_config;
 pub use genesis_config as EXPERIMENTAL_genesis_config;
 
