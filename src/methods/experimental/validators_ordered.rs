@@ -13,7 +13,7 @@
 //! let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
 //!
 //! let request = methods::EXPERIMENTAL_validators_ordered::RpcValidatorsOrderedRequest {
-//!     block_id: Some(BlockId::Hash("3eitm2GGAGhmvg6k7bFnsabSjkDC1WDPxH3buxZofTiN".parse()?))
+//!     block_id: Some(BlockId::Hash("Brj839ta6ffccCvDcXzEh7iRak2jCxuc7M3U1cEmRH9k".parse()?))
 //! };
 //!
 //! let response = client.call(request).await?;
