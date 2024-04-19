@@ -7,7 +7,7 @@
 //!
 //! ```
 //! use near_jsonrpc_client::{methods, JsonRpcClient};
-//! use near_primitives::views;
+//! use near_primitives::views::TxExecutionStatus;
 //!
 //! # #[tokio::main]
 //! # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -18,14 +18,15 @@
 //!     transaction_info: methods::EXPERIMENTAL_tx_status::TransactionInfo::TransactionId {
 //!         tx_hash,
 //!         sender_account_id: "itranscend.near".parse()?,
-//!    }
+//!     },
+//!     wait_until: TxExecutionStatus::Executed,
 //! };
 //!
 //! let response = client.call(request).await?;
 //!
 //! assert!(matches!(
 //!     response,
-//!     views::FinalExecutionOutcomeWithReceiptView { .. }
+//!     near_jsonrpc_primitives::types::transactions::RpcTransactionResponse { .. }
 //! ));
 //! # Ok(())
 //! # }
@@ -33,14 +34,13 @@
 use super::*;
 
 pub use near_jsonrpc_primitives::types::transactions::RpcTransactionError;
+pub use near_jsonrpc_primitives::types::transactions::RpcTransactionResponse;
 pub use near_jsonrpc_primitives::types::transactions::TransactionInfo;
-
-pub type RpcTransactionStatusResponse =
-    near_primitives::views::FinalExecutionOutcomeWithReceiptView;
 
 #[derive(Debug)]
 pub struct RpcTransactionStatusRequest {
     pub transaction_info: TransactionInfo,
+    pub wait_until: near_primitives::views::TxExecutionStatus,
 }
 
 impl From<RpcTransactionStatusRequest>
@@ -49,15 +49,12 @@ impl From<RpcTransactionStatusRequest>
     fn from(this: RpcTransactionStatusRequest) -> Self {
         Self {
             transaction_info: this.transaction_info,
-            wait_until: near_primitives::views::TxExecutionStatus::None,
+            wait_until: this.wait_until,
         }
     }
 }
-
-impl RpcHandlerResponse for RpcTransactionStatusResponse {}
-
 impl RpcMethod for RpcTransactionStatusRequest {
-    type Response = RpcTransactionStatusResponse;
+    type Response = RpcTransactionResponse;
     type Error = RpcTransactionError;
 
     fn method_name(&self) -> &str {
@@ -69,12 +66,19 @@ impl RpcMethod for RpcTransactionStatusRequest {
             TransactionInfo::Transaction(signed_transaction) => {
                 match signed_transaction {
                     near_jsonrpc_primitives::types::transactions::SignedTransaction::SignedTransaction(tx) => {
-                        json!([common::serialize_signed_transaction(tx)?])
+                        json!({
+                            "signed_tx_base64": common::serialize_signed_transaction(tx)?,
+                            "wait_until": self.wait_until
+                        })
                     },
                 }
             }
             TransactionInfo::TransactionId { tx_hash,sender_account_id } => {
-                json!([tx_hash, sender_account_id])
+                json!({
+                    "tx_hash": tx_hash,
+                    "sender_account_id": sender_account_id,
+                    "wait_until": self.wait_until
+                })
             }
         })
     }
