@@ -73,10 +73,10 @@ impl RpcMethod for RpcSendTransactionRequest {
     }
 
     fn params(&self) -> Result<serde_json::Value, io::Error> {
-        Ok(json!([
-            common::serialize_signed_transaction(&self.signed_transaction)?,
-            self.wait_until
-        ]))
+        Ok(json!({
+                "signed_tx_base64": common::serialize_signed_transaction(&self.signed_transaction)?,
+                "wait_until": self.wait_until
+        }))
     }
 }
 
