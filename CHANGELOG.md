@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0](https://github.com/near/near-jsonrpc-client-rs/compare/v0.8.0...v0.9.0) - 2024-04-22
+
+### Added
+- Upgrade near-primitives to 0.21.x and refactor the API adding `wait_until` flag, drop `check_tx` method ([#136](https://github.com/near/near-jsonrpc-client-rs/pull/136))
+
+### Other
+- removed array creation for parameters in fn params() implementation for send_tx method ([#142](https://github.com/near/near-jsonrpc-client-rs/pull/142))
+
 ## [0.8.0](https://github.com/near/near-jsonrpc-client-rs/compare/v0.7.0...v0.8.0) - 2024-01-21
 
 ### Other
