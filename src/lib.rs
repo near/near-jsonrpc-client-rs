@@ -61,6 +61,7 @@
 use std::{fmt, sync::Arc};
 
 use lazy_static::lazy_static;
+use log::debug;
 
 pub mod auth;
 pub mod errors;
@@ -87,11 +88,13 @@ pub struct JsonRpcClientConnector {
 impl JsonRpcClientConnector {
     /// Return a JsonRpcClient that connects to the specified server.
     pub fn connect<U: AsUrl>(&self, server_addr: U) -> JsonRpcClient {
-        log::debug!("returned a new JSONRPC client handle");
+        let server_addr = server_addr.to_string();
+
+        debug!("returned a new JSONRPC client handle for {}", server_addr);
 
         JsonRpcClient {
             inner: Arc::new(JsonRpcInnerClient {
-                server_addr: server_addr.to_string(),
+                server_addr: server_addr,
                 client: self.client.clone(),
             }),
             headers: reqwest::header::HeaderMap::new(),
@@ -200,8 +203,9 @@ impl JsonRpcClient {
             ))
         })?;
 
-        log::debug!("request payload: {:#}", request_payload);
-        log::debug!("request headers: {:#?}", self.headers());
+        debug!("request url: {}", self.inner.server_addr);
+        debug!("request headers: {:#?}", self.headers());
+        debug!("request payload: {:#}", request_payload);
 
         let request_payload = serde_json::to_vec(&request_payload).map_err(|err| {
             JsonRpcError::TransportError(RpcTransportError::SendError(
@@ -221,7 +225,8 @@ impl JsonRpcClient {
                 JsonRpcTransportSendError::PayloadSendError(err),
             ))
         })?;
-        log::debug!("response headers: {:#?}", response.headers());
+        debug!("response status: {:#?}", response.status());
+        debug!("response headers: {:#?}", response.headers());
         match response.status() {
             reqwest::StatusCode::OK => {}
             non_ok_status => {
@@ -248,7 +253,7 @@ impl JsonRpcClient {
         let response_payload = serde_json::from_slice::<serde_json::Value>(&response_payload);
 
         if let Ok(ref response_payload) = response_payload {
-            log::debug!("response payload: {:#}", response_payload);
+            debug!("response payload: {:#}", response_payload);
         }
 
         let response_message = near_jsonrpc_primitives::message::decoded_to_parsed(
@@ -341,7 +346,7 @@ impl JsonRpcClient {
             reqwest::header::HeaderValue::from_static("application/json"),
         );
 
-        log::debug!("initialized a new JSONRPC client connector");
+        debug!("initialized a new JSONRPC client connector");
         JsonRpcClientConnector {
             client: reqwest::Client::builder()
                 .default_headers(headers)
