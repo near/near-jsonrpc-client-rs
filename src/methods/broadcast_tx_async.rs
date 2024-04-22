@@ -70,7 +70,7 @@ impl From<RpcBroadcastTxAsyncRequest>
     fn from(this: RpcBroadcastTxAsyncRequest) -> Self {
         Self {
             signed_transaction: this.signed_transaction,
-            wait_until: near_primitives::views::TxExecutionStatus::default(),
+            wait_until: near_primitives::views::TxExecutionStatus::None,
         }
     }
 }
