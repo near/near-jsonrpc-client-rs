@@ -92,7 +92,7 @@
 //!   ```
 use super::*;
 
-pub use near_jsonrpc_primitives::types::chunks::{RpcChunkError, RpcChunkRequest};
+pub use near_jsonrpc_primitives::types::chunks::{ChunkReference, RpcChunkError, RpcChunkRequest};
 
 pub type RpcChunkResponse = near_primitives::views::ChunkView;
 
