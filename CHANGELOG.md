@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0](https://github.com/near/near-jsonrpc-client-rs/compare/v0.9.0...v0.10.0) - 2024-06-07
+
+### Other
+- expose `ChunkReference` type used in chunk call ([#144](https://github.com/near/near-jsonrpc-client-rs/pull/144))
+- [**breaking**] Upgraded libraries to the latest versions: near-* 0.22 and reqwest 0.12 ([#145](https://github.com/near/near-jsonrpc-client-rs/pull/145))
+
 ## [0.9.0](https://github.com/near/near-jsonrpc-client-rs/compare/v0.8.0...v0.9.0) - 2024-04-22
 
 ### Added
