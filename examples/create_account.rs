@@ -134,27 +134,30 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let is_sub_account = new_account_id.is_sub_account_of(&signer.account_id);
     let new_key_pair = near_crypto::SecretKey::from_random(near_crypto::KeyType::ED25519);
 
-    let transaction = if is_sub_account {
-        TransactionV0 {
-            signer_id: signer.account_id.clone(),
-            public_key: signer.public_key.clone(),
-            nonce: current_nonce + 1,
-            receiver_id: new_account_id.clone(),
-            block_hash: latest_hash,
-            actions: vec![
-                Action::CreateAccount(CreateAccountAction {}),
-                Action::AddKey(Box::new(AddKeyAction {
-                    access_key: near_primitives::account::AccessKey {
-                        nonce: 0,
-                        permission: near_primitives::account::AccessKeyPermission::FullAccess,
-                    },
-                    public_key: new_key_pair.public_key(),
-                })),
-                Action::Transfer(TransferAction {
-                    deposit: initial_deposit,
-                }),
-            ],
-        }
+    let (transaction, expected_output) = if is_sub_account {
+        (
+            TransactionV0 {
+                signer_id: signer.account_id.clone(),
+                public_key: signer.public_key.clone(),
+                nonce: current_nonce + 1,
+                receiver_id: new_account_id.clone(),
+                block_hash: latest_hash,
+                actions: vec![
+                    Action::CreateAccount(CreateAccountAction {}),
+                    Action::AddKey(Box::new(AddKeyAction {
+                        access_key: near_primitives::account::AccessKey {
+                            nonce: 0,
+                            permission: near_primitives::account::AccessKeyPermission::FullAccess,
+                        },
+                        public_key: new_key_pair.public_key(),
+                    })),
+                    Action::Transfer(TransferAction {
+                        deposit: initial_deposit,
+                    }),
+                ],
+            },
+            vec![],
+        )
     } else {
         let contract_id = if client.server_addr().ends_with("testnet.near.org") {
             "testnet".parse()?
@@ -163,24 +166,27 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         } else {
             Err("can only create non-sub accounts for mainnet / testnet\nconsider creating a sub-account instead")?
         };
-        TransactionV0 {
-            signer_id: signer.account_id.clone(),
-            public_key: signer.public_key.clone(),
-            nonce: current_nonce + 1,
-            receiver_id: contract_id,
-            block_hash: latest_hash,
-            actions: vec![Action::FunctionCall(Box::new(FunctionCallAction {
-                method_name: "create_account".to_string(),
-                args: json!({
-                    "new_account_id": new_account_id,
-                    "new_public_key": new_key_pair.public_key(),
-                })
-                .to_string()
-                .into_bytes(),
-                gas: 300_000_000_000_000,
-                deposit: initial_deposit,
-            }))],
-        }
+        (
+            TransactionV0 {
+                signer_id: signer.account_id.clone(),
+                public_key: signer.public_key.clone(),
+                nonce: current_nonce + 1,
+                receiver_id: contract_id,
+                block_hash: latest_hash,
+                actions: vec![Action::FunctionCall(Box::new(FunctionCallAction {
+                    method_name: "create_account".to_string(),
+                    args: json!({
+                        "new_account_id": new_account_id,
+                        "new_public_key": new_key_pair.public_key(),
+                    })
+                    .to_string()
+                    .into_bytes(),
+                    gas: 300_000_000_000_000,
+                    deposit: initial_deposit,
+                }))],
+            },
+            b"true".to_vec(),
+        )
     };
 
     println!("=============================================================");
@@ -229,8 +235,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         break;
                     }
                     FinalExecutionStatus::SuccessValue(ref s) => {
-                        // outcome.status != SuccessValue(`false`)
-                        if s.is_empty() {
+                        if s == &expected_output {
                             println!("(i) Account successfully created after {}s", delta);
                         } else {
                             println!("{:#?}", outcome);
