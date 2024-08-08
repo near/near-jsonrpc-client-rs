@@ -1,4 +1,7 @@
+use std::str::FromStr;
+
 use near_jsonrpc_client::methods;
+use near_primitives::{hash::CryptoHash, types::AccountId};
 
 mod utils;
 
@@ -57,6 +60,22 @@ pub fn specify_block_reference() -> std::io::Result<near_primitives::types::Bloc
     Ok(block_reference)
 }
 
+fn get_valid_input<T: FromStr>(
+    prompt: &str,
+    max_retries: usize,
+) -> Result<T, Box<dyn std::error::Error>> {
+    for _ in 0..max_retries {
+        let input = utils::input(prompt)?;
+        if let Ok(value) = input.parse() {
+            return Ok(value);
+        } else {
+            println!("(i) Invalid input!");
+        }
+    }
+
+    Err(format!("(i) Maximum number of retries ({}) reached", max_retries).into())
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     env_logger::init();
@@ -64,35 +83,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = utils::select_network()?;
 
     // tolerate only 3 retries for a non-failing transaction hash
-    'root: for _ in 1..=3 {
-        let tx_hash = 'tx_hash: loop {
-            // tolerate only 3 retries for a valid transaction hash
-            for _ in 1..=3 {
-                if let Ok(tx_hash) =
-                    utils::input("What transaction hash should we query? ")?.parse()
-                {
-                    break 'tx_hash tx_hash;
-                }
-                println!("(i) Invalid transaction hash!");
-            }
-
-            break 'root;
-        };
-
-        let account_id = 'account_id: loop {
-            // tolerate only 3 retries for a valid Account ID
-            for _ in 1..=3 {
-                if let Ok(account_id) =
-                    utils::input("What account signed this transaction? ")?.parse()
-                {
-                    break 'account_id account_id;
-                }
-                println!("(i) Invalid Account ID!");
-            }
-
-            break 'root;
-        };
-
+    for _ in 1..=3 {
+        let tx_hash: CryptoHash = get_valid_input("What transaction hash should we query", 3)?;
+        let account_id: AccountId = get_valid_input("What account signed this transaction", 3)?;
         let wait_until_str = utils::input("Enter the desired guaranteed execution status (can be one of: NONE, INCLUDED, INCLUDED_FINAL, EXECUTED, FINAL): ")?;
         let wait_until = serde_json::from_value(serde_json::json!(wait_until_str))?;
 

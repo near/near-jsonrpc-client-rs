@@ -9,13 +9,15 @@
 //!
 //! This script is interactive.
 
+use near_crypto::Signer;
 use near_jsonrpc_client::methods::broadcast_tx_commit::RpcTransactionError;
 use near_jsonrpc_client::{methods, JsonRpcClient};
 use near_jsonrpc_primitives::types::query::QueryResponseKind;
 use near_jsonrpc_primitives::types::transactions::TransactionInfo;
 use near_primitives::hash::CryptoHash;
 use near_primitives::transaction::{
-    Action, AddKeyAction, CreateAccountAction, FunctionCallAction, Transaction, TransferAction,
+    Action, AddKeyAction, CreateAccountAction, FunctionCallAction, Transaction, TransactionV0,
+    TransferAction,
 };
 use near_primitives::types::{AccountId, BlockReference};
 use near_primitives::views::{FinalExecutionStatus, TxExecutionStatus};
@@ -124,7 +126,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             utils::input("How much do you want to fund this account with (in Ⓝ units)? ")?
                 .parse()?;
         if deposit >= 0.0 {
-            break ((deposit * 1_000_000.0) as u128) * 1_000_000_000_000_000_000 as u128;
+            break ((deposit * 1_000_000.0) as u128) * 1_000_000_000_000_000_000_u128;
         }
         println!("(i) Enter a non-zero deposit value!");
     };
@@ -133,7 +135,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let new_key_pair = near_crypto::SecretKey::from_random(near_crypto::KeyType::ED25519);
 
     let transaction = if is_sub_account {
-        Transaction {
+        TransactionV0 {
             signer_id: signer.account_id.clone(),
             public_key: signer.public_key.clone(),
             nonce: current_nonce + 1,
@@ -161,7 +163,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         } else {
             Err("can only create non-sub accounts for mainnet / testnet\nconsider creating a sub-account instead")?
         };
-        Transaction {
+        TransactionV0 {
             signer_id: signer.account_id.clone(),
             public_key: signer.public_key.clone(),
             nonce: current_nonce + 1,
@@ -189,7 +191,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("-------------------------------------------------------------");
 
     let request = methods::broadcast_tx_async::RpcBroadcastTxAsyncRequest {
-        signed_transaction: transaction.sign(&signer),
+        signed_transaction: Transaction::V0(transaction).sign(&Signer::InMemory(signer.clone())),
     };
 
     let sent_at = time::Instant::now();
@@ -228,7 +230,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     }
                     FinalExecutionStatus::SuccessValue(ref s) => {
                         // outcome.status != SuccessValue(`false`)
-                        if s == b"false" {
+                        if s.is_empty() {
                             println!("(i) Account successfully created after {}s", delta);
                         } else {
                             println!("{:#?}", outcome);

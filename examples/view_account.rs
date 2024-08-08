@@ -24,5 +24,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("{:#?}", result);
     }
 
+    let request: methods::EXPERIMENTAL_protocol_config::RpcProtocolConfigRequest =
+        methods::EXPERIMENTAL_protocol_config::RpcProtocolConfigRequest {
+            block_reference: BlockReference::latest(),
+        };
+
+    let response = client.call(request).await?;
+    println!("{:#?}", response);
+
     Ok(())
 }
