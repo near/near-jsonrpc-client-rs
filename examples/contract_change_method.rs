@@ -1,7 +1,8 @@
+use near_crypto::Signer;
 use near_jsonrpc_client::{methods, JsonRpcClient};
 use near_jsonrpc_primitives::types::query::QueryResponseKind;
 use near_jsonrpc_primitives::types::transactions::{RpcTransactionError, TransactionInfo};
-use near_primitives::transaction::{Action, FunctionCallAction, Transaction};
+use near_primitives::transaction::{Action, FunctionCallAction, Transaction, TransactionV0};
 use near_primitives::types::BlockReference;
 use near_primitives::views::TxExecutionStatus;
 
@@ -39,7 +40,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let other_account = utils::input("Enter the account to be rated: ")?;
     let rating = utils::input("Enter a rating: ")?.parse::<f32>()?;
 
-    let transaction = Transaction {
+    let transaction = TransactionV0 {
         signer_id: signer.account_id.clone(),
         public_key: signer.public_key.clone(),
         nonce: current_nonce + 1,
@@ -59,7 +60,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     let request = methods::broadcast_tx_async::RpcBroadcastTxAsyncRequest {
-        signed_transaction: transaction.sign(&signer),
+        signed_transaction: Transaction::V0(transaction).sign(&Signer::InMemory(signer.clone())),
     };
 
     let sent_at = time::Instant::now();

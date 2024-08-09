@@ -14,7 +14,7 @@
 //! use near_jsonrpc_client::{methods, JsonRpcClient};
 //! use near_jsonrpc_primitives::types::{query::QueryResponseKind, transactions::TransactionInfo};
 //! use near_primitives::types::{AccountId, BlockReference};
-//! use near_primitives::transaction::{Action, FunctionCallAction, Transaction};
+//! use near_primitives::transaction::{Action, FunctionCallAction, Transaction, TransactionV0};
 //! use serde_json::json;
 //!
 //! # #[tokio::main]
@@ -29,7 +29,7 @@
 //! let other_account = "rpc_docs.testnet".parse::<AccountId>()?;
 //! let rating = "4.5".parse::<f32>()?;
 //!
-//! let transaction = Transaction {
+//! let transaction = Transaction::V0(TransactionV0 {
 //!     signer_id: signer.account_id.clone(),
 //!     public_key: signer.public_key.clone(),
 //!     nonce: 904565 + 1,
@@ -46,10 +46,10 @@
 //!         gas: 100_000_000_000_000, // 100 TeraGas
 //!         deposit: 0,
 //!     }))],
-//! };
+//! });
 //!
 //! let request = methods::broadcast_tx_commit::RpcBroadcastTxCommitRequest {
-//!     signed_transaction: transaction.sign(&signer)
+//!     signed_transaction: transaction.sign(&near_crypto::Signer::InMemory(signer))
 //! };
 //! # Ok(())
 //! # }
