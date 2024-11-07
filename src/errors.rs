@@ -65,6 +65,12 @@ pub enum JsonRpcServerResponseStatusError {
     /// The RPC client exceeds the rate limit by sending too many requests.
     #[error("this client has exceeded the rate limit")]
     TooManyRequests,
+    #[error("the server returned status code 400 - bad request")]
+    BadRequest,
+    #[error("timerout error")]
+    TimeoutError,
+    #[error("serivce unavailable")]
+    ServiceUnavailable,
     /// The RPC server returned a non-200 status code.
     #[error("the server returned a non-OK (200) status code: [{status}]")]
     Unexpected { status: reqwest::StatusCode },

@@ -226,17 +226,29 @@ impl JsonRpcClient {
             reqwest::StatusCode::OK => {}
             non_ok_status => {
                 return Err(JsonRpcError::ServerError(
-                    JsonRpcServerError::ResponseStatusError(match non_ok_status {
+                    match non_ok_status {
                         reqwest::StatusCode::UNAUTHORIZED => {
-                            JsonRpcServerResponseStatusError::Unauthorized
+                            JsonRpcServerError::ResponseStatusError(JsonRpcServerResponseStatusError::Unauthorized)
                         }
                         reqwest::StatusCode::TOO_MANY_REQUESTS => {
-                            JsonRpcServerResponseStatusError::TooManyRequests
+                            JsonRpcServerError::ResponseStatusError(JsonRpcServerResponseStatusError::TooManyRequests)
+                        }
+                        reqwest::StatusCode::BAD_REQUEST => {
+                            JsonRpcServerError::ResponseStatusError(JsonRpcServerResponseStatusError::BadRequest)
+                        }
+                        reqwest::StatusCode::INTERNAL_SERVER_ERROR => {
+                            JsonRpcServerError::InternalError { info: Some(String::from("Internal server error")) }
+                        }
+                        reqwest::StatusCode::SERVICE_UNAVAILABLE => {
+                            JsonRpcServerError::ResponseStatusError(JsonRpcServerResponseStatusError::ServiceUnavailable)
+                        }
+                        reqwest::StatusCode::REQUEST_TIMEOUT => {
+                            JsonRpcServerError::ResponseStatusError(JsonRpcServerResponseStatusError::TimeoutError)
                         }
                         unexpected => {
-                            JsonRpcServerResponseStatusError::Unexpected { status: unexpected }
+                            JsonRpcServerError::ResponseStatusError(JsonRpcServerResponseStatusError::Unexpected { status: unexpected })
                         }
-                    }),
+                    }
                 ));
             }
         }
