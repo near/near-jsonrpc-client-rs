@@ -67,9 +67,9 @@ pub enum JsonRpcServerResponseStatusError {
     TooManyRequests,
     #[error("the server returned status code 400 - bad request")]
     BadRequest,
-    #[error("timerout error")]
+    #[error("the request failed with timeout error")]
     TimeoutError,
-    #[error("serivce unavailable")]
+    #[error("the server is unavailable")]
     ServiceUnavailable,
     /// The RPC server returned a non-200 status code.
     #[error("the server returned a non-OK (200) status code: [{status}]")]
