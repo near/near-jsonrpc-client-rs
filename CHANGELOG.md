@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.0](https://github.com/near/near-jsonrpc-client-rs/compare/v0.13.0...v0.14.0) - 2024-11-12
+
+### Added
+
+- added http errors 400, 408, 503, 500 ([#160](https://github.com/near/near-jsonrpc-client-rs/pull/160))
+
+### Other
+
+- [**breaking**] updates near-* dependencies to 0.27 release ([#161](https://github.com/near/near-jsonrpc-client-rs/pull/161))
+
 ## [0.13.0](https://github.com/near/near-jsonrpc-client-rs/compare/v0.12.0...v0.13.0) - 2024-09-11
 
 ### Other
