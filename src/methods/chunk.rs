@@ -13,7 +13,7 @@
 //!       ```
 //!       use near_jsonrpc_client::{methods, JsonRpcClient};
 //!       use near_jsonrpc_primitives::types::chunks;
-//!       use near_primitives::types::BlockId;
+//!       use near_primitives::types::{BlockId, ShardId};
 //!
 //!       # #[tokio::main]
 //!       # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -22,7 +22,7 @@
 //!       let request = methods::chunk::RpcChunkRequest {
 //!           chunk_reference: chunks::ChunkReference::BlockShardId {
 //!               block_id: BlockId::Hash("6atGq4TUTZerVHU9qWoYfzXNBg3K4C4cca15TE6KfuBr".parse()?),
-//!               shard_id: 0,
+//!               shard_id: ShardId::from(0),
 //!           }
 //!       };
 //!
@@ -41,7 +41,7 @@
 //!       ```
 //!       use near_jsonrpc_client::{methods, JsonRpcClient};
 //!       use near_jsonrpc_primitives::types::chunks;
-//!       use near_primitives::types::BlockId;
+//!       use near_primitives::types::{BlockId, ShardId};
 //!
 //!       # #[tokio::main]
 //!       # async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -50,7 +50,7 @@
 //!       let request = methods::chunk::RpcChunkRequest {
 //!           chunk_reference: chunks::ChunkReference::BlockShardId {
 //!               block_id: BlockId::Height(61512623),
-//!               shard_id: 3,
+//!               shard_id: ShardId::from(3),
 //!           }
 //!       };
 //!
