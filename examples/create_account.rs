@@ -9,7 +9,6 @@
 //!
 //! This script is interactive.
 
-use near_crypto::Signer;
 use near_jsonrpc_client::methods::broadcast_tx_commit::RpcTransactionError;
 use near_jsonrpc_client::{methods, JsonRpcClient};
 use near_jsonrpc_primitives::types::query::QueryResponseKind;
@@ -106,7 +105,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
 
         if let Some((latest_hash, current_nonce)) =
-            get_current_nonce(&client, &signer.account_id, &signer.public_key).await?
+            get_current_nonce(&client, &signer.get_account_id(), &signer.public_key()).await?
         {
             break (signer, latest_hash, current_nonce);
         }
@@ -131,14 +130,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("(i) Enter a non-zero deposit value!");
     };
 
-    let is_sub_account = new_account_id.is_sub_account_of(&signer.account_id);
+    let is_sub_account = new_account_id.is_sub_account_of(&signer.get_account_id());
     let new_key_pair = near_crypto::SecretKey::from_random(near_crypto::KeyType::ED25519);
 
     let (transaction, expected_output) = if is_sub_account {
         (
             TransactionV0 {
-                signer_id: signer.account_id.clone(),
-                public_key: signer.public_key.clone(),
+                signer_id: signer.get_account_id(),
+                public_key: signer.public_key().clone(),
                 nonce: current_nonce + 1,
                 receiver_id: new_account_id.clone(),
                 block_hash: latest_hash,
@@ -168,8 +167,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         };
         (
             TransactionV0 {
-                signer_id: signer.account_id.clone(),
-                public_key: signer.public_key.clone(),
+                signer_id: signer.get_account_id(),
+                public_key: signer.public_key().clone(),
                 nonce: current_nonce + 1,
                 receiver_id: contract_id,
                 block_hash: latest_hash,
@@ -197,7 +196,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("-------------------------------------------------------------");
 
     let request = methods::broadcast_tx_async::RpcBroadcastTxAsyncRequest {
-        signed_transaction: Transaction::V0(transaction).sign(&Signer::InMemory(signer.clone())),
+        signed_transaction: Transaction::V0(transaction).sign(&signer),
     };
 
     let sent_at = time::Instant::now();
@@ -212,7 +211,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .call(methods::tx::RpcTransactionStatusRequest {
                 transaction_info: TransactionInfo::TransactionId {
                     tx_hash,
-                    sender_account_id: signer.account_id.clone(),
+                    sender_account_id: signer.get_account_id(),
                 },
                 wait_until: TxExecutionStatus::Final,
             })
