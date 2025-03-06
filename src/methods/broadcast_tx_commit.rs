@@ -30,8 +30,8 @@
 //! let rating = "4.5".parse::<f32>()?;
 //!
 //! let transaction = Transaction::V0(TransactionV0 {
-//!     signer_id: signer.account_id.clone(),
-//!     public_key: signer.public_key.clone(),
+//!     signer_id: signer.get_account_id(),
+//!     public_key: signer.public_key().clone(),
 //!     nonce: 904565 + 1,
 //!     receiver_id: "nosedive.testnet".parse::<AccountId>()?,
 //!     block_hash: "AUDcb2iNUbsmCsmYGfGuKzyXKimiNcCZjBKTVsbZGnoH".parse()?,
@@ -49,7 +49,7 @@
 //! });
 //!
 //! let request = methods::broadcast_tx_commit::RpcBroadcastTxCommitRequest {
-//!     signed_transaction: transaction.sign(&near_crypto::Signer::InMemory(signer))
+//!     signed_transaction: transaction.sign(&signer)
 //! };
 //! # Ok(())
 //! # }

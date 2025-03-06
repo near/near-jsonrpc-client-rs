@@ -19,10 +19,10 @@ thiserror = "2.0"
 serde_json = "1.0.85"
 lazy_static = "1.4.0"
 
-near-crypto = ">0.22,<0.29"
-near-primitives = { version = ">0.22,<0.29", features = ["test_utils"] }
-near-chain-configs = ">0.22,<0.29"
-near-jsonrpc-primitives = ">0.22,<0.29"
+near-crypto = ">0.22,<0.30"
+near-primitives = { version = ">0.22,<0.30", features = ["test_utils"] }
+near-chain-configs = ">0.22,<0.30"
+near-jsonrpc-primitives = ">0.22,<0.30"
 
 [dev-dependencies]
 tokio = { version = "1.0", features = ["macros", "rt-multi-thread"] }

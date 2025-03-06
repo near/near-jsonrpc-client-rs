@@ -1,4 +1,3 @@
-use near_crypto::Signer;
 use near_jsonrpc_client::{methods, JsonRpcClient};
 use near_jsonrpc_primitives::types::query::QueryResponseKind;
 use near_jsonrpc_primitives::types::transactions::{RpcTransactionError, TransactionInfo};
@@ -26,8 +25,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .call(methods::query::RpcQueryRequest {
             block_reference: BlockReference::latest(),
             request: near_primitives::views::QueryRequest::ViewAccessKey {
-                account_id: signer.account_id.clone(),
-                public_key: signer.public_key.clone(),
+                account_id: signer.get_account_id(),
+                public_key: signer.public_key().clone(),
             },
         })
         .await?;
@@ -41,8 +40,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let rating = utils::input("Enter a rating: ")?.parse::<f32>()?;
 
     let transaction = TransactionV0 {
-        signer_id: signer.account_id.clone(),
-        public_key: signer.public_key.clone(),
+        signer_id: signer.get_account_id(),
+        public_key: signer.public_key().clone(),
         nonce: current_nonce + 1,
         receiver_id: "nosedive.testnet".parse()?,
         block_hash: access_key_query_response.block_hash,
@@ -60,7 +59,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     let request = methods::broadcast_tx_async::RpcBroadcastTxAsyncRequest {
-        signed_transaction: Transaction::V0(transaction).sign(&Signer::InMemory(signer.clone())),
+        signed_transaction: Transaction::V0(transaction).sign(&signer),
     };
 
     let sent_at = time::Instant::now();
@@ -71,7 +70,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .call(methods::tx::RpcTransactionStatusRequest {
                 transaction_info: TransactionInfo::TransactionId {
                     tx_hash,
-                    sender_account_id: signer.account_id.clone(),
+                    sender_account_id: signer.get_account_id(),
                 },
                 wait_until: TxExecutionStatus::Executed,
             })
