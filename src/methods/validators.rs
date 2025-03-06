@@ -12,11 +12,11 @@
 //!
 //!   # #[tokio::main]
 //!   # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-//!   let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
+//!   let client = JsonRpcClient::connect("https://archival-rpc.testnet.near.org");
 //!
 //!   let request = methods::validators::RpcValidatorRequest {
 //!       epoch_reference: EpochReference::EpochId(
-//!           "9xrjdZmgjoVkjVE3ui7tY37x9Mkw5wH385qNXE6cho7T".parse()?,
+//!           "ECjBFyob3eKjDnDWDrbX4pkiSbGRAGyiHbS4ZVY8dxvD".parse()?,
 //!       )
 //!   };
 //!
@@ -38,7 +38,7 @@
 //!
 //!   # #[tokio::main]
 //!   # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!   let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
+//!   let client = JsonRpcClient::connect("https://archival-rpc.testnet.near.org");
 //!
 //!   let request = methods::validators::RpcValidatorRequest {
 //!       epoch_reference: EpochReference::Latest
