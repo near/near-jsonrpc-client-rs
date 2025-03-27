@@ -29,7 +29,7 @@ pub type RpcGenesisConfigResponse = near_chain_configs::GenesisConfig;
 #[derive(Debug)]
 pub struct RpcGenesisConfigRequest;
 
-#[derive(Debug, Deserialize, Error)]
+#[derive(Debug, Serialize, Deserialize, Error)]
 #[error("{}", unreachable!("fatal: this error should never be constructed"))]
 pub enum RpcGenesisConfigError {}
 

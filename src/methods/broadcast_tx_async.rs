@@ -75,7 +75,7 @@ impl From<RpcBroadcastTxAsyncRequest>
     }
 }
 
-#[derive(Debug, Deserialize, Error)]
+#[derive(Debug, Serialize, Deserialize, Error)]
 #[error("{}", unreachable!("fatal: this error should never be constructed"))]
 pub enum RpcBroadcastTxAsyncError {}
 

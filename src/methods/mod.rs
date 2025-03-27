@@ -1,7 +1,7 @@
 //! This module contains all the RPC methods.
 use std::io;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 use thiserror::Error;
 
