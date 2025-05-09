@@ -19,7 +19,7 @@ env:
 
 jobs:
   test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout Repository
@@ -32,7 +32,7 @@ jobs:
       run: cargo test --verbose --workspace
 
   clippy:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout Repository
@@ -42,7 +42,7 @@ jobs:
       run: cargo clippy -- -D clippy::all
 
   cargo-fmt:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout Repository
