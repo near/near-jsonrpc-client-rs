@@ -1,6 +1,6 @@
 [package]
 name = "near-jsonrpc-client"
-version = "0.16.1"
+version = "0.17.0"
 authors = ["Near Inc <hello@nearprotocol.com>"]
 edition = "2021"
 license = "MIT OR Apache-2.0"
