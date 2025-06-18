@@ -63,16 +63,12 @@ impl RpcMethod for RpcTransactionStatusRequest {
 
     fn params(&self) -> Result<serde_json::Value, io::Error> {
         Ok(match &self.transaction_info {
-            TransactionInfo::Transaction(signed_transaction) => {
-                match signed_transaction {
-                    near_jsonrpc_primitives::types::transactions::SignedTransaction::SignedTransaction(tx) => {
-                        json!({
-                            "signed_tx_base64": common::serialize_signed_transaction(tx)?,
-                            "wait_until": self.wait_until
-                        })
-                    },
-                }
-            }
+            TransactionInfo::Transaction { signed_tx } => {
+                json!({
+                    "signed_tx_base64": common::serialize_signed_transaction(signed_tx)?,
+                    "wait_until": self.wait_until
+                })
+            }    
             TransactionInfo::TransactionId { tx_hash,sender_account_id } => {
                 json!({
                     "tx_hash": tx_hash,
