@@ -460,8 +460,8 @@ mod tests {
             matches!(
                 tx_status,
                 Ok(methods::tx::RpcTransactionResponse { ref final_execution_outcome, .. })
-                if final_execution_outcome.unwrap().into_outcome().transaction.signer_id == "miraclx.near"
-                && final_execution_outcome.unwrap().into_outcome().transaction.hash == "9FtHUFBQsZ2MG77K3x3MJ9wjX3UT8zE1TczCrhZEcG8U".parse()?
+                if final_execution_outcome.clone().unwrap().into_outcome().transaction.signer_id == "miraclx.near"
+                && final_execution_outcome.clone().unwrap().into_outcome().transaction.hash == "9FtHUFBQsZ2MG77K3x3MJ9wjX3UT8zE1TczCrhZEcG8U".parse()?
             ),
             "expected an Ok(RpcTransactionStatusResponse) with matching signer_id + hash, found [{:?}]",
             tx_status
