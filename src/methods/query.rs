@@ -22,7 +22,7 @@
 //!
 //! # #[tokio::main]
 //! # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-//! let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
+//! let client = JsonRpcClient::connect("https://archival-rpc.mainnet.fastnear.com");
 //!
 //! let request = methods::query::RpcQueryRequest {
 //!     block_reference: BlockReference::BlockId(BlockId::Hash("6Qq9hYG7vQhnje4iC1hfbyhh9vNQoNem7j8Dxi7EVSdN".parse()?)),
@@ -49,7 +49,7 @@
 //!
 //! # #[tokio::main]
 //! # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-//! let client = JsonRpcClient::connect("https://archival-rpc.testnet.near.org");
+//! let client = JsonRpcClient::connect("https://archival-rpc.testnet.fastnear.com");
 //!
 //! let request = methods::query::RpcQueryRequest {
 //!     block_reference: BlockReference::BlockId(BlockId::Hash("CrYzVUyam5TMJTcJDJMSJ7Fzc79SDTgtK1SfVpEnteZF".parse()?)),
@@ -76,7 +76,7 @@
 //!
 //! # #[tokio::main]
 //! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! let client = JsonRpcClient::connect("https://archival-rpc.testnet.near.org");
+//! let client = JsonRpcClient::connect("https://archival-rpc.testnet.fastnear.com");
 //!
 //! let request = methods::query::RpcQueryRequest {
 //!     // block_reference: BlockReference::BlockId(BlockId::Hash("AUDcb2iNUbsmCsmYGfGuKzyXKimiNcCZjBKTVsbZGnoH".parse()?)),
@@ -106,7 +106,7 @@
 //!
 //! # #[tokio::main]
 //! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! let client = JsonRpcClient::connect("https://archival-rpc.testnet.near.org");
+//! let client = JsonRpcClient::connect("https://archival-rpc.testnet.fastnear.com");
 //!
 //! let request = methods::query::RpcQueryRequest {
 //!     // block_reference: BlockReference::BlockId(BlockId::Hash("CA9bigchLBUYKaHKz3vQxK3Z7Fae2gnVabGrrLJrQEzp".parse()?)),
@@ -135,7 +135,7 @@
 //!
 //! # #[tokio::main]
 //! # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-//! let client = JsonRpcClient::connect("https://archival-rpc.testnet.near.org");
+//! let client = JsonRpcClient::connect("https://archival-rpc.testnet.fastnear.com");
 //!
 //! let request = methods::query::RpcQueryRequest {
 //!     block_reference: BlockReference::BlockId(BlockId::Hash("AUDcb2iNUbsmCsmYGfGuKzyXKimiNcCZjBKTVsbZGnoH".parse()?)),
@@ -163,7 +163,7 @@
 //!
 //! # #[tokio::main]
 //! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! let client = JsonRpcClient::connect("https://archival-rpc.testnet.near.org");
+//! let client = JsonRpcClient::connect("https://archival-rpc.testnet.fastnear.com");
 //!
 //! let request = methods::query::RpcQueryRequest {
 //!     // block_reference: BlockReference::BlockId(BlockId::Hash("CA9bigchLBUYKaHKz3vQxK3Z7Fae2gnVabGrrLJrQEzp".parse()?)),
@@ -317,7 +317,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_unknown_access_key() -> Result<(), Box<dyn std::error::Error>> {
-        let client = JsonRpcClient::connect("https://archival-rpc.testnet.near.org");
+        let client = JsonRpcClient::connect("https://archival-rpc.testnet.fastnear.com");
 
         let request = RpcQueryRequest {
             block_reference: near_primitives::types::BlockReference::BlockId(
@@ -349,7 +349,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_contract_execution_error() -> Result<(), Box<dyn std::error::Error>> {
-        let client = JsonRpcClient::connect("https://archival-rpc.testnet.near.org");
+        let client = JsonRpcClient::connect("https://archival-rpc.testnet.fastnear.com");
 
         let request = RpcQueryRequest {
             block_reference: near_primitives::types::BlockReference::BlockId(

@@ -7,7 +7,7 @@
 //!
 //! # #[tokio::main]
 //! # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-//! let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
+//! let client = JsonRpcClient::connect("https://archival-rpc.mainnet.fastnear.com");
 //!
 //! let request = methods::next_light_client_block::RpcLightClientNextBlockRequest {
 //!     last_block_hash: "ANm3jm5wq1Z4rJv6tXWyiDtC3wYKpXVHY4iq6bE1te7B".parse()?,

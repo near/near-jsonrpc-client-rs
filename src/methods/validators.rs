@@ -12,7 +12,7 @@
 //!
 //!   # #[tokio::main]
 //!   # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-//!   let client = JsonRpcClient::connect("https://archival-rpc.testnet.near.org");
+//!   let client = JsonRpcClient::connect("https://archival-rpc.testnet.fastnear.com");
 //!
 //!   let request = methods::validators::RpcValidatorRequest {
 //!       epoch_reference: EpochReference::EpochId(
@@ -38,7 +38,7 @@
 //!
 //!   # #[tokio::main]
 //!   # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!   let client = JsonRpcClient::connect("https://archival-rpc.testnet.near.org");
+//!   let client = JsonRpcClient::connect("https://archival-rpc.testnet.fastnear.com");
 //!
 //!   let request = methods::validators::RpcValidatorRequest {
 //!       epoch_reference: EpochReference::Latest

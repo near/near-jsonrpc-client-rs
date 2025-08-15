@@ -42,7 +42,7 @@
 //!
 //!    # #[tokio::main]
 //!    # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-//!    let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
+//!    let client = JsonRpcClient::connect("https://archival-rpc.mainnet.fastnear.com");
 //!
 //!    let tx_status_request = methods::tx::RpcTransactionStatusRequest {
 //!        transaction_info: TransactionInfo::TransactionId {
@@ -444,7 +444,7 @@ mod tests {
     #[tokio::test]
     #[cfg(feature = "any")]
     async fn any_typed_ok() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
+        let client = JsonRpcClient::connect("https://archival-rpc.mainnet.fastnear.com");
 
         let tx_status = client
             .call(methods::any::<methods::tx::RpcTransactionStatusRequest>(
@@ -473,7 +473,7 @@ mod tests {
     #[tokio::test]
     #[cfg(feature = "any")]
     async fn any_typed_err() -> Result<(), Box<dyn std::error::Error>> {
-        let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
+        let client = JsonRpcClient::connect("https://archival-rpc.mainnet.fastnear.com");
 
         let tx_error = client
             .call(methods::any::<methods::tx::RpcTransactionStatusRequest>(
@@ -504,7 +504,7 @@ mod tests {
     #[tokio::test]
     #[cfg(feature = "any")]
     async fn any_untyped_ok() {
-        let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
+        let client = JsonRpcClient::connect("https://archival-rpc.mainnet.fastnear.com");
 
         let status = client
             .call(
@@ -534,7 +534,7 @@ mod tests {
     #[tokio::test]
     #[cfg(feature = "any")]
     async fn any_untyped_err() {
-        let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
+        let client = JsonRpcClient::connect("https://archival-rpc.mainnet.fastnear.com");
 
         let tx_error = client
             .call(

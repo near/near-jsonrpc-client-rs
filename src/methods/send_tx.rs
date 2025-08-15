@@ -20,7 +20,7 @@
 //! # #[tokio::main]
 //! # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 //! use near_primitives::views::TxExecutionStatus;
-//! let client = JsonRpcClient::connect("https://archival-rpc.testnet.near.org");
+//! let client = JsonRpcClient::connect("https://archival-rpc.testnet.fastnear.com");
 //!
 //! let signer_account_id = "fido.testnet".parse::<AccountId>()?;
 //! let signer_secret_key = "ed25519:12dhevYshfiRqFSu8DSfxA27pTkmGRv6C5qQWTJYTcBEoB7MSTyidghi5NWXzWqrxCKgxVx97bpXPYQxYN5dieU".parse()?;

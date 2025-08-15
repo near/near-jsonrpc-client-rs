@@ -10,7 +10,7 @@
 //! # #[tokio::main]
 //! # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 //! use near_primitives::views::{FinalExecutionOutcomeViewEnum, TxExecutionStatus};
-//! let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
+//! let client = JsonRpcClient::connect("https://archival-rpc.mainnet.fastnear.com");
 //! let tx_hash = "B9aypWiMuiWR5kqzewL9eC96uZWA3qCMhLe67eBMWacq".parse()?;
 //!
 //! let request = methods::tx::RpcTransactionStatusRequest {

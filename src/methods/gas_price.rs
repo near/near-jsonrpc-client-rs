@@ -13,7 +13,7 @@
 //!
 //!     # #[tokio::main]
 //!     # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!     let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
+//!     let client = JsonRpcClient::connect("https://archival-rpc.mainnet.fastnear.com");
 //!
 //!     let request = methods::gas_price::RpcGasPriceRequest {
 //!         block_id: Some(BlockId::Height(61512623)),
@@ -37,7 +37,7 @@
 //!
 //!     # #[tokio::main]
 //!     # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-//!     let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
+//!     let client = JsonRpcClient::connect("https://archival-rpc.mainnet.fastnear.com");
 //!
 //!     let request = methods::gas_price::RpcGasPriceRequest {
 //!         block_id: Some(BlockId::Hash("6atGq4TUTZerVHU9qWoYfzXNBg3K4C4cca15TE6KfuBr".parse()?)),
