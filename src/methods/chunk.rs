@@ -17,7 +17,7 @@
 //!
 //!       # #[tokio::main]
 //!       # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-//!       let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
+//!       let client = JsonRpcClient::connect("https://archival-rpc.mainnet.fastnear.com");
 //!
 //!       let request = methods::chunk::RpcChunkRequest {
 //!           chunk_reference: chunks::ChunkReference::BlockShardId {
@@ -45,7 +45,7 @@
 //!
 //!       # #[tokio::main]
 //!       # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!       let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
+//!       let client = JsonRpcClient::connect("https://archival-rpc.mainnet.fastnear.com");
 //!
 //!       let request = methods::chunk::RpcChunkRequest {
 //!           chunk_reference: chunks::ChunkReference::BlockShardId {
@@ -73,7 +73,7 @@
 //!
 //!   # #[tokio::main]
 //!   # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-//!   let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
+//!   let client = JsonRpcClient::connect("https://archival-rpc.mainnet.fastnear.com");
 //!
 //!   let request = methods::chunk::RpcChunkRequest{
 //!       chunk_reference: chunks::ChunkReference::ChunkHash {

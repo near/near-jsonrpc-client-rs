@@ -6,7 +6,7 @@
 //!
 //! # #[tokio::main]
 //! # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-//! let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
+//! let client = JsonRpcClient::connect("https://archival-rpc.mainnet.fastnear.com");
 //!
 //! let request = methods::light_client_proof::RpcLightClientExecutionProofRequest {
 //!     id: TransactionOrReceiptId::Transaction {

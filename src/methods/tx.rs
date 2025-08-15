@@ -10,7 +10,7 @@
 //! # #[tokio::main]
 //! # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 //! use near_primitives::views::{FinalExecutionOutcomeViewEnum, TxExecutionStatus};
-//! let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
+//! let client = JsonRpcClient::connect("https://archival-rpc.mainnet.fastnear.com");
 //! let tx_hash = "B9aypWiMuiWR5kqzewL9eC96uZWA3qCMhLe67eBMWacq".parse()?;
 //!
 //! let request = methods::tx::RpcTransactionStatusRequest {
@@ -67,17 +67,16 @@ impl RpcMethod for RpcTransactionStatusRequest {
 
     fn params(&self) -> Result<serde_json::Value, io::Error> {
         Ok(match &self.transaction_info {
-            TransactionInfo::Transaction(signed_transaction) => {
-                match signed_transaction {
-                    near_jsonrpc_primitives::types::transactions::SignedTransaction::SignedTransaction(tx) => {
-                        json!({
-                            "signed_tx_base64": common::serialize_signed_transaction(tx)?,
-                            "wait_until": self.wait_until
-                        })
-                    },
-                }
+            TransactionInfo::Transaction { signed_tx } => {
+                json!({
+                    "signed_tx_base64": common::serialize_signed_transaction(signed_tx)?,
+                    "wait_until": self.wait_until
+                })
             }
-            TransactionInfo::TransactionId { tx_hash,sender_account_id } => {
+            TransactionInfo::TransactionId {
+                tx_hash,
+                sender_account_id,
+            } => {
                 json!({
                     "tx_hash": tx_hash,
                     "sender_account_id": sender_account_id,

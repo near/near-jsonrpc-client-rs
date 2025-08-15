@@ -12,7 +12,7 @@
 //!
 //! # #[tokio::main]
 //! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! let client = JsonRpcClient::connect("https://archival-rpc.mainnet.near.org");
+//! let client = JsonRpcClient::connect("https://archival-rpc.mainnet.fastnear.com");
 //!
 //! let request = methods::EXPERIMENTAL_protocol_config::RpcProtocolConfigRequest {
 //!     block_reference: BlockReference::BlockId(BlockId::Height(100_000_000))
