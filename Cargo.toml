@@ -23,7 +23,6 @@ near-crypto = "0.34"
 near-primitives = { version = "0.34", features = ["test_utils"] }
 near-chain-configs = "0.34"
 near-jsonrpc-primitives = "0.34"
-near-token = "0.3"
 
 [dev-dependencies]
 tokio = { version = "1.0", features = ["macros", "rt-multi-thread"] }

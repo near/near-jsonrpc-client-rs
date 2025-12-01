@@ -3,9 +3,8 @@ use near_jsonrpc_primitives::types::query::QueryResponseKind;
 use near_jsonrpc_primitives::types::transactions::{RpcTransactionError, TransactionInfo};
 use near_primitives::gas::Gas;
 use near_primitives::transaction::{Action, FunctionCallAction, Transaction, TransactionV0};
-use near_primitives::types::BlockReference;
+use near_primitives::types::{Balance, BlockReference};
 use near_primitives::views::TxExecutionStatus;
-use near_token::NearToken;
 use tokio::time;
 
 mod utils;
@@ -56,7 +55,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .to_string()
             .into_bytes(),
             gas: Gas::from_teragas(100),
-            deposit: NearToken::ZERO,
+            deposit: Balance::ZERO,
         }))],
     });
     let tx_hash = transaction.get_hash_and_size().0;

@@ -19,10 +19,9 @@ use near_primitives::transaction::{
     Action, AddKeyAction, CreateAccountAction, FunctionCallAction, Transaction, TransactionV0,
     TransferAction,
 };
-use near_primitives::types::{AccountId, BlockReference};
+use near_primitives::types::{AccountId, Balance, BlockReference};
 use near_primitives::views::{FinalExecutionStatus, TxExecutionStatus};
 
-use near_token::NearToken;
 use serde_json::json;
 use tokio::time;
 
@@ -153,7 +152,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         public_key: new_key_pair.public_key(),
                     })),
                     Action::Transfer(TransferAction {
-                        deposit: NearToken::from_yoctonear(initial_deposit),
+                        deposit: Balance::from_yoctonear(initial_deposit),
                     }),
                 ],
             },
@@ -183,7 +182,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .to_string()
                     .into_bytes(),
                     gas: Gas::from_teragas(300),
-                    deposit: NearToken::from_yoctonear(initial_deposit),
+                    deposit: Balance::from_yoctonear(initial_deposit),
                 }))],
             },
             b"true".to_vec(),

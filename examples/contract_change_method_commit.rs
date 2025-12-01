@@ -2,9 +2,8 @@ use near_jsonrpc_client::{methods, JsonRpcClient};
 use near_jsonrpc_primitives::types::query::QueryResponseKind;
 use near_primitives::gas::Gas;
 use near_primitives::transaction::{Action, FunctionCallAction, Transaction, TransactionV0};
-use near_primitives::types::BlockReference;
+use near_primitives::types::{Balance, BlockReference};
 
-use near_token::NearToken;
 use serde_json::json;
 
 mod utils;
@@ -53,7 +52,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .to_string()
             .into_bytes(),
             gas: Gas::from_teragas(100),
-            deposit: NearToken::ZERO,
+            deposit: Balance::ZERO,
         }))],
     };
 

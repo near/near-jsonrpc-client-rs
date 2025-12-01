@@ -14,7 +14,7 @@
 //! use near_jsonrpc_client::{methods, JsonRpcClient};
 //! use near_primitives::gas::Gas;
 //! use near_jsonrpc_primitives::types::{query::QueryResponseKind, transactions::TransactionInfo};
-//! use near_primitives::types::{AccountId, BlockReference};
+//! use near_primitives::types::{AccountId, Balance, BlockReference};
 //! use near_primitives::transaction::{Action, FunctionCallAction, Transaction, TransactionV0};
 //! use serde_json::json;
 //!
@@ -46,7 +46,7 @@
 //!         .to_string()
 //!         .into_bytes(),
 //!         gas: Gas::from_teragas(100),
-//!         deposit: near_token::NearToken::ZERO,
+//!         deposit: Balance::ZERO,
 //!     }))],
 //! });
 //!
