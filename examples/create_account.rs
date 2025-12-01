@@ -13,12 +13,13 @@ use near_jsonrpc_client::methods::broadcast_tx_commit::RpcTransactionError;
 use near_jsonrpc_client::{methods, JsonRpcClient};
 use near_jsonrpc_primitives::types::query::QueryResponseKind;
 use near_jsonrpc_primitives::types::transactions::TransactionInfo;
+use near_primitives::gas::Gas;
 use near_primitives::hash::CryptoHash;
 use near_primitives::transaction::{
     Action, AddKeyAction, CreateAccountAction, FunctionCallAction, Transaction, TransactionV0,
     TransferAction,
 };
-use near_primitives::types::{AccountId, BlockReference};
+use near_primitives::types::{AccountId, Balance, BlockReference};
 use near_primitives::views::{FinalExecutionStatus, TxExecutionStatus};
 
 use serde_json::json;
@@ -151,7 +152,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         public_key: new_key_pair.public_key(),
                     })),
                     Action::Transfer(TransferAction {
-                        deposit: initial_deposit,
+                        deposit: Balance::from_yoctonear(initial_deposit),
                     }),
                 ],
             },
@@ -180,8 +181,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     })
                     .to_string()
                     .into_bytes(),
-                    gas: 300_000_000_000_000,
-                    deposit: initial_deposit,
+                    gas: Gas::from_teragas(300),
+                    deposit: Balance::from_yoctonear(initial_deposit),
                 }))],
             },
             b"true".to_vec(),
