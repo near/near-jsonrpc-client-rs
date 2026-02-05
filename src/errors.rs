@@ -125,7 +125,7 @@ impl<E: super::methods::RpcHandlerError> From<RpcError> for JsonRpcError<E> {
                     Ok(handler_error) => {
                         return JsonRpcError::ServerError(JsonRpcServerError::HandlerError(
                             handler_error,
-                        ))
+                        ));
                     }
                     Err(err) => {
                         handler_parse_error.replace(err);
@@ -140,7 +140,7 @@ impl<E: super::methods::RpcHandlerError> From<RpcError> for JsonRpcError<E> {
                     info: err["info"]["error_message"]
                         .as_str()
                         .map(|info| info.to_string()),
-                })
+                });
             }
             None => {}
         }
@@ -149,7 +149,7 @@ impl<E: super::methods::RpcHandlerError> From<RpcError> for JsonRpcError<E> {
                 Some(Ok(handler_error)) => {
                     return JsonRpcError::ServerError(JsonRpcServerError::HandlerError(
                         handler_error,
-                    ))
+                    ));
                 }
                 Some(Err(err)) => {
                     handler_parse_error.replace(err);
