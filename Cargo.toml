@@ -3,7 +3,6 @@ name = "near-jsonrpc-client"
 version = "0.20.0"
 authors = ["Near Inc <hello@nearprotocol.com>"]
 edition = "2024"
-resolver = "3"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/near/near-jsonrpc-client-rs"
 description = "Lower-level API for interfacing with the NEAR Protocol via JSONRPC"
