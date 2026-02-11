@@ -10,7 +10,7 @@
 //! This script is interactive.
 
 use near_jsonrpc_client::methods::broadcast_tx_commit::RpcTransactionError;
-use near_jsonrpc_client::{methods, JsonRpcClient};
+use near_jsonrpc_client::{JsonRpcClient, methods};
 use near_jsonrpc_primitives::types::query::QueryResponseKind;
 use near_jsonrpc_primitives::types::transactions::TransactionInfo;
 use near_primitives::gas::Gas;
@@ -164,7 +164,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         } else if client.server_addr().ends_with("mainnet.near.org") {
             "near".parse()?
         } else {
-            Err("can only create non-sub accounts for mainnet / testnet\nconsider creating a sub-account instead")?
+            Err(
+                "can only create non-sub accounts for mainnet / testnet\nconsider creating a sub-account instead",
+            )?
         };
         (
             TransactionV0 {

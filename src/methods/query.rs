@@ -304,7 +304,7 @@ mod tests {
             matches!(
                 response_err.handler_error(),
                 Some(RpcQueryError::ContractExecutionError {
-                    ref vm_error,
+                    vm_error,
                     ..
                 }) if vm_error.contains("MethodResolveError(MethodNotFound)")
             ),
@@ -335,7 +335,7 @@ mod tests {
             matches!(
                 response_err.handler_error(),
                 Some(RpcQueryError::UnknownAccessKey {
-                    ref public_key,
+                    public_key,
                     block_height: 63503911,
                     ..
                 }) if public_key.to_string() == "ed25519:9KnjTjL6vVoM8heHvCcTgLZ67FwFkiLsNtknFAVsVvYY"
@@ -368,7 +368,7 @@ mod tests {
             matches!(
                 response_err.handler_error(),
                 Some(RpcQueryError::ContractExecutionError {
-                    ref vm_error,
+                    vm_error,
                     block_height: 63503911,
                     ..
                 }) if vm_error.contains("MethodResolveError(MethodEmptyName)")

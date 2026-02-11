@@ -106,7 +106,7 @@ pub use experimental::EXPERIMENTAL_validators_ordered;
 #[cfg(feature = "any")]
 mod any;
 #[cfg(feature = "any")]
-pub use any::{request as any, RpcAnyRequest};
+pub use any::{RpcAnyRequest, request as any};
 // ======== any ========
 
 // ======== sandbox ========

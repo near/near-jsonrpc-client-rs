@@ -1,4 +1,4 @@
-use near_jsonrpc_client::{methods, JsonRpcClient};
+use near_jsonrpc_client::{JsonRpcClient, methods};
 use near_jsonrpc_primitives::types::query::QueryResponseKind;
 use near_primitives::gas::Gas;
 use near_primitives::transaction::{Action, FunctionCallAction, Transaction, TransactionV0};

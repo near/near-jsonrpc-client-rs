@@ -426,7 +426,7 @@ impl AsUrl for reqwest::Url {}
 
 #[cfg(test)]
 mod tests {
-    use crate::{methods, JsonRpcClient};
+    use crate::{JsonRpcClient, methods};
 
     #[tokio::test]
     async fn chk_status_testnet() {
