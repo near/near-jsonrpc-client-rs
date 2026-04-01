@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.0](https://github.com/near/near-jsonrpc-client-rs/compare/v0.20.0...v0.21.0) - 2026-04-01
+
+### Added
+
+- bump near crates to 0.35 ([#186](https://github.com/near/near-jsonrpc-client-rs/pull/186))
+
+### Other
+
+- upgrade to Rust edition 2024 ([#184](https://github.com/near/near-jsonrpc-client-rs/pull/184))
+- added DevEx to CODEOWNERS ([#182](https://github.com/near/near-jsonrpc-client-rs/pull/182))
+
 ## [0.20.0](https://github.com/near/near-jsonrpc-client-rs/compare/v0.19.0...v0.20.0) - 2025-12-01
 
 ### Other
