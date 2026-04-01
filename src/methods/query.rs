@@ -254,7 +254,8 @@ impl RpcMethod for RpcQueryRequest {
                     }
                 } else {
                     RpcQueryError::ContractExecutionError {
-                        vm_error: error,
+                        vm_error: error.clone(),
+                        error: near_primitives::errors::FunctionCallError::ExecutionError(error),
                         block_height,
                         block_hash,
                     }
