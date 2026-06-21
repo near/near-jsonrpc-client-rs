@@ -84,6 +84,8 @@
 //!     request: QueryRequest::ViewState {
 //!         account_id: "nosedive.testnet".parse()?,
 //!         prefix: StoreKey::from(vec![]),
+//!         after_key: None,
+//!         limit: None,
 //!         include_proof: false,
 //!     }
 //! };
