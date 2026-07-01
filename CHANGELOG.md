@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.0-rc.1](https://github.com/near/near-jsonrpc-client-rs/compare/v0.21.1...v0.22.0-rc.1) - 2026-07-01
+
+### Added
+
+- build against nearcore 2.13 / ML-DSA-65 ([#190](https://github.com/near/near-jsonrpc-client-rs/pull/190))
+
 ## [0.21.1](https://github.com/near/near-jsonrpc-client-rs/compare/v0.21.0...v0.21.1) - 2026-06-03
 
 ### Other
