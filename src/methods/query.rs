@@ -16,7 +16,7 @@
 //!
 //! ### Returns basic account information.
 //!
-//! ```
+//! ```no_run
 //! use near_jsonrpc_client::{methods, JsonRpcClient};
 //! use near_primitives::{types::{BlockReference, BlockId}, views::QueryRequest};
 //!
@@ -43,7 +43,7 @@
 //!
 //! ### Returns the contract code (Wasm binary) deployed to the account. The returned code will be encoded in base64.
 //!
-//! ```
+//! ```no_run
 //! use near_jsonrpc_client::{methods, JsonRpcClient};
 //! use near_primitives::{types::{BlockReference, BlockId}, views::QueryRequest};
 //!
@@ -70,7 +70,7 @@
 //!
 //! ### Returns the account state
 //!
-//! ```
+//! ```no_run
 //! use near_jsonrpc_client::{methods, JsonRpcClient};
 //! use near_primitives::{types::{BlockReference, BlockId, StoreKey}, views::QueryRequest};
 //!
@@ -84,6 +84,8 @@
 //!     request: QueryRequest::ViewState {
 //!         account_id: "nosedive.testnet".parse()?,
 //!         prefix: StoreKey::from(vec![]),
+//!         after_key: None,
+//!         limit: None,
 //!         include_proof: false,
 //!     }
 //! };
@@ -100,7 +102,7 @@
 //!
 //! ### Returns information about a single access key for given account
 //!
-//! ```
+//! ```no_run
 //! use near_jsonrpc_client::{methods, JsonRpcClient};
 //! use near_primitives::{types::{BlockReference, BlockId}, views::QueryRequest};
 //!
@@ -129,7 +131,7 @@
 //!
 //! ### Returns all access keys for a given account.
 //!
-//! ```
+//! ```no_run
 //! use near_jsonrpc_client::{methods, JsonRpcClient};
 //! use near_primitives::{types::{BlockReference, BlockId}, views::QueryRequest};
 //!
@@ -156,7 +158,7 @@
 //!
 //! ### Call a function in a contract deployed on the network
 //!
-//! ```
+//! ```no_run
 //! use near_jsonrpc_client::{methods, JsonRpcClient};
 //! use near_primitives::{types::{BlockReference, BlockId, FunctionArgs}, views::QueryRequest};
 //! use serde_json::json;

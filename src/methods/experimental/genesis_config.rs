@@ -4,7 +4,7 @@
 //!
 //! Returns the genesis config of the network.
 //!
-//! ```
+//! ```no_run
 //! use near_jsonrpc_client::{methods, JsonRpcClient};
 //!
 //! # #[tokio::main]

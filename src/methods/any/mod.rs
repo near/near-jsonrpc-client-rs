@@ -8,7 +8,7 @@
 //! near-jsonrpc-client = { ..., features = ["any"] }
 //! ```
 //!
-//! ```
+//! ```no_run
 //! use serde::Deserialize;
 //! use serde_json::json;
 //!

@@ -6,7 +6,7 @@
 //!
 //! - Get the validators for a specified epoch.
 //!
-//!   ```
+//!   ```no_run
 //!   use near_jsonrpc_client::{methods, JsonRpcClient};
 //!   use near_primitives::types::{EpochReference, EpochId, BlockReference, Finality};
 //!
@@ -32,7 +32,7 @@
 //!
 //! - Get the validators for the latest block.
 //!
-//!   ```
+//!   ```no_run
 //!   use near_jsonrpc_client::{methods, JsonRpcClient};
 //!   use near_primitives::types::{EpochReference, EpochId, BlockId};
 //!
