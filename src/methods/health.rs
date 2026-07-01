@@ -4,7 +4,7 @@
 //!
 //! Returns the current health stauts of the RPC node the client connects to.
 //!
-//! ```
+//! ```no_run
 //! use near_jsonrpc_client::{methods, JsonRpcClient};
 //!
 //! # #[tokio::main]

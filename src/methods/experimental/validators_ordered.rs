@@ -4,7 +4,7 @@
 //!
 //! Returns the ordered validators for this [block](https://explorer.near.org/blocks/3Lq3Mtfpc3spH9oF5dXnUzvCBEqjTQwX1yCqKibwzgWR).
 //!
-//! ```
+//! ```no_run
 //! use near_jsonrpc_client::{methods, JsonRpcClient};
 //! use near_primitives::types::BlockId;
 //!

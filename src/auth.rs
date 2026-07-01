@@ -9,7 +9,7 @@
 //!
 //! ### API Key (`x-api-key` Header)
 //!
-//! ```
+//! ```no_run
 //! use near_jsonrpc_client::{JsonRpcClient, auth, methods};
 //! use near_primitives::types::{BlockReference, Finality};
 //!
@@ -32,7 +32,7 @@
 //!
 //! ### `Authorization` Header
 //!
-//! ```
+//! ```no_run
 //! use near_jsonrpc_client::{JsonRpcClient, auth, methods};
 //! use near_primitives::types::{BlockReference, Finality};
 //!

@@ -7,7 +7,7 @@
 //!
 //! - `BlockId::Height`
 //!
-//!     ```
+//!     ```no_run
 //!     # use near_jsonrpc_client::{methods, JsonRpcClient};
 //!     use near_primitives::types::BlockId;
 //!
@@ -31,7 +31,7 @@
 //!
 //! - `BlockId::Hash`
 //!
-//!     ```
+//!     ```no_run
 //!     # use near_jsonrpc_client::{methods, JsonRpcClient};
 //!     use near_primitives::types::BlockId;
 //!

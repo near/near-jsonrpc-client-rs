@@ -2,7 +2,7 @@
 //!
 //! ## Example
 //!
-//! ```
+//! ```no_run
 //! use near_jsonrpc_client::{methods, JsonRpcClient};
 //!
 //! # #[tokio::main]
