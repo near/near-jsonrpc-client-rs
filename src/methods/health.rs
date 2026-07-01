@@ -2,7 +2,7 @@
 //!
 //! ## Example
 //!
-//! Returns the current health stauts of the RPC node the client connects to.
+//! Returns the current health status of the RPC node the client connects to.
 //!
 //! ```no_run
 //! use near_jsonrpc_client::{methods, JsonRpcClient};
