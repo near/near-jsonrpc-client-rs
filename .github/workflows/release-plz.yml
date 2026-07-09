@@ -1,0 +1,73 @@
+name: Release-plz
+
+on:
+  push:
+    branches:
+      - master
+
+permissions: {}
+
+jobs:
+  release-plz-pr:
+    name: Release-plz PR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    concurrency:
+      group: release-plz-pr-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Run release-plz (release-pr)
+        uses: release-plz/action@v0.5
+        with:
+          command: release-pr
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  release-plz-release:
+    name: Release-plz release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+      id-token: write
+      attestations: write
+    # Never cancel an in-flight publish — half-published releases are worse than waiting.
+    concurrency:
+      group: release-plz-release-${{ github.ref }}
+      cancel-in-progress: false
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Run release-plz (release)
+        id: release-plz
+        uses: release-plz/action@v0.5
+        with:
+          command: release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # release-plz doesn't expose the produced .crate path, so re-package locally.
+      # The crate tarball is reproducible from the same commit, so the attestation
+      # still binds the published artifact to this run.
+      - name: Re-package crate for attestation
+        if: steps.release-plz.outputs.releases_created == 'true'
+        run: cargo package --no-verify
+      - name: Attest build provenance
+        if: steps.release-plz.outputs.releases_created == 'true'
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: target/package/*.crate
