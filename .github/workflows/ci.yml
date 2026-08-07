@@ -23,7 +23,7 @@ jobs:
 
     steps:
     - name: Checkout Repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v7
 
     - name: Show Active Rust Toolchain
       run: rustup show active-toolchain
@@ -36,7 +36,7 @@ jobs:
 
     steps:
     - name: Checkout Repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v7
 
     - name: Run clippy
       run: cargo clippy -- -D clippy::all
@@ -46,7 +46,7 @@ jobs:
 
     steps:
     - name: Checkout Repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v7
 
     - name: Run cargo fmt
       run: cargo fmt --all -- --check
@@ -57,7 +57,7 @@ jobs:
     if: github.ref == 'refs/heads/master'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           token: ${{ secrets.NEARPROTOCOL_CI_PR_ACCESS }}
