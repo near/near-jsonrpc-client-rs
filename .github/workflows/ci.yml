@@ -1,10 +1,10 @@
 name: CI
 
 permissions:
-  pull-requests: write
-  contents: write
+  contents: read
 
 on:
+  workflow_call:
   push:
     branches: [ master ]
   pull_request:

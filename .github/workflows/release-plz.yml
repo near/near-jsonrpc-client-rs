@@ -8,7 +8,13 @@ on:
 permissions: {}
 
 jobs:
+  validate:
+    uses: ./.github/workflows/ci.yml
+    permissions:
+      contents: read
+
   release-plz-pr:
+    needs: validate
     name: Release-plz PR
     runs-on: ubuntu-latest
     permissions:
@@ -33,6 +39,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.NEARPROTOCOL_CI_PR_ACCESS }}
 
   release-plz-release:
+    needs: validate
     name: Release-plz release
     runs-on: ubuntu-latest
     permissions:
@@ -65,4 +72,4 @@ jobs:
         if: steps.release-plz.outputs.releases_created == 'true'
         uses: actions/attest-build-provenance@v1
         with:
-          subject-path: target/package/*.crate
+          subject-path: target/package/**/*.crate
