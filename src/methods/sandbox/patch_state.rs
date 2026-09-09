@@ -6,7 +6,7 @@
 //!
 //! ## Examples
 //!
-//! ```
+//! ```no_run
 //! use near_jsonrpc_client::{methods, JsonRpcClient};
 //! use near_primitives::{state_record::StateRecord, account, types::AccountId, hash::CryptoHash};
 //!

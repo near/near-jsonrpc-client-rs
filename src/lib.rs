@@ -15,7 +15,7 @@
 //!
 //! 1. Request server status from testnet RPC
 //!
-//!    ```
+//!    ```no_run
 //!    # #![allow(deprecated)]
 //!    use near_jsonrpc_client::{methods, JsonRpcClient};
 //!

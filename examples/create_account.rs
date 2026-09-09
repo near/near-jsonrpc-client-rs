@@ -131,7 +131,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("(i) Enter a non-zero deposit value!");
     };
 
-    let is_sub_account = new_account_id.is_sub_account_of(&signer.get_account_id());
+    let is_sub_account = new_account_id.is_sub_account_of(signer.get_account_id());
     let new_key_pair = near_crypto::SecretKey::from_random(near_crypto::KeyType::ED25519);
 
     let (transaction, expected_output) = if is_sub_account {

@@ -8,7 +8,7 @@
 //!
 //! - `AccountChanges`
 //!
-//!     ```
+//!     ```no_run
 //!     # use near_jsonrpc_client::{methods, JsonRpcClient};
 //!     use near_primitives::{views::StateChangesRequestView, types::{BlockReference, BlockId}};
 //!
@@ -35,7 +35,7 @@
 //!
 //! - `SingleAccessKeyChanges`
 //!
-//!     ```
+//!     ```no_run
 //!     use near_jsonrpc_client::{methods, JsonRpcClient};
 //!     use near_primitives::{views::StateChangesRequestView, types::{BlockReference, BlockId, AccountWithPublicKey}};
 //!
@@ -72,7 +72,7 @@
 //!
 //! - `AllAccessKeyChanges`
 //!
-//!     ```
+//!     ```no_run
 //!     # use near_jsonrpc_client::{methods, JsonRpcClient};
 //!     use near_primitives::{views::StateChangesRequestView, types::{BlockReference, BlockId}};
 //!
@@ -99,7 +99,7 @@
 //!
 //! - `ContractCodeChanges`
 //!
-//!     ```
+//!     ```no_run
 //!     # use near_jsonrpc_client::{methods, JsonRpcClient};
 //!     use near_primitives::{views::StateChangesRequestView, types::{BlockReference, BlockId}};
 //!
@@ -126,7 +126,7 @@
 //!
 //! - `DataChanges`
 //!
-//!     ```
+//!     ```no_run
 //!     # use near_jsonrpc_client::{methods, JsonRpcClient};
 //!     use near_primitives::{views::StateChangesRequestView, types::{BlockReference, BlockId, StoreKey}, hash::CryptoHash};
 //!

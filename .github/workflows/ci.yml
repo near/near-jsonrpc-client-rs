@@ -23,7 +23,7 @@ jobs:
 
     steps:
     - name: Checkout Repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v7
 
     - name: Show Active Rust Toolchain
       run: rustup show active-toolchain
@@ -36,7 +36,7 @@ jobs:
 
     steps:
     - name: Checkout Repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v7
 
     - name: Run clippy
       run: cargo clippy -- -D clippy::all
@@ -46,7 +46,7 @@ jobs:
 
     steps:
     - name: Checkout Repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v7
 
     - name: Run cargo fmt
       run: cargo fmt --all -- --check
