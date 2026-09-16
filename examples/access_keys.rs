@@ -1,6 +1,6 @@
 use near_jsonrpc_client::methods;
 use near_jsonrpc_primitives::types::query::QueryResponseKind;
-use near_primitives::types::BlockReference;
+use near_primitives::types::{BlockId, BlockReference};
 
 mod utils;
 
@@ -30,10 +30,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // pass a page size from the first request on. `last_key` is the cursor for the
     // next page and is `None` on the last one.
     let mut after_key = None;
+    let mut block_reference = BlockReference::latest();
     loop {
         let access_key_query_response = client
             .call(methods::query::RpcQueryRequest {
-                block_reference: BlockReference::latest(),
+                block_reference: block_reference.clone(),
                 request: near_primitives::views::QueryRequest::ViewAccessKeyList {
                     account_id: account_id.clone(),
                     after_key,
@@ -41,6 +42,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 },
             })
             .await?;
+
+        // Pin the following pages to the block the first page came from, so the cursor
+        // is applied to a single consistent snapshot of the account's keys.
+        block_reference =
+            BlockReference::BlockId(BlockId::Hash(access_key_query_response.block_hash));
 
         let QueryResponseKind::AccessKeyList(response) = access_key_query_response.kind else {
             break;
