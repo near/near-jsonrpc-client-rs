@@ -89,6 +89,7 @@ pub mod query;
 pub mod send_tx;
 pub mod status;
 pub mod tx;
+pub mod tx_status;
 pub mod validators;
 
 // ======== experimental ========
@@ -214,7 +215,7 @@ mod common {
     // broadcast_tx_commit, tx
     impl RpcHandlerResponse for near_primitives::views::FinalExecutionOutcomeView {}
 
-    // broadcast_tx_commit, tx, EXPERIMENTAL_tx_status
+    // broadcast_tx_commit, tx, tx_status, EXPERIMENTAL_tx_status, send_tx
     impl RpcHandlerError for near_jsonrpc_primitives::types::transactions::RpcTransactionError {
         fn parse_legacy_error(value: serde_json::Value) -> Option<Result<Self, serde_json::Error>> {
             match serde_json::from_value::<near_jsonrpc_primitives::errors::ServerError>(value) {
