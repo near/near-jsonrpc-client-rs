@@ -24,9 +24,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let account_id: near_primitives::types::AccountId =
         utils::input("Enter the Account ID whose keys we're listing: ")?.parse()?;
 
-    // `view_access_key_list` is paginated since nearcore 2.14: a page holds at most
-    // `limit` keys (server-side cap when unset) and `last_key` is the cursor for the
-    // next page. Accounts with more keys than the cap must be listed page by page.
+    // `view_access_key_list` is paginated since nearcore 2.14. A request with neither
+    // `limit` nor `after_key` is the legacy unpaginated form, which fails with
+    // `TooManyAccessKeys` once the account holds more keys than the node's cap, so
+    // pass a page size from the first request on. `last_key` is the cursor for the
+    // next page and is `None` on the last one.
     let mut after_key = None;
     loop {
         let access_key_query_response = client
@@ -35,7 +37,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 request: near_primitives::views::QueryRequest::ViewAccessKeyList {
                     account_id: account_id.clone(),
                     after_key,
-                    limit: None,
+                    limit: Some(50.try_into()?),
                 },
             })
             .await?;

@@ -132,10 +132,11 @@
 //! ### Returns the access keys of a given account, one page at a time.
 //!
 //! Since nearcore 2.14 (protocol 87) `view_access_key_list` is paginated: a response
-//! holds at most `limit` keys (a server-side cap applies when `limit` is `None`), and
-//! `last_key` is the cursor to pass as `after_key` to fetch the next page. `last_key`
-//! is `None` on the final page. Accounts with more keys than the cap return
-//! [`RpcQueryError::TooManyAccessKeys`] unless the request paginates.
+//! holds at most `limit` keys (capped by the node), and `last_key` is the cursor to
+//! pass as `after_key` to fetch the next page. `last_key` is `None` on the final page.
+//! A request with neither `limit` nor `after_key` is the legacy unpaginated form and
+//! returns [`RpcQueryError::TooManyAccessKeys`] once the account holds more keys than
+//! the node's cap, so set `limit` from the first request on.
 //!
 //! ```no_run
 //! use near_jsonrpc_client::{methods, JsonRpcClient};
