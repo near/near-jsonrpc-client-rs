@@ -21,16 +21,28 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let client = utils::select_network()?;
 
-    let account_id = utils::input("Enter the Account ID whose keys we're listing: ")?.parse()?;
+    let account_id: near_primitives::types::AccountId =
+        utils::input("Enter the Account ID whose keys we're listing: ")?.parse()?;
 
-    let access_key_query_response = client
-        .call(methods::query::RpcQueryRequest {
-            block_reference: BlockReference::latest(),
-            request: near_primitives::views::QueryRequest::ViewAccessKeyList { account_id },
-        })
-        .await?;
+    // `view_access_key_list` is paginated since nearcore 2.14: a page holds at most
+    // `limit` keys (server-side cap when unset) and `last_key` is the cursor for the
+    // next page. Accounts with more keys than the cap must be listed page by page.
+    let mut after_key = None;
+    loop {
+        let access_key_query_response = client
+            .call(methods::query::RpcQueryRequest {
+                block_reference: BlockReference::latest(),
+                request: near_primitives::views::QueryRequest::ViewAccessKeyList {
+                    account_id: account_id.clone(),
+                    after_key,
+                    limit: None,
+                },
+            })
+            .await?;
 
-    if let QueryResponseKind::AccessKeyList(response) = access_key_query_response.kind {
+        let QueryResponseKind::AccessKeyList(response) = access_key_query_response.kind else {
+            break;
+        };
         for access_key in response.keys {
             println!("🗝 [{}]", access_key.public_key);
             println!("     \u{21b3}      nonce: {}", access_key.access_key.nonce);
@@ -38,6 +50,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 "     \u{21b3} permission: {}",
                 indent(20, format!("{:#?}", access_key.access_key.permission))
             );
+        }
+
+        match response.last_key {
+            Some(last_key) => after_key = Some(last_key),
+            None => break,
         }
     }
 
