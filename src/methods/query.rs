@@ -129,29 +129,47 @@
 //! # }
 //! ```
 //!
-//! ### Returns all access keys for a given account.
+//! ### Returns the access keys of a given account, one page at a time.
+//!
+//! Since nearcore 2.14 (protocol 87) `view_access_key_list` is paginated: a response
+//! holds at most `limit` keys (a server-side cap applies when `limit` is `None`), and
+//! `last_key` is the cursor to pass as `after_key` to fetch the next page. `last_key`
+//! is `None` on the final page. Accounts with more keys than the cap return
+//! [`RpcQueryError::TooManyAccessKeys`] unless the request paginates.
 //!
 //! ```no_run
 //! use near_jsonrpc_client::{methods, JsonRpcClient};
+//! use near_jsonrpc_primitives::types::query::QueryResponseKind;
 //! use near_primitives::{types::{BlockReference, BlockId}, views::QueryRequest};
 //!
 //! # #[tokio::main]
 //! # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 //! let client = JsonRpcClient::connect("https://archival-rpc.testnet.fastnear.com");
 //!
-//! let request = methods::query::RpcQueryRequest {
-//!     block_reference: BlockReference::BlockId(BlockId::Hash("AUDcb2iNUbsmCsmYGfGuKzyXKimiNcCZjBKTVsbZGnoH".parse()?)),
-//!     request: QueryRequest::ViewAccessKeyList {
-//!         account_id: "nosedive.testnet".parse()?,
+//! let mut after_key = None;
+//! loop {
+//!     let request = methods::query::RpcQueryRequest {
+//!         block_reference: BlockReference::BlockId(BlockId::Hash("AUDcb2iNUbsmCsmYGfGuKzyXKimiNcCZjBKTVsbZGnoH".parse()?)),
+//!         request: QueryRequest::ViewAccessKeyList {
+//!             account_id: "nosedive.testnet".parse()?,
+//!             after_key,
+//!             limit: Some(50.try_into()?),
+//!         }
+//!     };
+//!
+//!     let response = client.call(request).await?;
+//!
+//!     let QueryResponseKind::AccessKeyList(page) = response.kind else {
+//!         panic!("unexpected query response kind");
+//!     };
+//!     for key in page.keys {
+//!         println!("{}", key.public_key);
 //!     }
-//! };
-//!
-//! let response = client.call(request).await?;
-//!
-//! assert!(matches!(
-//!     response,
-//!     methods::query::RpcQueryResponse { .. }
-//! ));
+//!     match page.last_key {
+//!         Some(last_key) => after_key = Some(last_key),
+//!         None => break,
+//!     }
+//! }
 //! # Ok(())
 //! # }
 //! ```
@@ -381,5 +399,68 @@ mod tests {
         );
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod pagination_tests {
+    use super::*;
+
+    #[test]
+    fn view_access_key_list_omits_unset_pagination_fields() {
+        let request = RpcQueryRequest {
+            block_reference: near_primitives::types::BlockReference::latest(),
+            request: near_primitives::views::QueryRequest::ViewAccessKeyList {
+                account_id: "nosedive.testnet".parse().unwrap(),
+                after_key: None,
+                limit: None,
+            },
+        };
+        let params = request.params().unwrap();
+        assert_eq!(params["request_type"], "view_access_key_list");
+        assert!(params.get("after_key").is_none());
+        assert!(params.get("limit").is_none());
+    }
+
+    #[test]
+    fn view_access_key_list_serializes_pagination_fields() {
+        let after_key = "ed25519:GwRkfEckaADh5tVxe3oMfHBJZfHAJ55TRWqJv9hSpR38"
+            .parse::<near_crypto::PublicKeyHandle>()
+            .unwrap();
+        let request = RpcQueryRequest {
+            block_reference: near_primitives::types::BlockReference::latest(),
+            request: near_primitives::views::QueryRequest::ViewAccessKeyList {
+                account_id: "nosedive.testnet".parse().unwrap(),
+                after_key: Some(after_key),
+                limit: Some(25.try_into().unwrap()),
+            },
+        };
+        let params = request.params().unwrap();
+        assert_eq!(
+            params["after_key"],
+            "ed25519:GwRkfEckaADh5tVxe3oMfHBJZfHAJ55TRWqJv9hSpR38"
+        );
+        assert_eq!(params["limit"], 25);
+    }
+
+    #[test]
+    fn access_key_list_response_carries_last_key() {
+        let response: RpcQueryResponse = serde_json::from_value(serde_json::json!({
+            "block_height": 1,
+            "block_hash": "11111111111111111111111111111111",
+            "keys": [],
+            "last_key": "ed25519:GwRkfEckaADh5tVxe3oMfHBJZfHAJ55TRWqJv9hSpR38",
+        }))
+        .unwrap();
+        let near_jsonrpc_primitives::types::query::QueryResponseKind::AccessKeyList(list) =
+            response.kind
+        else {
+            panic!("expected AccessKeyList");
+        };
+        assert!(list.keys.is_empty());
+        assert_eq!(
+            list.last_key.unwrap().to_string(),
+            "ed25519:GwRkfEckaADh5tVxe3oMfHBJZfHAJ55TRWqJv9hSpR38"
+        );
     }
 }

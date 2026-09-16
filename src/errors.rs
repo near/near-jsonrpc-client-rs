@@ -167,3 +167,96 @@ impl<E: super::methods::RpcHandlerError> From<RpcError> for JsonRpcError<E> {
         JsonRpcError::ServerError(JsonRpcServerError::NonContextualError(err))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::methods::tx_status::{RpcTransactionError, TimeoutErrorCause};
+    use near_primitives::views::TxExecutionStatus;
+
+    /// Wraps a handler-error `cause` the way nearcore's JSON-RPC server emits it.
+    fn handler_error(cause: serde_json::Value) -> JsonRpcError<RpcTransactionError> {
+        let rpc_error: RpcError = serde_json::from_value(serde_json::json!({
+            "name": "HANDLER_ERROR",
+            "cause": cause,
+            "code": -32000,
+            "message": "Server error",
+            "data": "Timeout",
+        }))
+        .expect("valid RpcError envelope");
+        rpc_error.into()
+    }
+
+    /// nearcore <= 2.13 serializes the unit `TimeoutError` with no `info` at all.
+    #[test]
+    fn parses_bare_timeout_error_from_pre_2_14_nodes() {
+        let err = handler_error(serde_json::json!({ "name": "TIMEOUT_ERROR" }));
+        assert!(
+            matches!(
+                err.handler_error(),
+                Some(RpcTransactionError::TimeoutError(None))
+            ),
+            "unexpected: {err:#?}"
+        );
+    }
+
+    /// nearcore 2.14 attaches the cause under `info`; `PENDING` carries the last-known status.
+    #[test]
+    fn parses_pending_timeout_error_from_2_14_nodes() {
+        let err = handler_error(serde_json::json!({
+            "name": "TIMEOUT_ERROR",
+            "info": {
+                "cause": "PENDING",
+                "status": { "final_execution_status": "INCLUDED" }
+            }
+        }));
+        match err.handler_error() {
+            Some(RpcTransactionError::TimeoutError(Some(TimeoutErrorCause::Pending {
+                status,
+            }))) => {
+                assert!(matches!(
+                    status.final_execution_status,
+                    TxExecutionStatus::Included
+                ));
+                assert!(status.final_execution_outcome.is_none());
+            }
+            other => panic!("unexpected: {other:#?}"),
+        }
+    }
+
+    #[test]
+    fn parses_other_timeout_causes_from_2_14_nodes() {
+        let not_observed = handler_error(serde_json::json!({
+            "name": "TIMEOUT_ERROR",
+            "info": { "cause": "NOT_OBSERVED" }
+        }));
+        assert!(matches!(
+            not_observed.handler_error(),
+            Some(RpcTransactionError::TimeoutError(Some(
+                TimeoutErrorCause::NotObserved
+            )))
+        ));
+
+        let does_not_track_shard = handler_error(serde_json::json!({
+            "name": "TIMEOUT_ERROR",
+            "info": { "cause": "DOES_NOT_TRACK_SHARD", "shard_id": 3 }
+        }));
+        assert!(matches!(
+            does_not_track_shard.handler_error(),
+            Some(RpcTransactionError::TimeoutError(Some(
+                TimeoutErrorCause::DoesNotTrackShard { shard_id }
+            ))) if *shard_id == near_primitives::types::ShardId::new(3)
+        ));
+
+        let error = handler_error(serde_json::json!({
+            "name": "TIMEOUT_ERROR",
+            "info": { "cause": "ERROR", "debug_info": "boom" }
+        }));
+        assert!(matches!(
+            error.handler_error(),
+            Some(RpcTransactionError::TimeoutError(Some(
+                TimeoutErrorCause::Error { debug_info }
+            ))) if debug_info == "boom"
+        ));
+    }
+}
