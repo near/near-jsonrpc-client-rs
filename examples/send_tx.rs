@@ -72,7 +72,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Ok(response) => response,
         Err(err) => {
             match err.handler_error() {
-                Some(RpcTransactionError::TimeoutError) => {}
+                Some(RpcTransactionError::TimeoutError(_)) => {}
                 _ => Err(err)?,
             }
             loop {
@@ -94,7 +94,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                 match response {
                     Err(err) => match err.handler_error() {
-                        Some(RpcTransactionError::TimeoutError) => {}
+                        Some(RpcTransactionError::TimeoutError(_)) => {}
                         _ => Err(err)?,
                     },
                     Ok(response) => {

@@ -250,7 +250,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             Err(err) => match err.handler_error() {
                 Some(
-                    RpcTransactionError::TimeoutError
+                    RpcTransactionError::TimeoutError(_)
                     | RpcTransactionError::UnknownTransaction { .. },
                 ) => {
                     time::sleep(time::Duration::from_secs(2)).await;
