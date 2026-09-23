@@ -290,7 +290,7 @@ impl JsonRpcClient {
                 .map_err(|err| JsonRpcError::ServerError(JsonRpcServerError::HandlerError(err)));
         }
         Err(JsonRpcError::TransportError(RpcTransportError::RecvError(
-            JsonRpcTransportRecvError::UnexpectedServerResponse(response_message),
+            JsonRpcTransportRecvError::UnexpectedServerResponse(Box::new(response_message)),
         )))
     }
 

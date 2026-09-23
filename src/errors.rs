@@ -32,8 +32,11 @@ pub enum JsonRpcTransportHandlerResponseError {
 #[derive(Debug, Error)]
 pub enum JsonRpcTransportRecvError {
     /// Client receives a JSON RPC message body that isn't structured as a response.
+    ///
+    /// Boxed because `Message` embeds `serde_json::Value`, which grows large enough under
+    /// `serde_json/preserve_order` to trip `clippy::result_large_err` downstream.
     #[error("unexpected server response: [{0:?}]")]
-    UnexpectedServerResponse(Message),
+    UnexpectedServerResponse(Box<Message>),
     /// Client is unable to read the response from the RPC server.
     #[error("error while reading response: [{0}]")]
     PayloadRecvError(reqwest::Error),
