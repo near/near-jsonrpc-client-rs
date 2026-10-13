@@ -2,7 +2,7 @@ use near_jsonrpc_client::errors::{
     JsonRpcError::ServerError, JsonRpcServerError::ResponseStatusError,
     JsonRpcServerResponseStatusError::Unauthorized,
 };
-use near_jsonrpc_client::{auth, methods, JsonRpcClient};
+use near_jsonrpc_client::{JsonRpcClient, auth, methods};
 use near_primitives::types::{BlockReference, Finality};
 
 mod utils;

@@ -19,6 +19,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         request: QueryRequest::ViewState {
             account_id: contract_id.clone(),
             prefix: near_primitives::types::StoreKey::from(Vec::new()),
+            after_key: None,
+            limit: None,
             include_proof: false,
         },
     };

@@ -1,6 +1,6 @@
 //! Returns the proofs for a transaction execution.
 //!
-//! ```
+//! ```no_run
 //! use near_jsonrpc_client::{methods, JsonRpcClient};
 //! use near_primitives::types::TransactionOrReceiptId;
 //!

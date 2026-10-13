@@ -1,11 +1,17 @@
-//! Queries the status of a transaction.
+//! Queries the status of a transaction, including the receipts it produced.
+//!
+//! Deprecated: nearcore 2.14 stabilized this method as `tx_status`; use
+//! [`tx_status`](super::tx_status) instead. This variant keeps sending
+//! `EXPERIMENTAL_tx_status`, which nodes of every version still serve, so it remains
+//! usable while a network is still running nearcore 2.13.
 //!
 //! ## Example
 //!
 //! Returns the final transaction result for
 //! <https://explorer.near.org/transactions/B9aypWiMuiWR5kqzewL9eC96uZWA3qCMhLe67eBMWacq>
 //!
-//! ```
+//! ```no_run
+//! # #![allow(deprecated)]
 //! use near_jsonrpc_client::{methods, JsonRpcClient};
 //! use near_primitives::views::TxExecutionStatus;
 //!
@@ -37,12 +43,17 @@ pub use near_jsonrpc_primitives::types::transactions::RpcTransactionError;
 pub use near_jsonrpc_primitives::types::transactions::RpcTransactionResponse;
 pub use near_jsonrpc_primitives::types::transactions::TransactionInfo;
 
+#[deprecated(
+    since = "0.23.0",
+    note = "nearcore 2.14 stabilized this method as `tx_status`; use `methods::tx_status::RpcTransactionStatusRequest`"
+)]
 #[derive(Debug)]
 pub struct RpcTransactionStatusRequest {
     pub transaction_info: TransactionInfo,
     pub wait_until: near_primitives::views::TxExecutionStatus,
 }
 
+#[allow(deprecated)]
 impl From<RpcTransactionStatusRequest>
     for near_jsonrpc_primitives::types::transactions::RpcTransactionStatusRequest
 {
@@ -53,6 +64,8 @@ impl From<RpcTransactionStatusRequest>
         }
     }
 }
+
+#[allow(deprecated)]
 impl RpcMethod for RpcTransactionStatusRequest {
     type Response = RpcTransactionResponse;
     type Error = RpcTransactionError;
@@ -83,4 +96,5 @@ impl RpcMethod for RpcTransactionStatusRequest {
     }
 }
 
+#[allow(deprecated)]
 impl private::Sealed for RpcTransactionStatusRequest {}

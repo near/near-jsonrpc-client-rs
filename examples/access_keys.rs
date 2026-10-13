@@ -1,6 +1,6 @@
 use near_jsonrpc_client::methods;
 use near_jsonrpc_primitives::types::query::QueryResponseKind;
-use near_primitives::types::BlockReference;
+use near_primitives::types::{BlockId, BlockReference};
 
 mod utils;
 
@@ -21,16 +21,36 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let client = utils::select_network()?;
 
-    let account_id = utils::input("Enter the Account ID whose keys we're listing: ")?.parse()?;
+    let account_id: near_primitives::types::AccountId =
+        utils::input("Enter the Account ID whose keys we're listing: ")?.parse()?;
 
-    let access_key_query_response = client
-        .call(methods::query::RpcQueryRequest {
-            block_reference: BlockReference::latest(),
-            request: near_primitives::views::QueryRequest::ViewAccessKeyList { account_id },
-        })
-        .await?;
+    // `view_access_key_list` is paginated since nearcore 2.14. A request with neither
+    // `limit` nor `after_key` is the legacy unpaginated form, which fails with
+    // `TooManyAccessKeys` once the account holds more keys than the node's cap, so
+    // pass a page size from the first request on. `last_key` is the cursor for the
+    // next page and is `None` on the last one.
+    let mut after_key = None;
+    let mut block_reference = BlockReference::latest();
+    loop {
+        let access_key_query_response = client
+            .call(methods::query::RpcQueryRequest {
+                block_reference: block_reference.clone(),
+                request: near_primitives::views::QueryRequest::ViewAccessKeyList {
+                    account_id: account_id.clone(),
+                    after_key,
+                    limit: Some(50.try_into()?),
+                },
+            })
+            .await?;
 
-    if let QueryResponseKind::AccessKeyList(response) = access_key_query_response.kind {
+        // Pin the following pages to the block the first page came from, so the cursor
+        // is applied to a single consistent snapshot of the account's keys.
+        block_reference =
+            BlockReference::BlockId(BlockId::Hash(access_key_query_response.block_hash));
+
+        let QueryResponseKind::AccessKeyList(response) = access_key_query_response.kind else {
+            break;
+        };
         for access_key in response.keys {
             println!("🗝 [{}]", access_key.public_key);
             println!("     \u{21b3}      nonce: {}", access_key.access_key.nonce);
@@ -38,6 +58,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 "     \u{21b3} permission: {}",
                 indent(20, format!("{:#?}", access_key.access_key.permission))
             );
+        }
+
+        match response.last_key {
+            Some(last_key) => after_key = Some(last_key),
+            None => break,
         }
     }
 

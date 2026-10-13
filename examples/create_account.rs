@@ -10,7 +10,7 @@
 //! This script is interactive.
 
 use near_jsonrpc_client::methods::broadcast_tx_commit::RpcTransactionError;
-use near_jsonrpc_client::{methods, JsonRpcClient};
+use near_jsonrpc_client::{JsonRpcClient, methods};
 use near_jsonrpc_primitives::types::query::QueryResponseKind;
 use near_jsonrpc_primitives::types::transactions::TransactionInfo;
 use near_primitives::gas::Gas;
@@ -131,7 +131,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("(i) Enter a non-zero deposit value!");
     };
 
-    let is_sub_account = new_account_id.is_sub_account_of(&signer.get_account_id());
+    let is_sub_account = new_account_id.is_sub_account_of(signer.get_account_id());
     let new_key_pair = near_crypto::SecretKey::from_random(near_crypto::KeyType::ED25519);
 
     let (transaction, expected_output) = if is_sub_account {
@@ -164,7 +164,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         } else if client.server_addr().ends_with("mainnet.near.org") {
             "near".parse()?
         } else {
-            Err("can only create non-sub accounts for mainnet / testnet\nconsider creating a sub-account instead")?
+            Err(
+                "can only create non-sub accounts for mainnet / testnet\nconsider creating a sub-account instead",
+            )?
         };
         (
             TransactionV0 {
@@ -248,7 +250,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             Err(err) => match err.handler_error() {
                 Some(
-                    RpcTransactionError::TimeoutError
+                    RpcTransactionError::TimeoutError(_)
                     | RpcTransactionError::UnknownTransaction { .. },
                 ) => {
                     time::sleep(time::Duration::from_secs(2)).await;

@@ -1,4 +1,4 @@
-use near_jsonrpc_client::{methods, JsonRpcClient};
+use near_jsonrpc_client::{JsonRpcClient, methods};
 use near_jsonrpc_primitives::types::query::QueryResponseKind;
 use near_jsonrpc_primitives::types::transactions::{RpcTransactionError, TransactionInfo};
 use near_primitives::gas::Gas;
@@ -17,7 +17,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let signer_account_id = utils::input("Enter the signer Account ID: ")?.parse()?;
     let signer_secret_key = utils::input("Enter the signer's private key: ")?.parse()?;
-    let wait_until_str = utils::input("Enter the desired guaranteed execution status (can be one of: NONE, INCLUDED, INCLUDED_FINAL, EXECUTED, FINAL): ")?;
+    let wait_until_str = utils::input(
+        "Enter the desired guaranteed execution status (can be one of: NONE, INCLUDED, INCLUDED_FINAL, EXECUTED, FINAL): ",
+    )?;
     let wait_until: TxExecutionStatus = serde_json::from_value(serde_json::json!(wait_until_str))?;
 
     let signer = near_crypto::InMemorySigner::from_secret_key(signer_account_id, signer_secret_key);
@@ -70,7 +72,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Ok(response) => response,
         Err(err) => {
             match err.handler_error() {
-                Some(RpcTransactionError::TimeoutError) => {}
+                Some(RpcTransactionError::TimeoutError(_)) => {}
                 _ => Err(err)?,
             }
             loop {
@@ -92,7 +94,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                 match response {
                     Err(err) => match err.handler_error() {
-                        Some(RpcTransactionError::TimeoutError) => {}
+                        Some(RpcTransactionError::TimeoutError(_)) => {}
                         _ => Err(err)?,
                     },
                     Ok(response) => {

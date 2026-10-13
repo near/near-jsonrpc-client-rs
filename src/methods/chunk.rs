@@ -10,7 +10,7 @@
 //!
 //!     - `BlockId::Hash`
 //!
-//!       ```
+//!       ```no_run
 //!       use near_jsonrpc_client::{methods, JsonRpcClient};
 //!       use near_jsonrpc_primitives::types::chunks;
 //!       use near_primitives::types::{BlockId, ShardId};
@@ -38,7 +38,7 @@
 //!
 //!     - `BlockId::Height`
 //!
-//!       ```
+//!       ```no_run
 //!       use near_jsonrpc_client::{methods, JsonRpcClient};
 //!       use near_jsonrpc_primitives::types::chunks;
 //!       use near_primitives::types::{BlockId, ShardId};
@@ -67,7 +67,7 @@
 //!
 //! - `ChunkHash`: Query a chunk by a specific reference via it's associated chunk hash.
 //!
-//!   ```
+//!   ```no_run
 //!   use near_jsonrpc_client::{methods, JsonRpcClient};
 //!   use near_jsonrpc_primitives::types::chunks;
 //!

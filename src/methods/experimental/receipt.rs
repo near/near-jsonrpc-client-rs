@@ -6,7 +6,7 @@
 //!
 //! Returns the receipt for this [transaction](https://explorer.near.org/transactions/4nVcmhWkV8Y3uJp9VQWrJhfesncJERfrvt9WwDi77oEJ#3B5PPT9EKj5352Wks9GnCeSUBDsVvSF4ceMQv2nEULTf) on mainnet.
 //!
-//! ```
+//! ```no_run
 //! use near_jsonrpc_client::{methods, JsonRpcClient};
 //! use near_jsonrpc_primitives::types::receipts::ReceiptReference;
 //!

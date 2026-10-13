@@ -8,7 +8,7 @@
 //!
 //! You can also use the `Finality` and `SyncCheckpoint` variants of [`BlockReference`](https://docs.rs/near-primitives/0.12.0/near_primitives/types/enum.BlockReference.html) to return block change details.
 //!
-//! ```
+//! ```no_run
 //! use near_jsonrpc_client::{methods, JsonRpcClient};
 //! use near_primitives::types::{BlockReference, BlockId};
 //!

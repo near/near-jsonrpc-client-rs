@@ -31,7 +31,7 @@ pub fn specify_block_reference() -> std::io::Result<near_primitives::types::Bloc
                     Ok(block_hash) => {
                         break Some(near_primitives::types::BlockReference::BlockId(
                             near_primitives::types::BlockId::Hash(block_hash),
-                        ))
+                        ));
                     }
                     _ => println!("(i) Invalid block hash, please reenter!"),
                 }
@@ -44,7 +44,7 @@ pub fn specify_block_reference() -> std::io::Result<near_primitives::types::Bloc
                     Ok(block_height) => {
                         break Some(near_primitives::types::BlockReference::BlockId(
                             near_primitives::types::BlockId::Height(block_height),
-                        ))
+                        ));
                     }
                     _ => println!("(i) Invalid block height, please reenter!"),
                 }

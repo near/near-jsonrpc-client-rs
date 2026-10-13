@@ -7,6 +7,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.0-rc.2](https://github.com/near/near-jsonrpc-client-rs/compare/v0.23.0-rc.1...v0.23.0-rc.2) - 2026-09-24
+
+### Fixed
+
+- [**breaking**] box large error payloads to keep JsonRpcError small ([#198](https://github.com/near/near-jsonrpc-client-rs/pull/198))
+
+## [0.23.0-rc.1](https://github.com/near/near-jsonrpc-client-rs/compare/v0.22.0...v0.23.0-rc.1) - 2026-09-23
+
+### Added
+
+- support nearcore 2.14 ([#195](https://github.com/near/near-jsonrpc-client-rs/pull/195))
+
+### Other
+
+- maintenance and update tokens to fix ci ([#193](https://github.com/near/near-jsonrpc-client-rs/pull/193))
+
+## [0.22.0](https://github.com/near/near-jsonrpc-client-rs/compare/v0.21.1...v0.22.0) - 2026-07-09
+
+### Added
+
+- build against nearcore 2.13 / ML-DSA-65 ([#190](https://github.com/near/near-jsonrpc-client-rs/pull/190))
+
+### Other
+
+- pin to nearcore 2.13.0 stable ([#192](https://github.com/near/near-jsonrpc-client-rs/pull/192))
+
+## [0.22.0-rc.1](https://github.com/near/near-jsonrpc-client-rs/compare/v0.21.1...v0.22.0-rc.1) - 2026-07-01
+
+### Added
+
+- build against nearcore 2.13 / ML-DSA-65 ([#190](https://github.com/near/near-jsonrpc-client-rs/pull/190))
+
+## [0.21.1](https://github.com/near/near-jsonrpc-client-rs/compare/v0.21.0...v0.21.1) - 2026-06-03
+
+### Other
+
+- bump nearcore crates to 0.36 (2.12 / protocol 84) ([#189](https://github.com/near/near-jsonrpc-client-rs/pull/189))
+- release v0.21.0 ([#183](https://github.com/near/near-jsonrpc-client-rs/pull/183))
+
+## [0.21.0](https://github.com/near/near-jsonrpc-client-rs/compare/v0.20.0...v0.21.0) - 2026-04-01
+
+### Added
+
+- bump near crates to 0.35 ([#186](https://github.com/near/near-jsonrpc-client-rs/pull/186))
+
+### Other
+
+- upgrade to Rust edition 2024 ([#184](https://github.com/near/near-jsonrpc-client-rs/pull/184))
+- added DevEx to CODEOWNERS ([#182](https://github.com/near/near-jsonrpc-client-rs/pull/182))
+
 ## [0.20.0](https://github.com/near/near-jsonrpc-client-rs/compare/v0.19.0...v0.20.0) - 2025-12-01
 
 ### Other

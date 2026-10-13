@@ -16,7 +16,7 @@
 //!
 //! ### Returns basic account information.
 //!
-//! ```
+//! ```no_run
 //! use near_jsonrpc_client::{methods, JsonRpcClient};
 //! use near_primitives::{types::{BlockReference, BlockId}, views::QueryRequest};
 //!
@@ -43,7 +43,7 @@
 //!
 //! ### Returns the contract code (Wasm binary) deployed to the account. The returned code will be encoded in base64.
 //!
-//! ```
+//! ```no_run
 //! use near_jsonrpc_client::{methods, JsonRpcClient};
 //! use near_primitives::{types::{BlockReference, BlockId}, views::QueryRequest};
 //!
@@ -70,7 +70,7 @@
 //!
 //! ### Returns the account state
 //!
-//! ```
+//! ```no_run
 //! use near_jsonrpc_client::{methods, JsonRpcClient};
 //! use near_primitives::{types::{BlockReference, BlockId, StoreKey}, views::QueryRequest};
 //!
@@ -84,6 +84,8 @@
 //!     request: QueryRequest::ViewState {
 //!         account_id: "nosedive.testnet".parse()?,
 //!         prefix: StoreKey::from(vec![]),
+//!         after_key: None,
+//!         limit: None,
 //!         include_proof: false,
 //!     }
 //! };
@@ -100,7 +102,7 @@
 //!
 //! ### Returns information about a single access key for given account
 //!
-//! ```
+//! ```no_run
 //! use near_jsonrpc_client::{methods, JsonRpcClient};
 //! use near_primitives::{types::{BlockReference, BlockId}, views::QueryRequest};
 //!
@@ -127,36 +129,55 @@
 //! # }
 //! ```
 //!
-//! ### Returns all access keys for a given account.
+//! ### Returns the access keys of a given account, one page at a time.
 //!
-//! ```
+//! Since nearcore 2.14 (protocol 87) `view_access_key_list` is paginated: a response
+//! holds at most `limit` keys (capped by the node), and `last_key` is the cursor to
+//! pass as `after_key` to fetch the next page. `last_key` is `None` on the final page.
+//! A request with neither `limit` nor `after_key` is the legacy unpaginated form and
+//! returns [`RpcQueryError::TooManyAccessKeys`] once the account holds more keys than
+//! the node's cap, so set `limit` from the first request on.
+//!
+//! ```no_run
 //! use near_jsonrpc_client::{methods, JsonRpcClient};
+//! use near_jsonrpc_primitives::types::query::QueryResponseKind;
 //! use near_primitives::{types::{BlockReference, BlockId}, views::QueryRequest};
 //!
 //! # #[tokio::main]
 //! # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 //! let client = JsonRpcClient::connect("https://archival-rpc.testnet.fastnear.com");
 //!
-//! let request = methods::query::RpcQueryRequest {
-//!     block_reference: BlockReference::BlockId(BlockId::Hash("AUDcb2iNUbsmCsmYGfGuKzyXKimiNcCZjBKTVsbZGnoH".parse()?)),
-//!     request: QueryRequest::ViewAccessKeyList {
-//!         account_id: "nosedive.testnet".parse()?,
+//! let mut after_key = None;
+//! loop {
+//!     let request = methods::query::RpcQueryRequest {
+//!         block_reference: BlockReference::BlockId(BlockId::Hash("AUDcb2iNUbsmCsmYGfGuKzyXKimiNcCZjBKTVsbZGnoH".parse()?)),
+//!         request: QueryRequest::ViewAccessKeyList {
+//!             account_id: "nosedive.testnet".parse()?,
+//!             after_key,
+//!             limit: Some(50.try_into()?),
+//!         }
+//!     };
+//!
+//!     let response = client.call(request).await?;
+//!
+//!     let QueryResponseKind::AccessKeyList(page) = response.kind else {
+//!         panic!("unexpected query response kind");
+//!     };
+//!     for key in page.keys {
+//!         println!("{}", key.public_key);
 //!     }
-//! };
-//!
-//! let response = client.call(request).await?;
-//!
-//! assert!(matches!(
-//!     response,
-//!     methods::query::RpcQueryResponse { .. }
-//! ));
+//!     match page.last_key {
+//!         Some(last_key) => after_key = Some(last_key),
+//!         None => break,
+//!     }
+//! }
 //! # Ok(())
 //! # }
 //! ```
 //!
 //! ### Call a function in a contract deployed on the network
 //!
-//! ```
+//! ```no_run
 //! use near_jsonrpc_client::{methods, JsonRpcClient};
 //! use near_primitives::{types::{BlockReference, BlockId, FunctionArgs}, views::QueryRequest};
 //! use serde_json::json;
@@ -254,7 +275,8 @@ impl RpcMethod for RpcQueryRequest {
                     }
                 } else {
                     RpcQueryError::ContractExecutionError {
-                        vm_error: error,
+                        vm_error: error.clone(),
+                        error: near_primitives::errors::FunctionCallError::ExecutionError(error),
                         block_height,
                         block_hash,
                     }
@@ -304,7 +326,7 @@ mod tests {
             matches!(
                 response_err.handler_error(),
                 Some(RpcQueryError::ContractExecutionError {
-                    ref vm_error,
+                    vm_error,
                     ..
                 }) if vm_error.contains("MethodResolveError(MethodNotFound)")
             ),
@@ -335,7 +357,7 @@ mod tests {
             matches!(
                 response_err.handler_error(),
                 Some(RpcQueryError::UnknownAccessKey {
-                    ref public_key,
+                    public_key,
                     block_height: 63503911,
                     ..
                 }) if public_key.to_string() == "ed25519:9KnjTjL6vVoM8heHvCcTgLZ67FwFkiLsNtknFAVsVvYY"
@@ -368,7 +390,7 @@ mod tests {
             matches!(
                 response_err.handler_error(),
                 Some(RpcQueryError::ContractExecutionError {
-                    ref vm_error,
+                    vm_error,
                     block_height: 63503911,
                     ..
                 }) if vm_error.contains("MethodResolveError(MethodEmptyName)")
@@ -378,5 +400,68 @@ mod tests {
         );
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod pagination_tests {
+    use super::*;
+
+    #[test]
+    fn view_access_key_list_omits_unset_pagination_fields() {
+        let request = RpcQueryRequest {
+            block_reference: near_primitives::types::BlockReference::latest(),
+            request: near_primitives::views::QueryRequest::ViewAccessKeyList {
+                account_id: "nosedive.testnet".parse().unwrap(),
+                after_key: None,
+                limit: None,
+            },
+        };
+        let params = request.params().unwrap();
+        assert_eq!(params["request_type"], "view_access_key_list");
+        assert!(params.get("after_key").is_none());
+        assert!(params.get("limit").is_none());
+    }
+
+    #[test]
+    fn view_access_key_list_serializes_pagination_fields() {
+        let after_key = "ed25519:GwRkfEckaADh5tVxe3oMfHBJZfHAJ55TRWqJv9hSpR38"
+            .parse::<near_crypto::PublicKeyHandle>()
+            .unwrap();
+        let request = RpcQueryRequest {
+            block_reference: near_primitives::types::BlockReference::latest(),
+            request: near_primitives::views::QueryRequest::ViewAccessKeyList {
+                account_id: "nosedive.testnet".parse().unwrap(),
+                after_key: Some(after_key),
+                limit: Some(25.try_into().unwrap()),
+            },
+        };
+        let params = request.params().unwrap();
+        assert_eq!(
+            params["after_key"],
+            "ed25519:GwRkfEckaADh5tVxe3oMfHBJZfHAJ55TRWqJv9hSpR38"
+        );
+        assert_eq!(params["limit"], 25);
+    }
+
+    #[test]
+    fn access_key_list_response_carries_last_key() {
+        let response: RpcQueryResponse = serde_json::from_value(serde_json::json!({
+            "block_height": 1,
+            "block_hash": "11111111111111111111111111111111",
+            "keys": [],
+            "last_key": "ed25519:GwRkfEckaADh5tVxe3oMfHBJZfHAJ55TRWqJv9hSpR38",
+        }))
+        .unwrap();
+        let near_jsonrpc_primitives::types::query::QueryResponseKind::AccessKeyList(list) =
+            response.kind
+        else {
+            panic!("expected AccessKeyList");
+        };
+        assert!(list.keys.is_empty());
+        assert_eq!(
+            list.last_key.unwrap().to_string(),
+            "ed25519:GwRkfEckaADh5tVxe3oMfHBJZfHAJ55TRWqJv9hSpR38"
+        );
     }
 }

@@ -34,7 +34,7 @@ pub fn specify_block_reference() -> std::io::Result<near_primitives::types::Bloc
                     Ok(block_hash) => {
                         break Some(near_primitives::types::BlockReference::BlockId(
                             near_primitives::types::BlockId::Hash(block_hash),
-                        ))
+                        ));
                     }
                     _ => println!("(i) Invalid block hash, please reenter!"),
                 }
@@ -47,7 +47,7 @@ pub fn specify_block_reference() -> std::io::Result<near_primitives::types::Bloc
                     Ok(block_height) => {
                         break Some(near_primitives::types::BlockReference::BlockId(
                             near_primitives::types::BlockId::Height(block_height),
-                        ))
+                        ));
                     }
                     _ => println!("(i) Invalid block height, please reenter!"),
                 }
@@ -86,7 +86,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     for _ in 1..=3 {
         let tx_hash: CryptoHash = get_valid_input("What transaction hash should we query", 3)?;
         let account_id: AccountId = get_valid_input("What account signed this transaction", 3)?;
-        let wait_until_str = utils::input("Enter the desired guaranteed execution status (can be one of: NONE, INCLUDED, INCLUDED_FINAL, EXECUTED, FINAL): ")?;
+        let wait_until_str = utils::input(
+            "Enter the desired guaranteed execution status (can be one of: NONE, INCLUDED, INCLUDED_FINAL, EXECUTED, FINAL): ",
+        )?;
         let wait_until = serde_json::from_value(serde_json::json!(wait_until_str))?;
 
         match client

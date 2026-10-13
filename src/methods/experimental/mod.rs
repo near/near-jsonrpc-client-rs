@@ -9,6 +9,18 @@ pub use changes_in_block as EXPERIMENTAL_changes_in_block;
 pub mod genesis_config;
 pub use genesis_config as EXPERIMENTAL_genesis_config;
 
+pub mod light_client_block_proof;
+pub use light_client_block_proof as EXPERIMENTAL_light_client_block_proof;
+
+pub mod light_client_chunk_execution_proof;
+pub use light_client_chunk_execution_proof as EXPERIMENTAL_light_client_chunk_execution_proof;
+
+pub mod light_client_execution_outcome_proof;
+pub use light_client_execution_outcome_proof as EXPERIMENTAL_light_client_execution_outcome_proof;
+
+pub mod light_client_state_proof;
+pub use light_client_state_proof as EXPERIMENTAL_light_client_state_proof;
+
 pub mod protocol_config;
 pub use protocol_config as EXPERIMENTAL_protocol_config;
 

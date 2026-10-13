@@ -1,4 +1,4 @@
-use near_jsonrpc_client::{methods, JsonRpcClient};
+use near_jsonrpc_client::{JsonRpcClient, methods};
 use near_jsonrpc_primitives::types::query::QueryResponseKind;
 use near_jsonrpc_primitives::types::transactions::{RpcTransactionError, TransactionInfo};
 use near_primitives::gas::Gas;
@@ -86,7 +86,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         match response {
             Err(err) => match err.handler_error() {
                 Some(
-                    RpcTransactionError::TimeoutError
+                    RpcTransactionError::TimeoutError(_)
                     | RpcTransactionError::UnknownTransaction { .. },
                 ) => {
                     time::sleep(time::Duration::from_secs(2)).await;

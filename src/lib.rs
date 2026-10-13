@@ -15,7 +15,7 @@
 //!
 //! 1. Request server status from testnet RPC
 //!
-//!    ```
+//!    ```no_run
 //!    # #![allow(deprecated)]
 //!    use near_jsonrpc_client::{methods, JsonRpcClient};
 //!
@@ -290,7 +290,7 @@ impl JsonRpcClient {
                 .map_err(|err| JsonRpcError::ServerError(JsonRpcServerError::HandlerError(err)));
         }
         Err(JsonRpcError::TransportError(RpcTransportError::RecvError(
-            JsonRpcTransportRecvError::UnexpectedServerResponse(response_message),
+            JsonRpcTransportRecvError::UnexpectedServerResponse(Box::new(response_message)),
         )))
     }
 
@@ -426,7 +426,7 @@ impl AsUrl for reqwest::Url {}
 
 #[cfg(test)]
 mod tests {
-    use crate::{methods, JsonRpcClient};
+    use crate::{JsonRpcClient, methods};
 
     #[tokio::test]
     async fn chk_status_testnet() {
