@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.0](https://github.com/near/near-jsonrpc-client-rs/compare/v0.22.0...v0.23.0) - 2026-10-26
+
+### Fixed
+
+- [**breaking**] box large error payloads to keep JsonRpcError small ([#198](https://github.com/near/near-jsonrpc-client-rs/pull/198))
+
+### Other
+
+- bump nearcore crates to 0.38 (2.14 stable) ([#204](https://github.com/near/near-jsonrpc-client-rs/pull/204))
+
 ## [0.23.0-rc.4](https://github.com/near/near-jsonrpc-client-rs/compare/v0.23.0-rc.3...v0.23.0-rc.4) - 2026-10-26
 
 ### Other
