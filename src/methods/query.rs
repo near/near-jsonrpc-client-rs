@@ -317,6 +317,8 @@ mod tests {
                 account_id: "testnet".parse()?,
                 method_name: "some_unavailable_method".to_string(),
                 args: vec![].into(),
+                // What does state_init have to do with RpcCallFunction query?
+                state_init: None,
             },
         };
 
@@ -381,6 +383,8 @@ mod tests {
                 account_id: "miraclx.testnet".parse()?,
                 method_name: "".to_string(),
                 args: vec![].into(),
+                // What does state_init have to do with RpcCallFunction query?
+                state_init: None,
             },
         };
 
