@@ -83,7 +83,7 @@ impl RpcMethod for RpcSendTransactionRequest {
             }
             near_primitives::transaction::TransactionEnvelope::Unsigned(ref ecc_tx) => {
                 json!({
-                    "ecc_base64": common::serialize_ecc_transaction(ecc_tx)?,
+                    "external_call_base64": common::serialize_ecc_transaction(ecc_tx)?,
                     "wait_until": self.wait_until,
                 })
             }
@@ -132,8 +132,8 @@ impl private::Sealed for RpcSendSignedTransactionRequest {}
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct RpcSendEccTransactionRequest {
-    #[serde(rename = "ecc_base64")]
-    ecc_transaction: near_primitives::transaction::EccTransaction,
+    #[serde(rename = "external_call_base64")]
+    external_call_transaction: near_primitives::transaction::EccTransaction,
     #[serde(default)]
     wait_until: near_primitives::views::TxExecutionStatus,
 }
@@ -142,7 +142,7 @@ impl From<RpcSendEccTransactionRequest> for RpcSendTransactionRequest {
     fn from(value: RpcSendEccTransactionRequest) -> Self {
         Self {
             transaction: near_primitives::transaction::TransactionEnvelope::Unsigned(
-                value.ecc_transaction,
+                value.external_call_transaction,
             ),
             wait_until: value.wait_until,
         }
