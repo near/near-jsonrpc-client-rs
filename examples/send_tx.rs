@@ -63,7 +63,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let tx_hash = transaction.get_hash_and_size().0;
 
     let request = methods::send_tx::RpcSendTransactionRequest {
-        signed_transaction: transaction.sign(&signer),
+        transaction: transaction.sign(&signer).into(),
         wait_until: wait_until.clone(),
     };
 

@@ -190,6 +190,12 @@ mod common {
         Ok(near_primitives::serialize::to_base64(&borsh::to_vec(&tx)?))
     }
 
+    pub fn serialize_ecc_transaction(
+        tx: &near_primitives::transaction::EccTransaction,
+    ) -> Result<String, io::Error> {
+        Ok(near_primitives::serialize::to_base64(&borsh::to_vec(&tx)?))
+    }
+
     // adv_*
     #[cfg(feature = "adversarial")]
     impl RpcHandlerError for () {}

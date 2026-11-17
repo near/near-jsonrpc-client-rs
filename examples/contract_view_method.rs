@@ -35,6 +35,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .to_string()
                 .into_bytes(),
             ),
+            state_init: None,
         },
     };
 

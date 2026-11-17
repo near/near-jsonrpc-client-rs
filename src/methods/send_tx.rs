@@ -51,7 +51,7 @@
 //! });
 //!
 //! let request = methods::send_tx::RpcSendTransactionRequest {
-//!     signed_transaction: transaction.sign(&signer),
+//!     transaction: transaction.sign(&signer).into(),
 //!     wait_until: TxExecutionStatus::IncludedFinal,
 //! };
 //! # Ok(())
@@ -74,11 +74,92 @@ impl RpcMethod for RpcSendTransactionRequest {
     }
 
     fn params(&self) -> Result<serde_json::Value, io::Error> {
-        Ok(json!({
-                "signed_tx_base64": common::serialize_signed_transaction(&self.signed_transaction)?,
-                "wait_until": self.wait_until
-        }))
+        Ok(match self.transaction {
+            near_primitives::transaction::TransactionEnvelope::Signed(ref signed_tx) => {
+                json!({
+                    "signed_tx_base64": common::serialize_signed_transaction(signed_tx)?,
+                    "wait_until": self.wait_until
+                })
+            }
+            near_primitives::transaction::TransactionEnvelope::Unsigned(ref ecc_tx) => {
+                json!({
+                    "external_call_base64": common::serialize_ecc_transaction(ecc_tx)?,
+                    "wait_until": self.wait_until,
+                })
+            }
+        })
     }
 }
 
 impl private::Sealed for RpcSendTransactionRequest {}
+
+// Over the write format is a bit strange for end user, so we can also introduce the following
+// structs
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct RpcSendSignedTransactionRequest {
+    #[serde(rename = "signed_tx_base64")]
+    signed_transaction: near_primitives::transaction::SignedTransaction,
+    #[serde(default)]
+    wait_until: near_primitives::views::TxExecutionStatus,
+}
+
+impl From<RpcSendSignedTransactionRequest> for RpcSendTransactionRequest {
+    fn from(value: RpcSendSignedTransactionRequest) -> Self {
+        Self {
+            transaction: near_primitives::transaction::TransactionEnvelope::Signed(
+                value.signed_transaction,
+            ),
+            wait_until: value.wait_until,
+        }
+    }
+}
+
+impl RpcMethod for RpcSendSignedTransactionRequest {
+    type Response = RpcTransactionResponse;
+    type Error = RpcTransactionError;
+
+    fn method_name(&self) -> &str {
+        "send_tx"
+    }
+
+    fn params(&self) -> Result<serde_json::Value, io::Error> {
+        Ok(serde_json::to_value(self)?)
+    }
+}
+
+impl private::Sealed for RpcSendSignedTransactionRequest {}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct RpcSendEccTransactionRequest {
+    #[serde(rename = "external_call_base64")]
+    external_call_transaction: near_primitives::transaction::EccTransaction,
+    #[serde(default)]
+    wait_until: near_primitives::views::TxExecutionStatus,
+}
+
+impl From<RpcSendEccTransactionRequest> for RpcSendTransactionRequest {
+    fn from(value: RpcSendEccTransactionRequest) -> Self {
+        Self {
+            transaction: near_primitives::transaction::TransactionEnvelope::Unsigned(
+                value.external_call_transaction,
+            ),
+            wait_until: value.wait_until,
+        }
+    }
+}
+
+impl RpcMethod for RpcSendEccTransactionRequest {
+    type Response = RpcTransactionResponse;
+    type Error = RpcTransactionError;
+
+    fn method_name(&self) -> &str {
+        "send_tx"
+    }
+
+    fn params(&self) -> Result<serde_json::Value, io::Error> {
+        Ok(serde_json::to_value(self)?)
+    }
+}
+
+impl private::Sealed for RpcSendEccTransactionRequest {}

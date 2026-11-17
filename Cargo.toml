@@ -20,10 +20,12 @@ thiserror = "2.0"
 serde_json = "1.0.85"
 lazy_static = "1.4.0"
 
-near-crypto = "0.38.0"
-near-primitives = { version = "0.38.0", features = ["test_utils"] }
-near-chain-configs = "0.38.0"
-near-jsonrpc-primitives = "0.38.0"
+near-crypto = { version = "0", git = "https://github.com/near/nearcore", package = "near-crypto", branch = "2.15-release" }
+near-primitives = { version = "0", features = [
+    "test_utils",
+], git = "https://github.com/near/nearcore", package = "near-primitives", branch = "2.15-release" }
+near-chain-configs = { version = "0", git = "https://github.com/near/nearcore", package = "near-chain-configs", branch = "2.15-release" }
+near-jsonrpc-primitives = { version = "0", git = "https://github.com/near/nearcore", package = "near-jsonrpc-primitives", branch = "2.15-release" }
 
 [dev-dependencies]
 tokio = { version = "1.0", features = ["macros", "rt-multi-thread"] }

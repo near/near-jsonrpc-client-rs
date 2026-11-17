@@ -72,7 +72,9 @@ impl From<RpcBroadcastTxCommitRequest>
 {
     fn from(this: RpcBroadcastTxCommitRequest) -> Self {
         Self {
-            signed_transaction: this.signed_transaction,
+            transaction: near_primitives::transaction::TransactionEnvelope::Signed(
+                this.signed_transaction,
+            ),
             wait_until: near_primitives::views::TxExecutionStatus::default(),
         }
     }
