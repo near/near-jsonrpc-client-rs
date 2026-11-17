@@ -198,7 +198,8 @@
 //!             })
 //!             .to_string()
 //!             .into_bytes(),
-//!         )
+//!         ),
+//!         state_init: None,
 //!     }
 //! };
 //!

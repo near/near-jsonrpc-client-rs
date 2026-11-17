@@ -25,7 +25,7 @@
 //! let outcome = response.final_execution_outcome.expect("Should be executed by this moment");
 //! match outcome {
 //!     FinalExecutionOutcomeViewEnum::FinalExecutionOutcome(outcome) => {
-//!         assert_eq!(tx_hash, outcome.transaction.hash);
+//!         assert_eq!(tx_hash, outcome.transaction.id());
 //!     }
 //!     FinalExecutionOutcomeViewEnum::FinalExecutionOutcomeWithReceipt(_) => {
 //!         panic!("We haven't asked for the receipts");
